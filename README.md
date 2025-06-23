@@ -9,8 +9,8 @@ Read, Edit, Write, and make Special Miis from a Wiimote binary file or 3DS QR Co
 # Functions
  - **`async read3DSQR(pathToQR)`** - returns JSON.
  - **`async write3DSQR(miiJSON, path, fflRes)`** - writes a JPG QR of a 3DS scannable Mii to the path specified. If no fflRes is specified, the QR will render using Nintendo Studio's API. If one is, it will contain a locally rendered version. fflRes must be passed as a buffer (such as `fs.readFileSync('FFLResHigh.dat')`). `FFLResHigh.dat` will not be provided by the library, but must be provided to the library. `FFLResHigh.dat` can also be placed in the same directory to automatically use it.
- - **`readWiiBin(pathToMii)`** - returns JSON.
- - **`writeWiiBin(miiJSON)`** - returns Mii binary which can then be written.
+ - **`async readWiiBin(pathToMii)`** - returns JSON.
+ - **`async writeWiiBin(miiJSON)`** - returns Mii binary which can then be written.
  - **`async render3DSMiiWithStudio(miiJSON, path)`** - writes JPG representation of Mii's face to specific path, using Nintendo's Mii Studio.
  - **`convertMii(miiJson)`** - converts the Mii JSON format to the opposite Mii type and returns the JSON.
  - **`generateInstructions(miiJson, fullInstructions)`** - returns a JSON object of different instruction fields. If full is not set, only the instructions that differ from a default Mii will be returned.

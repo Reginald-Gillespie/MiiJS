@@ -94,207 +94,211 @@ async function downloadImage(url) {
         });
     });
 }
-var favCols=["Red","Orange","Yellow","Lime","Green","Blue","Cyan","Pink","Purple","Brown","White","Black"];
-var skinCols=["White","Tanned White","Darker White","Tanned Darker","Mostly Black","Black"];
-var hairCols=["Black","Brown","Red","Reddish Brown","Grey","Light Brown","Dark Blonde","Blonde"];
-var eyeCols=["Black","Grey","Brown","Lime","Blue","Green"];
-var wiiFaceFeatures=["None","Blush","Makeup and Blush","Freckles","Bags","Wrinkles on Cheeks","Wrinkles near Eyes","Chin Wrinkle","Makeup","Stubble","Wrinkles near Mouth","Wrinkles"];
-var wiiMouthColors=["Peach","Red","Pink"];
-var wiiGlassesCols=["Grey","Brown","Red","Blue","Yellow","White"];
-var wiiNoses={
-    '0': 1,
-    '1': 10,
-    '2': 2,
-    '3': 3,
-    '4': 6,
-    '5': 0,
-    '6': 5,
-    '7': 4,
-    '8': 8,
-    '9': 9,
-    '10': 7,
-    '11': 11
+
+
+const lookupTables = {
+    favCols: ["Red", "Orange", "Yellow", "Lime", "Green", "Blue", "Cyan", "Pink", "Purple", "Brown", "White", "Black"],
+    skinCols: ["White", "Tanned White", "Darker White", "Tanned Darker", "Mostly Black", "Black"],
+    hairCols: ["Black", "Brown", "Red", "Reddish Brown", "Grey", "Light Brown", "Dark Blonde", "Blonde"],
+    eyeCols: ["Black", "Grey", "Brown", "Lime", "Blue", "Green"],
+    wiiFaceFeatures: ["None", "Blush", "Makeup and Blush", "Freckles", "Bags", "Wrinkles on Cheeks", "Wrinkles near Eyes", "Chin Wrinkle", "Makeup", "Stubble", "Wrinkles near Mouth", "Wrinkles"],
+    wiiMouthColors: ["Peach", "Red", "Pink"],
+    wiiGlassesCols: ["Grey", "Brown", "Red", "Blue", "Yellow", "White"],
+    wiiNoses: {
+        '0': 1,
+        '1': 10,
+        '2': 2,
+        '3': 3,
+        '4': 6,
+        '5': 0,
+        '6': 5,
+        '7': 4,
+        '8': 8,
+        '9': 9,
+        '10': 7,
+        '11': 11
+    },
+    mouthTable: {
+        '0': '113',
+        '1': '121',
+        '2': '231',
+        '3': '222',
+        '4': '232',
+        '5': '132',
+        '6': '124',
+        '7': '211',
+        '8': '123',
+        '9': '221',
+        '10': '133',
+        '11': '223',
+        '12': '234',
+        '13': '134',
+        '14': '224',
+        '15': '213',
+        '16': '114',
+        '17': '212',
+        '18': '214',
+        '19': '131',
+        '20': '233',
+        '21': '112',
+        '22': '122',
+        '23': '111'
+    },
+    eyebrowTable: {
+        '0': '121',
+        '1': '112',
+        '2': '231',
+        '3': '212',
+        '4': '134',
+        '5': '124',
+        '6': '111',
+        '7': '113',
+        '8': '133',
+        '9': '122',
+        '10': '221',
+        '11': '211',
+        '12': '131',
+        '13': '223',
+        '14': '222',
+        '15': '213',
+        '16': '224',
+        '17': '114',
+        '18': '214',
+        '19': '132',
+        '20': '232',
+        '21': '123',
+        '22': '233',
+        '23': '234'
+    },
+    eyeTable: {
+        '0': '131',
+        '1': '113',
+        '2': '111',
+        '3': '413',
+        '4': '121',
+        '5': '311',
+        '6': '332',
+        '7': '411',
+        '8': '112',
+        '9': '222',
+        '10': '414',
+        '11': '221',
+        '12': '232',
+        '13': '331',
+        '14': '424',
+        '15': '114',
+        '16': '133',
+        '17': '132',
+        '18': '314',
+        '19': '231',
+        '20': '134',
+        '21': '233',
+        '22': '433',
+        '23': '213',
+        '24': '313',
+        '25': '214',
+        '26': '123',
+        '27': '124',
+        '28': '324',
+        '29': '432',
+        '30': '323',
+        '31': '333',
+        '32': '212',
+        '33': '211',
+        '34': '223',
+        '35': '234',
+        '36': '312',
+        '37': '322',
+        '38': '431',
+        '39': '122',
+        '40': '224',
+        '41': '321',
+        '42': '412',
+        '43': '423',
+        '44': '421',
+        '45': '422',
+        '46': '334',
+        '47': '434'
+    },
+    hairTable: {
+        '0': '534',
+        '1': '413',
+        '2': '632',
+        '3': '521',
+        '4': '422',
+        '5': '433',
+        '6': '522',
+        '7': '434',
+        '8': '414',
+        '9': '612',
+        '10': '512',
+        '11': '513',
+        '12': '411',
+        '13': '421',
+        '14': '511',
+        '15': '624',
+        '16': '621',
+        '17': '533',
+        '18': '622',
+        '19': '423',
+        '20': '532',
+        '21': '524',
+        '22': '531',
+        '23': '312',
+        '24': '614',
+        '25': '432',
+        '26': '412',
+        '27': '424',
+        '28': '613',
+        '29': '634',
+        '30': '314',
+        '31': '134',
+        '32': '211',
+        '33': '111',
+        '34': '334',
+        '35': '514',
+        '36': '313',
+        '37': '231',
+        '38': '321',
+        '39': '122',
+        '40': '121',
+        '41': '323',
+        '42': '331',
+        '43': '311',
+        '44': '112',
+        '45': '113',
+        '46': '631',
+        '47': '221',
+        '48': '212',
+        '49': '123',
+        '50': '223',
+        '51': '131',
+        '52': '232',
+        '53': '623',
+        '54': '332',
+        '55': '233',
+        '56': '114',
+        '57': '324',
+        '58': '213',
+        '59': '133',
+        '60': '224',
+        '61': '611',
+        '62': '234',
+        '63': '523',
+        '64': '214',
+        '65': '333',
+        '66': '222',
+        '67': '322',
+        '68': '124',
+        '69': '431',
+        '70': '132',
+        '71': '633'
+    },
+    faceFeatures3DS: ["None", "Near Eye Creases", "Cheek Creases", "Far Eye Creases", "Near Nose Creases", "Giant Bags", "Cleft Chin", "Chin Crease", "Sunken Eyes", "Far Cheek Creases", "Lines Near Eyes", "Wrinkles"],
+    makeups3DS: ["None", "Blush", "Orange Blush", "Blue Eyes", "Blush 2", "Orange Blush 2", "Blue Eyes and Blush", "Orange Eyes and Blush", "Purple Eyes and Blush 2", "Freckles", "Beard Stubble", "Beard and Mustache Stubble"],
+    mouthCols3DS: ["Orange", "Red", "Pink", "Peach", "Black"],
+    glassesCols3DS: ["Black", "Brown", "Red", "Blue", "Yellow", "Grey"]
 };
-var mouthTable={
-    '0': '113',
-    '1': '121',
-    '2': '231',
-    '3': '222',
-    '4': '232',
-    '5': '132',
-    '6': '124',
-    '7': '211',
-    '8': '123',
-    '9': '221',
-    '10': '133',
-    '11': '223',
-    '12': '234',
-    '13': '134',
-    '14': '224',
-    '15': '213',
-    '16': '114',
-    '17': '212',
-    '18': '214',
-    '19': '131',
-    '20': '233',
-    '21': '112',
-    '22': '122',
-    '23': '111'
-};
-var eyebrowTable={
-    '0': '121',
-    '1': '112',
-    '2': '231',
-    '3': '212',
-    '4': '134',
-    '5': '124',
-    '6': '111',
-    '7': '113',
-    '8': '133',
-    '9': '122',
-    '10': '221',
-    '11': '211',
-    '12': '131',
-    '13': '223',
-    '14': '222',
-    '15': '213',
-    '16': '224',
-    '17': '114',
-    '18': '214',
-    '19': '132',
-    '20': '232',
-    '21': '123',
-    '22': '233',
-    '23': '234'
-};
-var eyeTable={
-    '0': '131',
-    '1': '113',
-    '2': '111',
-    '3': '413',
-    '4': '121',
-    '5': '311',
-    '6': '332',
-    '7': '411',
-    '8': '112',
-    '9': '222',
-    '10': '414',
-    '11': '221',
-    '12': '232',
-    '13': '331',
-    '14': '424',
-    '15': '114',
-    '16': '133',
-    '17': '132',
-    '18': '314',
-    '19': '231',
-    '20': '134',
-    '21': '233',
-    '22': '433',
-    '23': '213',
-    '24': '313',
-    '25': '214',
-    '26': '123',
-    '27': '124',
-    '28': '324',
-    '29': '432',
-    '30': '323',
-    '31': '333',
-    '32': '212',
-    '33': '211',
-    '34': '223',
-    '35': '234',
-    '36': '312',
-    '37': '322',
-    '38': '431',
-    '39': '122',
-    '40': '224',
-    '41': '321',
-    '42': '412',
-    '43': '423',
-    '44': '421',
-    '45': '422',
-    '46': '334',
-    '47': '434'
-};
-var hairTable={
-    '0': '534',
-    '1': '413',
-    '2': '632',
-    '3': '521',
-    '4': '422',
-    '5': '433',
-    '6': '522',
-    '7': '434',
-    '8': '414',
-    '9': '612',
-    '10': '512',
-    '11': '513',
-    '12': '411',
-    '13': '421',
-    '14': '511',
-    '15': '624',
-    '16': '621',
-    '17': '533',
-    '18': '622',
-    '19': '423',
-    '20': '532',
-    '21': '524',
-    '22': '531',
-    '23': '312',
-    '24': '614',
-    '25': '432',
-    '26': '412',
-    '27': '424',
-    '28': '613',
-    '29': '634',
-    '30': '314',
-    '31': '134',
-    '32': '211',
-    '33': '111',
-    '34': '334',
-    '35': '514',
-    '36': '313',
-    '37': '231',
-    '38': '321',
-    '39': '122',
-    '40': '121',
-    '41': '323',
-    '42': '331',
-    '43': '311',
-    '44': '112',
-    '45': '113',
-    '46': '631',
-    '47': '221',
-    '48': '212',
-    '49': '123',
-    '50': '223',
-    '51': '131',
-    '52': '232',
-    '53': '623',
-    '54': '332',
-    '55': '233',
-    '56': '114',
-    '57': '324',
-    '58': '213',
-    '59': '133',
-    '60': '224',
-    '61': '611',
-    '62': '234',
-    '63': '523',
-    '64': '214',
-    '65': '333',
-    '66': '222',
-    '67': '322',
-    '68': '124',
-    '69': '431',
-    '70': '132',
-    '71': '633'
-};
-var faceFeatures3DS=["None","Near Eye Creases","Cheek Creases","Far Eye Creases","Near Nose Creases","Giant Bags","Cleft Chin","Chin Crease","Sunken Eyes","Far Cheek Creases","Lines Near Eyes","Wrinkles"];
-var makeups3DS=["None","Blush","Orange Blush","Blue Eyes","Blush 2","Orange Blush 2","Blue Eyes and Blush","Orange Eyes and Blush","Purple Eyes and Blush 2","Freckles","Beard Stubble","Beard and Mustache Stubble"];
-var mouthCols3DS=["Orange","Red","Pink","Peach","Black"];
-var glassesCols3DS=["Black","Brown","Red","Blue","Yellow","Grey"];
 
 var tables={
     faces: [
@@ -1073,6 +1077,309 @@ var defaultInstrs={
     }
 };
 
+// Mii binary helpers
+const decoders = {
+    number: (value, field) => value + (field.offset || 0),
+    boolean: (value, field) => field.invert ? value === 0 : value === 1,
+    enum: (value, field) => field.values[value],
+    lookup: (value, field, tables) => {
+        const table = tables[field.lookupTable];
+        return Array.isArray(table) ? table[value] : table?.[value.toString()];
+    },
+    color: (value, field, tables) => tables[field.colorArray]?.[value] || value
+};
+const encoders = {
+    number: (value, field) => value - (field.offset || 0),
+    boolean: (value, field) => field.invert ? (value ? 0 : 1) : (value ? 1 : 0),
+    enum: (value, field) => field.values.indexOf(value),
+    lookup: (decodedValue, field, tables) => {
+        const table = tables[field.lookupTable];
+        if (!table) return undefined;
+
+        if (Array.isArray(table)) {
+            const index = table.indexOf(decodedValue);
+            return index !== -1 ? index : undefined;
+        }
+
+        for (const [key, val] of Object.entries(table)) {
+            if (val === decodedValue) return key;
+        }
+
+        return undefined;
+    },
+    color: (value, field, T) => {
+        const arr = T[field.colorArray];
+        return arr?.indexOf(value) ?? value;
+    },
+};
+
+
+function decodeString(data, field) {
+    let result = "";
+    const maxLength = field.maxLength || 10;
+    
+    for (let i = 0; i < maxLength; i++) {
+        const charOffset = field.byteOffset + (i * 2);
+        if (charOffset + 1 < data.length) {
+            const char1 = data[charOffset];
+            const char2 = data[charOffset + 1];
+            if (char1 === 0 && char2 === 0) break;
+            result += String.fromCharCode(field.endianness == "little" ? char1 : char2);
+        }
+    }
+    return result.replace(/\x00/g, "");
+}
+function encodeString(str, field) {
+    const result = [];
+    const maxLength = field.maxLength || 10;
+
+    for (let i = 0; i < maxLength; i++) {
+        const code = i < str.length ? str.charCodeAt(i) : 0;
+
+        if (field.endianness == "little") {
+            result.push(code); // Low byte
+            result.push(0); // High byte
+        } else {
+            result.push(0); // High byte
+            result.push(code); // Low byte
+        }
+    }
+    return result;
+}
+/**
+ * Extracts a sequence of bits from a byte array.
+ *
+ * @param {Uint8Array} data - The byte array to extract bits from.
+ * @param {number} byteOffset - The starting byte offset in the array.
+ * @param {number} bitOffset - The starting bit offset within the byte.
+ * @param {number} bitLength - The number of bits to extract.
+ * @returns {number} The extracted bit sequence as an integer.
+ *
+ * This function calculates the bit-level offset, reads the necessary bytes,
+ * shifts and masks the result to isolate the requested bit field.
+ */
+function extractBits(data, byteOffset, bitOffset, bitLength) {
+    const totalBitOffset = byteOffset * 8 + bitOffset;
+    const startByte = Math.floor(totalBitOffset / 8);
+    const endByte = Math.floor((totalBitOffset + bitLength - 1) / 8);
+
+    let value = 0;
+    for (let i = startByte; i <= endByte; i++) {
+        if (i < data.length) {
+            value = (value << 8) | data[i];
+        }
+    }
+    
+    const rightShift = (endByte - startByte + 1) * 8 - (totalBitOffset % 8) - bitLength;
+    value >>>= rightShift;
+    
+    const mask = (1 << bitLength) - 1;
+    return value & mask;
+}
+function setBits(buffer, byteOffset, bitOffset, bitLength, value) {
+    const totalBitOffset = byteOffset * 8 + bitOffset;
+    const startByte = Math.floor(totalBitOffset / 8);
+    const endByte = Math.floor((totalBitOffset + bitLength - 1) / 8);
+    
+    if (startByte === endByte) {
+        const shift = 8 - ((totalBitOffset % 8) + bitLength);
+        const mask = ((1 << bitLength) - 1) << shift;
+        buffer[startByte] = (buffer[startByte] & ~mask) | ((value << shift) & mask);
+    } else {
+        // Multi-byte spanning (simplified)
+        const rightShift = (endByte - startByte + 1) * 8 - (totalBitOffset % 8) - bitLength;
+        let tempValue = value << rightShift;
+        
+        for (let i = endByte; i >= startByte; i--) {
+            buffer[i] = (buffer[i] & 0) | (tempValue & 0xFF);
+            tempValue >>>= 8;
+        }
+    }
+}
+function setNestedProperty(obj, path, value) {
+    // Allows to reference nessted properties in extraction schemas with "name.subcategory.suboption" 
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!(keys[i] in current)) {
+            current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+    }
+    
+    current[keys[keys.length - 1]] = value;
+}
+function getNestedProperty(obj, path) {
+    // See `setNestedProperty` comment
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+function reverseLookup(value, tableName, lookupTables) {
+    const table = lookupTables[tableName];
+    if (Array.isArray(table)) {
+        return table.indexOf(value);
+    } else if (table) {
+        return Object.keys(table).find(key => table[key] === value) || 0;
+    }
+    return 0;
+}
+function parseFromSchema(data, schema, lookupTables = {}) {
+    const result = {};
+
+    for (const [fieldPath, fieldDef] of Object.entries(schema)) {
+        let value;
+
+        if (fieldDef.type === 'string') {
+            value = decodeString(data, fieldDef);
+        } else {
+            value = extractBits(data, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength);
+        }
+
+        // Apply decoder
+        if (fieldDef.decoder && decoders[fieldDef.decoder]) {
+            value = decoders[fieldDef.decoder](value, fieldDef, lookupTables);
+        }
+
+        setNestedProperty(result, fieldPath, value);
+    }
+
+    return result;
+}
+function jsonToMiiBuffer(miiData, schema, lookupTables = {}, totalBytes = 74) {
+    const buffer = new Array(totalBytes).fill(0);
+
+    for (const [fieldPath, fieldDef] of Object.entries(schema)) {
+        let raw = getNestedProperty(miiData, fieldPath);
+
+        // Run encoders
+        if (fieldDef.decoder && encoders[fieldDef.decoder]) {
+            raw = encoders[fieldDef.decoder](raw, fieldDef, lookupTables);
+        }
+
+        if (fieldDef.type !== 'string') {
+            setBits(buffer, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength, raw);
+        } else {
+            const bytes = encodeString(raw, fieldDef);
+            for (let i = 0; i < bytes.length; i++) {
+                buffer[fieldDef.byteOffset + i] = bytes[i];
+            }
+        }
+    }
+
+    return Buffer.from(buffer);
+}
+
+const WII_MII_SCHEMA = {
+    'info.gender': { byteOffset: 0x00, bitOffset: 1, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
+    'info.birthMonth': { byteOffset: 0x00, bitOffset: 2, bitLength: 4, decoder: 'number' },
+    'info.birthday': { byteOffset: 0x00, bitOffset: 6, bitLength: 5, decoder: 'number' },
+    'info.favColor': { byteOffset: 0x01, bitOffset: 3, bitLength: 4, decoder: 'color', colorArray: 'favCols' },
+    'info.favorited': { byteOffset: 0x01, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    'info.name': { type: 'string', byteOffset: 0x02, maxLength: 10, endianness: "big" },
+    'info.creatorName': { type: 'string', byteOffset: 0x37, maxLength: 10, endianness: "big" },
+    'name': { type: 'string', byteOffset: 0x02, maxLength: 10, endianness: "big" },
+    'creatorName': { type: 'string', byteOffset: 0x37, maxLength: 10, endianness: "big" },
+    'info.height': { byteOffset: 0x16, bitOffset: 0, bitLength: 8, decoder: 'number' },
+    'info.weight': { byteOffset: 0x17, bitOffset: 0, bitLength: 8, decoder: 'number' },
+    'info.mingle': { byteOffset: 0x21, bitOffset: 5, bitLength: 1, decoder: 'boolean', invert: true },
+    'info.downloadedFromCheckMiiOut': { byteOffset: 0x21, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    'face.shape': { byteOffset: 0x20, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'face.col': { byteOffset: 0x20, bitOffset: 3, bitLength: 3, decoder: 'color', colorArray: 'skinCols' },
+    'face.feature': { byteOffset: 0x20, bitOffset: 6, bitLength: 4, decoder: 'lookup', lookupTable: 'wiiFaceFeatures' },
+    'hair.type': { byteOffset: 0x22, bitOffset: 0, bitLength: 7, decoder: 'lookup', lookupTable: 'hairTable' },
+    'hair.col': { byteOffset: 0x22, bitOffset: 7, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'hair.flipped': { byteOffset: 0x23, bitOffset: 2, bitLength: 1, decoder: 'boolean' },
+    'eyebrows.type': { byteOffset: 0x24, bitOffset: 0, bitLength: 5, decoder: 'lookup', lookupTable: 'eyebrowTable' },
+    'eyebrows.rotation': { byteOffset: 0x24, bitOffset: 6, bitLength: 4, decoder: 'number' },
+    'eyebrows.col': { byteOffset: 0x26, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'eyebrows.size': { byteOffset: 0x26, bitOffset: 3, bitLength: 4, decoder: 'number' },
+    'eyebrows.yPos': { byteOffset: 0x26, bitOffset: 7, bitLength: 5, decoder: 'number', offset: -3 },
+    'eyebrows.distApart': { byteOffset: 0x27, bitOffset: 4, bitLength: 4, decoder: 'number' },
+    'eyes.type': { byteOffset: 0x28, bitOffset: 0, bitLength: 6, decoder: 'lookup', lookupTable: 'eyeTable' },
+    'eyes.rotation': { byteOffset: 0x29, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'eyes.yPos': { byteOffset: 0x29, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'eyes.col': { byteOffset: 0x2A, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'eyeCols' },
+    'eyes.size': { byteOffset: 0x2A, bitOffset: 4, bitLength: 3, decoder: 'number' },
+    'eyes.distApart': { byteOffset: 0x2A, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'nose.type': { byteOffset: 0x2C, bitOffset: 0, bitLength: 4, decoder: 'lookup', lookupTable: 'wiiNoses' },
+    'nose.size': { byteOffset: 0x2C, bitOffset: 4, bitLength: 4, decoder: 'number' },
+    'nose.yPos': { byteOffset: 0x2D, bitOffset: 0, bitLength: 5, decoder: 'number' },
+    'mouth.type': { byteOffset: 0x2E, bitOffset: 0, bitLength: 5, decoder: 'lookup', lookupTable: 'mouthTable' },
+    'mouth.col': { byteOffset: 0x2E, bitOffset: 5, bitLength: 2, decoder: 'color', colorArray: 'wiiMouthColors' },
+    'mouth.size': { byteOffset: 0x2E, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'mouth.yPos': { byteOffset: 0x2F, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'glasses.type': { byteOffset: 0x30, bitOffset: 0, bitLength: 4, decoder: 'number' },
+    'glasses.col': { byteOffset: 0x30, bitOffset: 4, bitLength: 3, decoder: 'color', colorArray: 'wiiGlassesCols' },
+    'glasses.size': { byteOffset: 0x31, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'glasses.yPos': { byteOffset: 0x31, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'facialHair.mustacheType': { byteOffset: 0x32, bitOffset: 0, bitLength: 2, decoder: 'number' },
+    'facialHair.beardType': { byteOffset: 0x32, bitOffset: 2, bitLength: 2, decoder: 'number' },
+    'facialHair.col': { byteOffset: 0x32, bitOffset: 4, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'facialHair.mustacheSize': { byteOffset: 0x32, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'facialHair.mustacheYPos': { byteOffset: 0x33, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'mole.on': { byteOffset: 0x34, bitOffset: 0, bitLength: 1, decoder: 'boolean' },
+    'mole.size': { byteOffset: 0x34, bitOffset: 1, bitLength: 4, decoder: 'number' },
+    'mole.yPos': { byteOffset: 0x34, bitOffset: 5, bitLength: 5, decoder: 'number' },
+    'mole.xPos': { byteOffset: 0x35, bitOffset: 2, bitLength: 5, decoder: 'number' }
+};
+
+const THREEDS_MII_SCHEMA = {
+    'info.birthday': { byteOffset: 0x18, bitOffset: 6, bitLength: 5, decoder: 'number' },
+    'info.birthMonth': { byteOffset: 0x18, bitOffset: 3, bitLength: 4, decoder: 'number' },
+    'info.gender': { byteOffset: 0x18, bitOffset: 7, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
+    'info.favColor': { byteOffset: 0x19, bitOffset: 2, bitLength: 4, decoder: 'color', colorArray: 'favCols' },
+    'info.favorited': { byteOffset: 0x19, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    'name': { type: 'string', byteOffset: 0x1A, maxLength: 10, endianness: "little" },
+    'creatorName': { type: 'string', byteOffset: 0x48, maxLength: 10, endianness: "little" },
+    'info.height': { byteOffset: 0x2E, bitOffset: 0, bitLength: 8, decoder: 'number' },
+    'info.weight': { byteOffset: 0x2F, bitOffset: 0, bitLength: 8, decoder: 'number' },
+    'perms.sharing': { byteOffset: 0x30, bitOffset: 7, bitLength: 1, decoder: 'boolean', invert: true },
+    'perms.copying': { byteOffset: 0x01, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    'face.shape': { byteOffset: 0x30, bitOffset: 3, bitLength: 4, decoder: 'lookup', lookupTable: 'faces' },
+    'face.col': { byteOffset: 0x30, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'skinCols' },
+    'face.feature': { byteOffset: 0x31, bitOffset: 4, bitLength: 4, decoder: 'lookup', lookupTable: 'faceFeatures3DS' },
+    'face.makeup': { byteOffset: 0x31, bitOffset: 0, bitLength: 4, decoder: 'lookup', lookupTable: 'makeups3DS' },
+    'hair.style': { byteOffset: 0x32, bitOffset: 0, bitLength: 8, decoder: 'lookup', lookupTable: 'hairs' },
+    'hair.col': { byteOffset: 0x33, bitOffset: 5, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'hair.flipped': { byteOffset: 0x33, bitOffset: 4, bitLength: 1, decoder: 'boolean' },
+    'eyes.type': { byteOffset: 0x34, bitOffset: 2, bitLength: 6, decoder: 'lookup', lookupTable: 'eyes' },
+    'eyes.col': { byteOffset: 0x35, bitOffset: 7, bitLength: 3, decoder: 'color', colorArray: 'eyeCols' },
+    'eyes.size': { byteOffset: 0x35, bitOffset: 3, bitLength: 4, decoder: 'number' },
+    'eyes.squash': { byteOffset: 0x35, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'eyes.rot': { byteOffset: 0x36, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'eyes.distApart': { byteOffset: 0x36, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'eyes.yPos': { byteOffset: 0x37, bitOffset: 2, bitLength: 5, decoder: 'number' },
+    'eyebrows.style': { byteOffset: 0x38, bitOffset: 3, bitLength: 5, decoder: 'lookup', lookupTable: 'eyebrows' },
+    'eyebrows.col': { byteOffset: 0x38, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'eyebrows.size': { byteOffset: 0x39, bitOffset: 4, bitLength: 4, decoder: 'number' },
+    'eyebrows.squash': { byteOffset: 0x39, bitOffset: 1, bitLength: 3, decoder: 'number' },
+    'eyebrows.rot': { byteOffset: 0x3A, bitOffset: 4, bitLength: 4, decoder: 'number' },
+    'eyebrows.distApart': { byteOffset: 0x3A, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'eyebrows.yPos': { byteOffset: 0x3B, bitOffset: 2, bitLength: 5, decoder: 'number', offset: -3 },
+    'nose.type': { byteOffset: 0x3C, bitOffset: 3, bitLength: 5, decoder: 'lookup', lookupTable: 'noses' },
+    'nose.size': { byteOffset: 0x3C, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'nose.yPos': { byteOffset: 0x3D, bitOffset: 2, bitLength: 5, decoder: 'number' },
+    'mouth.type': { byteOffset: 0x3E, bitOffset: 2, bitLength: 6, decoder: 'lookup', lookupTable: 'mouths' },
+    'mouth.col': { byteOffset: 0x3E, bitOffset: 7, bitLength: 3, decoder: 'color', colorArray: 'mouthCols3DS' },
+    'mouth.size': { byteOffset: 0x3F, bitOffset: 3, bitLength: 4, decoder: 'number' },
+    'mouth.squash': { byteOffset: 0x3F, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'mouth.yPos': { byteOffset: 0x40, bitOffset: 3, bitLength: 5, decoder: 'number' },
+    'facialHair.mustacheType': { byteOffset: 0x40, bitOffset: 0, bitLength: 3, decoder: 'number' },
+    'facialHair.beardType': { byteOffset: 0x42, bitOffset: 5, bitLength: 3, decoder: 'number' },
+    'facialHair.col': { byteOffset: 0x42, bitOffset: 2, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
+    'facialHair.mustacheSize': { byteOffset: 0x42, bitOffset: 6, bitLength: 4, decoder: 'number' },
+    'facialHair.mustacheYPos': { byteOffset: 0x43, bitOffset: 1, bitLength: 5, decoder: 'number' },
+    'glasses.type': { byteOffset: 0x44, bitOffset: 4, bitLength: 4, decoder: 'number' },
+    'glasses.col': { byteOffset: 0x44, bitOffset: 1, bitLength: 3, decoder: 'color', colorArray: 'glassesCols3DS' },
+    'glasses.size': { byteOffset: 0x44, bitOffset: 5, bitLength: 4, decoder: 'number' },
+    'glasses.yPos': { byteOffset: 0x45, bitOffset: 0, bitLength: 5, decoder: 'number' },
+    'mole.on': { byteOffset: 0x46, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    'mole.size': { byteOffset: 0x46, bitOffset: 3, bitLength: 4, decoder: 'number' },
+    'mole.xPos': { byteOffset: 0x46, bitOffset: 6, bitLength: 5, decoder: 'number' },
+    'mole.yPos': { byteOffset: 0x47, bitOffset: 1, bitLength: 5, decoder: 'number' }
+};
+
+
 async function renderMii(studioMii,fflRes=_fflRes) {
   var width=600,height=600;
   /* ---------- WebGL 1 context ---------- */
@@ -1164,235 +1471,24 @@ async function renderMii(studioMii,fflRes=_fflRes) {
   return canvas.toBuffer('image/png');
 }
 
-var exports={
-    readWiiBin:function(binOrPath){
-        var thisMii={
-            info:{},
-            face:{},
-            nose:{},
-            mouth:{},
-            mole:{},
-            hair:{},
-            eyebrows:{},
-            eyes:{},
-            glasses:{},
-            facialHair:{}
-        };
-
+var exports = {
+    readWiiBin: async function(binOrPath){
         let data;
-        if(/[^01]/ig.test(binOrPath)){
-            data = fs.readFileSync(binOrPath);
-        }
-        else{
-            data=Buffer.from(binOrPath);
+        if (/[^01]/ig.test(binOrPath)) {
+            data = await fs.promises.readFile(binOrPath);
+        } else {
+            data = Buffer.from(binOrPath);
         }
 
-        const get = address => getBinaryFromAddress(address, data);
+        const thisMii = parseFromSchema(data, WII_MII_SCHEMA, lookupTables);
+        thisMii.console = 'wii';
 
-        var name="";
-        for(var i=0;i<10;i++){
-            name+=data.slice(3+i*2, 4+i*2)+"";
-        }
-        thisMii.name=name.replaceAll("\x00","");
-        var cname="";
-        for(var i=0;i<10;i++){
-            cname+=data.slice(55+i*2, 56+i*2)+"";
-        }
-        thisMii.creatorName=cname.replaceAll("\x00","");
-        thisMii.info.creatorName=thisMii.creatorName;
-        thisMii.info.name=thisMii.name;//Up to ten characters
-        thisMii.info.gender=get(0x00)[1]==="1"?"Female":"Male";//0 for Male, 1 for Female
-        thisMii.info.miiId=parseInt(get(0x18),2).toString(16)+parseInt(get(0x19),2).toString(16)+parseInt(get(0x1A),2).toString(16)+parseInt(get(0x1B),2).toString(16);
-        thisMii.info.systemId=parseInt(get(0x1C),2).toString(16)+parseInt(get(0x1D),2).toString(16)+parseInt(get(0x1E),2).toString(16)+parseInt(get(0x1F),2).toString(16);
-        var temp=get(0x20);
-        thisMii.face.shape=parseInt(temp.slice(0,3),2);//0-7
-        thisMii.face.col=skinCols[parseInt(temp.slice(3,6),2)];//0-5
-        temp=get(0x21);
-        thisMii.face.feature=wiiFaceFeatures[parseInt(get(0x20).slice(6,8)+temp.slice(0,2),2)];//0-11
-        thisMii.info.mingle=temp[5]==="0";//0 for Mingle, 1 for Don't Mingle
-        temp=get(0x2C);
-        for(var i=0;i<12;i++){
-            if(wiiNoses[i]===parseInt(temp.slice(0,4),2)){
-                thisMii.nose.type=i;
-            }
-        }
-        thisMii.nose.size=parseInt(temp.slice(4,8),2);
-        thisMii.nose.yPos=parseInt(get(0x2D).slice(0,5),2);//From top to bottom, 0-18, default 9
-        temp=get(0x2E);
-        thisMii.mouth.type=mouthTable[""+parseInt(temp.slice(0,5),2)];//0-23, Needs lookup table
-        thisMii.mouth.col=wiiMouthColors[parseInt(temp.slice(5,7),2)];//0-2, refer to mouthColors array
-        temp2=get(0x2F);
-        thisMii.mouth.size=parseInt(temp[7]+temp2.slice(0,3),2);//0-8, default 4
-        thisMii.mouth.yPos=parseInt(temp2.slice(3,8),2);//0-18, default 9, from top to bottom
-        temp=get(0x00);
-        var temp2=get(0x01);
-        thisMii.info.birthMonth=parseInt(temp.slice(2,6),2);
-        thisMii.info.birthday=parseInt(temp.slice(6,8)+temp2.slice(0,3),2);
-        thisMii.info.favColor=favCols[parseInt(temp2.slice(3,7),2)];//0-11, refer to cols array
-        thisMii.info.favorited=temp2[7]==="0"?false:true;
-        thisMii.info.height=parseInt(get(0x16),2);//0-127
-        thisMii.info.weight=parseInt(get(0x17),2);//0-127
-        thisMii.info.downloadedFromCheckMiiOut=get(0x21)[7]==="0"?false:true;
-        temp=get(0x34);
-        temp2=get(0x35);
-        thisMii.mole.on=temp[0]==="0"?false:true;//0 for Off, 1 for On
-        thisMii.mole.size=parseInt(temp.slice(1,5),2);//0-8, default 4
-        thisMii.mole.xPos=parseInt(temp2.slice(2,7),2);//0-16, Default 2
-        thisMii.mole.yPos=parseInt(temp.slice(5,8)+temp2.slice(0,2),2);//Top to bottom
-        temp=get(0x22);
-        temp2=get(0x23);
-        thisMii.hair.type=hairTable[""+parseInt(temp.slice(0,7),2)];//0-71, Needs lookup table
-        thisMii.hair.col=hairCols[parseInt(temp[7]+temp2.slice(0,2),2)];//0-7, refer to hairCols array
-        thisMii.hair.flipped=temp2[2]==="0"?false:true;
-        temp=get(0x24);
-        temp2=get(0x25);
-        thisMii.eyebrows.type=eyebrowTable[""+parseInt(temp.slice(0,5),2)];//0-23, Needs lookup table
-        thisMii.eyebrows.rotation=parseInt(temp.slice(6,8)+temp2.slice(0,2),2);//0-11, default varies based on eyebrow type
-        temp=get(0x26);
-        temp2=get(0x27);
-        thisMii.eyebrows.col=hairCols[parseInt(temp.slice(0,3),2)];
-        thisMii.eyebrows.size=parseInt(temp.slice(3,7),2);//0-8, default 4
-        thisMii.eyebrows.yPos=(parseInt(temp[7]+temp2.slice(0,4),2))-3;//0-15, default 10
-        thisMii.eyebrows.distApart=parseInt(temp2.slice(4,8),2);//0-12, default 2
-        thisMii.eyes.type=eyeTable[parseInt(get(0x28).slice(0,6),2)];//0-47, needs lookup table
-        temp=get(0x29);
-        thisMii.eyes.rotation=parseInt(temp.slice(0,3),2);//0-7, default varies based on eye type
-        thisMii.eyes.yPos=parseInt(temp.slice(3,8),2);//0-18, default 12, top to bottom
-        temp=get(0x2A);
-        thisMii.eyes.col=eyeCols[parseInt(temp.slice(0,3),2)];//0-5
-        thisMii.eyes.size=parseInt(temp.slice(4,7),2);//0-7, default 4
-        temp2=get(0x2B);
-        thisMii.eyes.distApart=parseInt(temp[7]+temp2.slice(0,3),2);//0-12, default 2
-        temp=get(0x30);
-        thisMii.glasses.type=parseInt(temp.slice(0,4),2);//0-8
-        thisMii.glasses.col=wiiGlassesCols[parseInt(temp.slice(4,7),2)];//0-5
-        temp=get(0x31);
-        thisMii.glasses.size=parseInt(temp.slice(0,3),2);//0-7, default 4
-        thisMii.glasses.yPos=parseInt(temp.slice(3,8),2);//0-20, default 10
-        temp=get(0x32);
-        temp2=get(0x33);
-        thisMii.facialHair.mustacheType=parseInt(temp.slice(0,2),2);//0-3
-        thisMii.facialHair.beardType=parseInt(temp.slice(2,4),2);//0-3
-        thisMii.facialHair.col=hairCols[parseInt(temp.slice(4,7),2)];//0-7
-        thisMii.facialHair.mustacheSize=parseInt(temp[7]+temp2.slice(0,3),2);//0-30, default 20
-        thisMii.facialHair.mustacheYPos=parseInt(temp2.slice(3,8),2);//0-16, default 2
-        thisMii.console="wii";
         return thisMii;
     },
     read3DSQR:async function(binOrPath){
-        function readMii(data){
-            var miiJson={
-                info:{},
-                perms:{},
-                hair:{},
-                face:{},
-                eyes:{},
-                eyebrows:{},
-                nose:{},
-                mouth:{},
-                facialHair:{},
-                glasses:{},
-                mole:{}
-            };
-            const get = address => getBinaryFromAddress(address, data);
-            var temp=get(0x18);
-            var temp2=get(0x19);
-            miiJson.info.birthday=parseInt(temp2.slice(6,8)+temp.slice(0,3),2);
-            miiJson.info.birthMonth=parseInt(temp.slice(3,7),2);
-            var name="";
-            for(var i=0x1A;i<0x2E;i+=2){
-                if(get(i)==="00000000"){
-                    break;
-                }
-                name+=data.slice(i,i+1);
-            }
-            miiJson.name=name.replaceAll("\x00","");
-            var cname="";
-            for(var i=0x48;i<0x5C;i+=2){
-                if(get(i)==="00000000"){
-                    break;
-                }
-                cname+=data.slice(i,i+1);
-            }
-            miiJson.creatorName=cname.replaceAll("\x00","");
-            miiJson.info.name=miiJson.name;
-            miiJson.info.creatorName=miiJson.creatorName;
-            miiJson.info.height=parseInt(get(0x2E),2);
-            miiJson.info.weight=parseInt(get(0x2F),2);
-            miiJson.info.gender=temp[7]==="1"?"Female":"Male";
-            temp=get(0x30);
-            miiJson.perms.sharing=temp[7]==="1"?false:true;
-            miiJson.info.favColor=favCols[parseInt(temp2.slice(2,6),2)];
-            miiJson.perms.copying=get(0x01)[7]==="1"?true:false;
-            miiJson.hair.style=lookupTable("hairs",parseInt(get(0x32),2),true);
-            miiJson.face.shape=lookupTable("faces",parseInt(temp.slice(3,7),2),false);
-            miiJson.face.col=skinCols[parseInt(temp.slice(0,3),2)];
-            temp=get(0x31);
-            miiJson.face.feature=faceFeatures3DS[parseInt(temp.slice(4,8),2)];
-            miiJson.face.makeup=makeups3DS[parseInt(temp.slice(0,4),2)];
-            temp=get(0x34);
-            miiJson.eyes.type=lookupTable("eyes",parseInt(temp.slice(2,8),2),true);
-            temp2=get(0x33);
-            miiJson.hair.col=hairCols[parseInt(temp2.slice(5,8),2)];
-            miiJson.hair.flipped=temp2[4]==="0"?false:true;
-            miiJson.eyes.col=eyeCols[parseInt(get(0x35)[7]+temp.slice(0,2),2)];
-            temp=get(0x35);
-            miiJson.eyes.size=parseInt(temp.slice(3,7),2);
-            miiJson.eyes.squash=parseInt(temp.slice(0,3),2);
-            temp=get(0x36);
-            temp2=get(0x37);
-            miiJson.eyes.rot=parseInt(temp.slice(3,8),2);
-            miiJson.eyes.distApart=parseInt(temp2[7]+temp.slice(0,3),2);
-            miiJson.eyes.yPos=parseInt(temp2.slice(2,7),2);
-            temp=get(0x38);
-            miiJson.eyebrows.style=lookupTable("eyebrows",parseInt(temp.slice(3,8),2),true);
-            miiJson.eyebrows.col=hairCols[parseInt(temp.slice(0,3),2)];
-            temp=get(0x39);
-            miiJson.eyebrows.size=parseInt(temp.slice(4,8),2);
-            miiJson.eyebrows.squash=parseInt(temp.slice(1,4),2);
-            temp=get(0x3A);
-            miiJson.eyebrows.rot=parseInt(temp.slice(4,8),2);
-            temp2=get(0x3B);
-            miiJson.eyebrows.distApart=parseInt(temp2[7]+temp.slice(0,3),2);
-            miiJson.eyebrows.yPos=parseInt(temp2.slice(2,7),2)-3;
-            temp=get(0x3C);
-            miiJson.nose.type=lookupTable("noses",parseInt(temp.slice(3,8),2),true);
-            temp2=get(0x3D);
-            miiJson.nose.size=parseInt(temp2[7]+temp.slice(0,3),2);
-            miiJson.nose.yPos=parseInt(temp2.slice(2,7),2);
-            temp=get(0x3E);
-            miiJson.mouth.type=lookupTable("mouths",parseInt(temp.slice(2,8),2),true);
-            temp2=get(0x3F);
-            miiJson.mouth.col=mouthCols3DS[parseInt(temp2[7]+temp.slice(0,2),2)];
-            miiJson.mouth.size=parseInt(temp2.slice(3,7),2);
-            miiJson.mouth.squash=parseInt(temp2.slice(0,3),2);
-            temp=get(0x40);
-            miiJson.mouth.yPos=parseInt(temp.slice(3,8),2);
-            miiJson.facialHair.mustacheType=parseInt(temp.slice(0,3),2);
-            temp=get(0x42);
-            miiJson.facialHair.beardType=parseInt(temp.slice(5,8),2);
-            miiJson.facialHair.col=hairCols[parseInt(temp.slice(2,5),2)];
-            temp2=get(0x43);
-            miiJson.facialHair.mustacheSize=parseInt(temp2.slice(6,8)+temp.slice(0,2),2);
-            miiJson.facialHair.mustacheYPos=parseInt(temp2.slice(1,6),2);
-            temp=get(0x44);
-            miiJson.glasses.type=parseInt(temp.slice(4,8),2);
-            miiJson.glasses.col=glassesCols3DS[parseInt(temp.slice(1,4),2)];
-            temp2=get(0x45);
-            miiJson.glasses.size=parseInt(temp2.slice(5,8)+temp[0],2);
-            miiJson.glasses.yPos=parseInt(temp2.slice(0,5),2);
-            temp=get(0x46);
-            miiJson.mole.on=temp[7]==="0"?false:true;
-            miiJson.mole.size=parseInt(temp.slice(3,7),2);
-            temp2=get(0x47);
-            miiJson.mole.xPos=parseInt(temp2.slice(6,8)+temp.slice(0,3),2);
-            miiJson.mole.yPos=parseInt(temp2.slice(1,6),2);
-            miiJson.console="3ds";
-            return miiJson;
-        }
         let qrCode;
         if(/[^01]/ig.test(binOrPath)){
-            var data=fs.readFileSync(binOrPath);
+            var data=await fs.promises.readFile(binOrPath);
             var img=await loadImage(data);
             const canvas = createCanvas(img.width, img.height);
             const ctx = canvas.getContext('2d');
@@ -1400,7 +1496,7 @@ var exports={
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             qrCode = jsQR(imageData.data, imageData.width, imageData.height).binaryData;
         }
-        else{
+        else {
             var d=binOrPath.match(/(0|1){1,8}/g);
             qrCode=[];
             d.forEach(byte=>{
@@ -1408,244 +1504,28 @@ var exports={
             });
         }
         if (qrCode) {
-            var data = decodeAesCcm(new Uint8Array(qrCode));
-            return Promise.resolve(readMii(Buffer.from(data)));
+            var data = Buffer.from(decodeAesCcm(new Uint8Array(qrCode)));
+
+            const miiJson = parseFromSchema(data, THREEDS_MII_SCHEMA, lookupTables);
+            miiJson.console = '3ds';
+            return miiJson;
         } else {
             console.error('Failed to decode QR code');
         }
     },
-    writeWiiBin:function(jsonIn, outPath){
+    writeWiiBin:async function(jsonIn, outPath){
         if(jsonIn.console?.toLowerCase() !== "wii"){
             this.convertMii(jsonIn);
         }
-        var mii=jsonIn;
-        var miiBin="0";
-        miiBin+=mii.info.gender==="Male"?"0":"1";
-        miiBin+=mii.info.birthMonth.toString(2).padStart(4,"0");
-        miiBin+=mii.info.birthday.toString(2).padStart(5,"0");
-        miiBin+=favCols.indexOf(mii.info.favColor).toString(2).padStart(4,"0");
-        miiBin+=mii.info.favorited?1:0;
-        for(var i=0;i<10;i++){
-            miiBin+="00000000";
-            if(i<mii.name.length){
-                miiBin+=mii.name.charCodeAt(i).toString(2).padStart(8,"0");
-            }
-            else{
-                miiBin+="00000000";
-            }
-        }
-        miiBin+=mii.info.height.toString(2).padStart(8,"0");
-        miiBin+=mii.info.weight.toString(2).padStart(8,"0");
-        let miiId="";
-        switch(mii.info.type){
-            case "Special":
-                miiId="01000110";
-            break;
-            case "Foreign":
-                miiId="11000110";
-            break;
-            default:
-                miiId="10001001";
-            break;
-        }
-        for(var i=0;i<3;i++){
-            miiId+=Math.floor(Math.random()*255).toString(2).padStart(8,"0");
-        }
-        miiBin+=miiId;
-        miiBin+="11111111".repeat(4);//System ID
-        miiBin+=mii.face.shape.toString(2).padStart(3,"0");
-        miiBin+=skinCols.indexOf(mii.face.col).toString(2).padStart(3,"0");
-        miiBin+=wiiFaceFeatures.indexOf(mii.face.feature).toString(2).padStart(4,"0");
-        miiBin+="000";
-        if(mii.info.mingle&&mii.info.type==="Special"){
-            mii.info.mingle=false;
-            console.error("A Special Mii cannot have Mingle on and still render on the Wii. Turned Mingle off in the output file.");
-        }
-        miiBin+=mii.info.mingle?"0":"1";
-        miiBin+="0";
-        miiBin+=mii.info.downloadedFromCheckMiiOut?"1":"0";
-        miiBin+=(+getKeyByValue(hairTable,mii.hair.type)).toString(2).padStart(7,"0");
-        miiBin+=hairCols.indexOf(mii.hair.col).toString(2).padStart(3,"0");
-        miiBin+=mii.hair.flipped?"1":"0";
-        miiBin+="00000";
-        miiBin+=(+getKeyByValue(eyebrowTable,mii.eyebrows.type)).toString(2).padStart(5,"0");
-        miiBin+="0";
-        miiBin+=mii.eyebrows.rotation.toString(2).padStart(4,"0");
-        miiBin+="000000";
-        miiBin+=hairCols.indexOf(mii.eyebrows.col).toString(2).padStart(3,"0");
-        miiBin+=mii.eyebrows.size.toString(2).padStart(4,"0");
-        miiBin+=(mii.eyebrows.yPos+3).toString(2).padStart(5,"0");
-        miiBin+=mii.eyebrows.distApart.toString(2).padStart(4,"0");
-        miiBin+=(+getKeyByValue(eyeTable,mii.eyes.type)).toString(2).padStart(6,"0");
-        miiBin+="00";
-        miiBin+=mii.eyes.rotation.toString(2).padStart(3,"0");
-        miiBin+=mii.eyes.yPos.toString(2).padStart(5,"0");
-        miiBin+=eyeCols.indexOf(mii.eyes.col).toString(2).padStart(3,"0");
-        miiBin+="0";
-        miiBin+=mii.eyes.size.toString(2).padStart(3,"0");
-        miiBin+=mii.eyes.distApart.toString(2).padStart(4,"0");
-        miiBin+="00000";
-        miiBin+=wiiNoses[mii.nose.type].toString(2).padStart(4,"0");
-        miiBin+=mii.nose.size.toString(2).padStart(4,"0");
-        miiBin+=mii.nose.yPos.toString(2).padStart(5,"0");
-        miiBin+="000";
-        miiBin+=(+getKeyByValue(mouthTable,mii.mouth.type)).toString(2).padStart(5,"0");
-        miiBin+=wiiMouthColors.indexOf(mii.mouth.col).toString(2).padStart(2,"0");
-        miiBin+=mii.mouth.size.toString(2).padStart(4,"0");
-        miiBin+=mii.mouth.yPos.toString(2).padStart(5,"0");
-        miiBin+=mii.glasses.type.toString(2).padStart(4,"0");
-        miiBin+=wiiGlassesCols.indexOf(mii.glasses.col).toString(2).padStart(3,"0");
-        miiBin+="0";
-        miiBin+=mii.glasses.size.toString(2).padStart(3,"0");
-        miiBin+=mii.glasses.yPos.toString(2).padStart(5,"0");
-        miiBin+=mii.facialHair.mustacheType.toString(2).padStart(2,"0");
-        miiBin+=mii.facialHair.beardType.toString(2).padStart(2,"0");
-        miiBin+=hairCols.indexOf(mii.facialHair.col).toString(2).padStart(3,"0");
-        miiBin+=mii.facialHair.mustacheSize.toString(2).padStart(4,"0");
-        miiBin+=mii.facialHair.mustacheYPos.toString(2).padStart(5,"0");
-        miiBin+=mii.mole.on?"1":"0";
-        miiBin+=mii.mole.size.toString(2).padStart(4,"0");
-        miiBin+=mii.mole.yPos.toString(2).padStart(5,"0");
-        miiBin+=mii.mole.xPos.toString(2).padStart(5,"0");
-        miiBin+="0";
-        for(var i=0;i<10;i++){
-            miiBin+="00000000";
-            if(i<mii.creatorName.length){
-                miiBin+=mii.creatorName.charCodeAt(i).toString(2).padStart(8,"0");
-            }
-            else{
-                miiBin+="00000000";
-            }
-        }
-        
-        //Writing based on miiBin
-        var toWrite=miiBin.match(/.{1,8}/g);
-        var buffers=[];
-        for(var i=0;i<toWrite.length;i++){
-            buffers.push(parseInt(toWrite[i],2));
-        }
-        fs.writeFileSync(outPath, Buffer.from(buffers));
+        const miiBuffer = jsonToMiiBuffer(jsonIn, WII_MII_SCHEMA, lookupTables, 74);
+        await fs.promises.writeFile(outPath, miiBuffer);
     },
-    write3DSQR:async function(jsonIn,outPath,fflRes=_fflRes){
-        if(!["3ds","wii u"].includes(jsonIn.console?.toLowerCase())){
-            jsonIn=this.convertMii(jsonIn);
+    write3DSQR:async function(miiJson,outPath,fflRes=_fflRes){
+        if(!["3ds","wii u"].includes(miiJson.console?.toLowerCase())){
+            miiJson=this.convertMii(miiJson);
         }
         return new Promise(async (resolve, reject) => {
-            var mii=jsonIn;
-            function makeMiiBinary(mii){
-                if(mii.perms.sharing&&mii.info.type==="Special"){
-                    mii.perms.sharing=false;
-                    console.log("Cannot have Sharing enabled for Special Miis. Disabled Sharing.");
-                }
-                var miiBin="00000011";
-                miiBin+="0000000";
-                miiBin+=mii.perms.copying?"1":"0";
-                miiBin+="00000000";
-                miiBin+="00110000";
-                miiBin+="1000101011010010000001101000011100011000110001100100011001100110010101100111111110111100000001110101110001000101011101100000001110100100010000000000000000000000".slice(0,8*8);
-                miiBin+=mii.info.type==="Special"?"0":"1";
-                miiBin+="0000000";
-                for(var i=0;i<3;i++){
-                    miiBin+=Math.floor(Math.random()*255).toString(2).padStart(8,"0");
-                }
-                miiBin+="0000000001000101011101100000001110100100010000000000000000000000";
-                miiBin+=mii.info.birthday.toString(2).padStart(5,"0").slice(2,5);
-                miiBin+=mii.info.birthMonth.toString(2).padStart(4,"0");
-                miiBin+=mii.info.gender==="Male"?"0":"1";
-                miiBin+="00";
-                miiBin+=favCols.indexOf(mii.info.favColor).toString(2).padStart(4,"0");
-                miiBin+=mii.info.birthday.toString(2).padStart(5,"0").slice(0,2);
-                for(var i=0;i<10;i++){
-                    if(i<mii.name.length){
-                        miiBin+=mii.name.charCodeAt(i).toString(2).padStart(8,"0");
-                    }
-                    else{
-                        miiBin+="00000000";
-                    }
-                    miiBin+="00000000";
-                }
-                miiBin+=mii.info.height.toString(2).padStart(8,"0");
-                miiBin+=mii.info.weight.toString(2).padStart(8,"0");
-                miiBin+=skinCols.indexOf(mii.face.col).toString(2).padStart(3,"0");
-                miiBin+=tables.faces[mii.face.shape].toString(2).padStart(4,"0");
-                miiBin+=mii.perms.sharing?"0":"1";
-                miiBin+=makeups3DS.indexOf(mii.face.makeup).toString(2).padStart(4,"0");
-                miiBin+=faceFeatures3DS.indexOf(mii.face.feature).toString(2).padStart(4,"0");
-                miiBin+=tables.hairs[mii.hair.style[0]][mii.hair.style[1]].toString(2).padStart(8,"0");
-                miiBin+="0000";
-                miiBin+=mii.hair.flipped?"1":"0";
-                miiBin+=hairCols.indexOf(mii.hair.col).toString(2).padStart(3,"0");
-                miiBin+=eyeCols.indexOf(mii.eyes.col).toString(2).padStart(3,"0").slice(1,3);
-                miiBin+=tables.eyes[mii.eyes.type[0]][mii.eyes.type[1]].toString(2).padStart(6,"0");
-                miiBin+=mii.eyes.squash.toString(2).padStart(3,"0");
-                miiBin+=mii.eyes.size.toString(2).padStart(4,"0");
-                miiBin+=eyeCols.indexOf(mii.eyes.col).toString(2).padStart(3,"0")[0];
-                miiBin+=mii.eyes.distApart.toString(2).padStart(4,"0").slice(1,4);
-                miiBin+=mii.eyes.rot.toString(2).padStart(5,"0");
-                miiBin+="00";
-                miiBin+=mii.eyes.yPos.toString(2).padStart(5,"0");
-                miiBin+=mii.eyes.distApart.toString(2).padStart(4,"0")[0];
-                miiBin+=hairCols.indexOf(mii.eyebrows.col).toString(2).padStart(3,"0");
-                miiBin+=tables.eyebrows[mii.eyebrows.style[0]][mii.eyebrows.style[1]].toString(2).padStart(5,"0");
-                miiBin+="0";
-                miiBin+=mii.eyebrows.squash.toString(2).padStart(3,"0");
-                miiBin+=mii.eyebrows.size.toString(2).padStart(4,"0");
-                miiBin+=mii.eyebrows.distApart.toString(2).padStart(4,"0").slice(1,4);
-                miiBin+="0";
-                miiBin+=mii.eyebrows.rot.toString(2).padStart(4,"0");
-                miiBin+="00";
-                miiBin+=(mii.eyebrows.yPos+3).toString(2).padStart(5,"0");
-                miiBin+=mii.eyebrows.distApart.toString(2).padStart(4,"0")[0];
-                miiBin+=mii.nose.size.toString(2).padStart(4,"0").slice(1,4);
-                miiBin+=tables.noses[mii.nose.type[0]][mii.nose.type[1]].toString(2).padStart(5,"0");
-                miiBin+="00";
-                miiBin+=mii.nose.yPos.toString(2).padStart(5,"0");
-                miiBin+=mii.nose.size.toString(2).padStart(4,"0")[0];
-                miiBin+=mouthCols3DS.indexOf(mii.mouth.col).toString(2).padStart(3,"0").slice(1,3);
-                miiBin+=tables.mouths[mii.mouth.type[0]][mii.mouth.type[1]].toString(2).padStart(6,"0");
-                miiBin+=mii.mouth.squash.toString(2).padStart(3,"0");
-                miiBin+=mii.mouth.size.toString(2).padStart(4,"0");
-                miiBin+=mouthCols3DS.indexOf(mii.mouth.col).toString(2).padStart(3,"0")[0];
-                miiBin+=mii.facialHair.mustacheType.toString(2).padStart(3,"0");
-                miiBin+=mii.mouth.yPos.toString(2).padStart(5,"0");
-                miiBin+="00000000";
-                miiBin+=mii.facialHair.mustacheSize.toString(2).padStart(4,"0").slice(2,4);
-                miiBin+=hairCols.indexOf(mii.facialHair.col).toString(2).padStart(3,"0");
-                miiBin+=mii.facialHair.beardType.toString(2).padStart(3,"0");
-                miiBin+="0";
-                miiBin+=mii.facialHair.mustacheYPos.toString(2).padStart(5,"0");
-                miiBin+=mii.facialHair.mustacheSize.toString(2).padStart(4,"0").slice(0,2);
-                miiBin+=mii.glasses.size.toString(2).padStart(4,"0")[3];
-                miiBin+=glassesCols3DS.indexOf(mii.glasses.col).toString(2).padStart(3,"0");
-                miiBin+=mii.glasses.type.toString(2).padStart(4,"0");
-                miiBin+="0";
-                miiBin+=mii.glasses.yPos.toString(2).padStart(4,"0");
-                miiBin+=mii.glasses.size.toString(2).padStart(4,"0").slice(0,3);
-                miiBin+=mii.mole.xPos.toString(2).padStart(5,"0").slice(2,5);
-                miiBin+=mii.mole.size.toString(2).padStart(4,"0");
-                miiBin+=mii.mole.on?"1":"0";
-                miiBin+="0";
-                miiBin+=mii.mole.yPos.toString(2).padStart(5,"0");
-                miiBin+=mii.mole.xPos.toString(2).padStart(5,"0").slice(0,2);
-                for(var i=0;i<10;i++){
-                    if(i<mii.creatorName.length){
-                        miiBin+=mii.creatorName.charCodeAt(i).toString(2).padStart(8,"0");
-                    }
-                    else{
-                        miiBin+="00000000";
-                    }
-                    miiBin+="00000000";
-                }
-                //Writing based on miiBin
-                var toWrite=miiBin.match(/.{1,8}/g);
-                var buffers=[];
-                for(var i=0;i<toWrite.length;i++){
-                    buffers.push(parseInt(toWrite[i],2));
-                }
-                const buffer = Buffer.from(buffers);
-                return buffer;
-            }
-            const miiBinary = makeMiiBinary(mii);
+            const miiBinary = jsonToMiiBuffer(miiJson, THREEDS_MII_SCHEMA, lookupTables, 74);
             var encryptedData = Buffer.from(encodeAesCcm(new Uint8Array(miiBinary)));
 
             const options = {
@@ -1673,54 +1553,54 @@ var exports={
             const qrBuffer = Buffer.from( await qrCodeImage.getRawData("png") )
 
             var studioMii=new Uint8Array([0x08, 0x00, 0x40, 0x03, 0x08, 0x04, 0x04, 0x02, 0x02, 0x0c, 0x03, 0x01, 0x06, 0x04, 0x06, 0x02, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x04, 0x00, 0x0a, 0x01, 0x00, 0x21, 0x40, 0x04, 0x00, 0x02, 0x14, 0x03, 0x13, 0x04, 0x17, 0x0d, 0x04, 0x00, 0x0a, 0x04, 0x01, 0x09]);
-            studioMii[0x16] = mii.info.gender==="Male"?0:1;
-            studioMii[0x15] = favCols.indexOf(mii.info.favColor);
-            studioMii[0x1E] = mii.info.height;
-            studioMii[2] = mii.info.weight;
-            studioMii[0x13] = tables.faces[mii.face.shape];
-            studioMii[0x11] = skinCols.indexOf(mii.face.col);
-            studioMii[0x14] = faceFeatures3DS.indexOf(mii.face.feature);
-            studioMii[0x12] = makeups3DS.indexOf(mii.face.makeup);
-            studioMii[0x1D] = tables.hairs[mii.hair.style[0]][mii.hair.style[1]];
-            studioMii[0x1B] = hairCols.indexOf(mii.hair.col);
+            studioMii[0x16] = miiJson.info.gender==="Male"?0:1;
+            studioMii[0x15] = lookupTables.favCols.indexOf(miiJson.info.favColor);
+            studioMii[0x1E] = miiJson.info.height;
+            studioMii[2] = miiJson.info.weight;
+            studioMii[0x13] = tables.faces[miiJson.face.shape];
+            studioMii[0x11] = lookupTables.skinCols.indexOf(miiJson.face.col);
+            studioMii[0x14] = lookupTables.faceFeatures3DS.indexOf(miiJson.face.feature);
+            studioMii[0x12] = lookupTables.makeups3DS.indexOf(miiJson.face.makeup);
+            studioMii[0x1D] = tables.hairs[miiJson.hair.style[0]][miiJson.hair.style[1]];
+            studioMii[0x1B] = lookupTables.hairCols.indexOf(miiJson.hair.col);
             if (!studioMii[0x1B]) studioMii[0x1B] = 8;
-            studioMii[0x1C] = mii.hair.flipped?1:0;
-            studioMii[7] = tables.eyes[mii.eyes.type[0]][mii.eyes.type[1]];
-            studioMii[4] = eyeCols.indexOf(mii.eyes.col) + 8;
-            studioMii[6] = mii.eyes.size;
-            studioMii[3] = mii.eyes.squash;
-            studioMii[5] = mii.eyes.rot;
-            studioMii[8] = mii.eyes.distApart;
-            studioMii[9] = mii.eyes.yPos;
-            studioMii[0xE] = tables.eyebrows[mii.eyebrows.style[0]][mii.eyebrows.style[1]];
-            studioMii[0xB] = hairCols.indexOf(mii.eyebrows.col);
+            studioMii[0x1C] = miiJson.hair.flipped?1:0;
+            studioMii[7] = tables.eyes[miiJson.eyes.type[0]][miiJson.eyes.type[1]];
+            studioMii[4] = lookupTables.eyeCols.indexOf(miiJson.eyes.col) + 8;
+            studioMii[6] = miiJson.eyes.size;
+            studioMii[3] = miiJson.eyes.squash;
+            studioMii[5] = miiJson.eyes.rot;
+            studioMii[8] = miiJson.eyes.distApart;
+            studioMii[9] = miiJson.eyes.yPos;
+            studioMii[0xE] = tables.eyebrows[miiJson.eyebrows.style[0]][miiJson.eyebrows.style[1]];
+            studioMii[0xB] = lookupTables.hairCols.indexOf(miiJson.eyebrows.col);
             if (!studioMii[0xB]) studioMii[0xB] = 8;
-            studioMii[0xD] = mii.eyebrows.size;
-            studioMii[0xA] = mii.eyebrows.squash;
-            studioMii[0xC] = mii.eyebrows.rot;
-            studioMii[0xF] = mii.eyebrows.distApart;
-            studioMii[0x10] = mii.eyebrows.yPos+3;
-            studioMii[0x2C] = tables.noses[mii.nose.type[0]][mii.nose.type[1]];
-            studioMii[0x2B] = mii.nose.size;
-            studioMii[0x2D] = mii.nose.yPos;
-            studioMii[0x26] = tables.mouths[mii.mouth.type[0]][mii.mouth.type[1]];
-            studioMii[0x24] = mouthCols3DS.indexOf(mii.mouth.col);
+            studioMii[0xD] = miiJson.eyebrows.size;
+            studioMii[0xA] = miiJson.eyebrows.squash;
+            studioMii[0xC] = miiJson.eyebrows.rot;
+            studioMii[0xF] = miiJson.eyebrows.distApart;
+            studioMii[0x10] = miiJson.eyebrows.yPos+3;
+            studioMii[0x2C] = tables.noses[miiJson.nose.type[0]][miiJson.nose.type[1]];
+            studioMii[0x2B] = miiJson.nose.size;
+            studioMii[0x2D] = miiJson.nose.yPos;
+            studioMii[0x26] = tables.mouths[miiJson.mouth.type[0]][miiJson.mouth.type[1]];
+            studioMii[0x24] = lookupTables.mouthCols3DS.indexOf(miiJson.mouth.col);
             if (studioMii[0x24] < 4) {
                 studioMii[0x24] += 19;
             } else {
                 studioMii[0x24] = 0;
             }
-            studioMii[0x25] = mii.mouth.size;
-            studioMii[0x23] = mii.mouth.squash;
-            studioMii[0x27] = mii.mouth.yPos;
-            studioMii[0x29] = mii.facialHair.mustacheType;
-            studioMii[1] = mii.facialHair.beardType;
-            studioMii[0] = hairCols.indexOf(mii.facialHair.col);
+            studioMii[0x25] = miiJson.mouth.size;
+            studioMii[0x23] = miiJson.mouth.squash;
+            studioMii[0x27] = miiJson.mouth.yPos;
+            studioMii[0x29] = miiJson.facialHair.mustacheType;
+            studioMii[1] = miiJson.facialHair.beardType;
+            studioMii[0] = lookupTables.hairCols.indexOf(miiJson.facialHair.col);
             if (!studioMii[0]) studioMii[0] = 8;
-            studioMii[0x28] = mii.facialHair.mustacheSize;
-            studioMii[0x2A] = mii.facialHair.mustacheYPos;
-            studioMii[0x19] = mii.glasses.type;
-            studioMii[0x17] = mii.glasses.col;
+            studioMii[0x28] = miiJson.facialHair.mustacheSize;
+            studioMii[0x2A] = miiJson.facialHair.mustacheYPos;
+            studioMii[0x19] = miiJson.glasses.type;
+            studioMii[0x17] = miiJson.glasses.col;
             if (!studioMii[0x17]) {
                 studioMii[0x17] = 8;
             } else if (studioMii[0x17] < 6) {
@@ -1728,19 +1608,19 @@ var exports={
             } else {
                 studioMii[0x17] = 0;
             }
-            studioMii[0x18] = mii.glasses.size;
-            studioMii[0x1A] = mii.glasses.yPos;
-            studioMii[0x20] = mii.mole.on?1:0;
-            studioMii[0x1F] = mii.mole.size;
-            studioMii[0x21] = mii.mole.xPos;
-            studioMii[0x22] = mii.mole.yPos;
+            studioMii[0x18] = miiJson.glasses.size;
+            studioMii[0x1A] = miiJson.glasses.yPos;
+            studioMii[0x20] = miiJson.mole.on?1:0;
+            studioMii[0x1F] = miiJson.mole.size;
+            studioMii[0x21] = miiJson.mole.xPos;
+            studioMii[0x22] = miiJson.mole.yPos;
             let miiPNGBuf = null;
             let renderedWithStudio = fflRes===null || fflRes===undefined; 
             if(renderedWithStudio){
-                miiPNGBuf = await this.render3DSMiiWithStudio(jsonIn);
+                miiPNGBuf = await this.render3DSMiiWithStudio(miiJson);
             }
             else{
-                miiPNGBuf = await this.render3DSMii(jsonIn,fflRes);
+                miiPNGBuf = await this.render3DSMii(miiJson,fflRes);
             }
             const main_img = await Jimp.read(qrBuffer);
             main_img.resize(424, 424, Jimp.RESIZE_NEAREST_NEIGHBOR); // Don't anti-alias the QR code
@@ -1771,12 +1651,12 @@ var exports={
             const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK)
             
             main_img.print(font, 0, 55, {
-                text: mii.name,
+                text: miiJson.name,
                 alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
                 alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE
             }, 424, 395);
             
-            if(mii.info.type==="Special"){
+            if(miiJson.info.type==="Special"){
                 const crown_img = await Jimp.read(path.join(__dirname, 'crown.jpg'));
                 crown_img.resize(40,20);
                 main_img.blit(crown_img,225,160);
@@ -1847,8 +1727,8 @@ var exports={
             miiTo.face.shape=convTables.face3DSToWii[mii.face.shape];
             miiTo.face.col=mii.face.col;
             //We prioritize Facial Features here because the Wii supports more of those than they do Makeup types, and is more likely to apply. The 3DS has two separate fields, so you can have makeup and wrinkles applied at the same time. The Wii only has one that covers both.
-            if(typeof(convTables.features3DSToWii[faceFeatures3DS.indexOf(mii.face.feature)])==='string'){
-                miiTo.face.feature=wiiFaceFeatures[convTables.makeup3DSToWii[makeups3DS.indexOf(mii.face.makeup)]];
+            if(typeof(convTables.features3DSToWii[lookupTables.faceFeatures3DS.indexOf(mii.face.feature)])==='string'){
+                miiTo.face.feature=wiiFaceFeatures[convTables.makeup3DSToWii[lookupTables.makeups3DS.indexOf(mii.face.makeup)]];
             }
             else{
                 miiTo.face.feature=wiiFaceFeatures[convTables.features3DSToWii[features3DS.indexOf(mii.face.feature)]];
@@ -1857,7 +1737,7 @@ var exports={
             miiTo.nose.size=mii.nose.size;
             miiTo.nose.yPos=mii.nose.yPos;
             miiTo.mouth.type=convTables.mouth3DSToWii[mii.mouth.type[0]][mii.mouth.type[1]];
-            miiTo.mouth.col=wiiMouthColors[mouthCols3DS.indexOf(mii.mouth.col)>2?0:mouthCols3DS.indexOf(mii.mouth.col)];
+            miiTo.mouth.col=wiiMouthColors[mouthCols3DS.indexOf(mii.mouth.col)>2?0:lookupTables.mouthCols3DS.indexOf(mii.mouth.col)];
             miiTo.mouth.size=mii.mouth.size;
             miiTo.mouth.yPos=mii.mouth.yPos;
             miiTo.mole=mii.mole;
@@ -1877,7 +1757,7 @@ var exports={
             miiTo.eyes.size=mii.eyes.size;
             miiTo.eyes.distApart=mii.eyes.distApart;
             miiTo.glasses=mii.glasses;
-            miiTo.glasses.col=wiiGlassesCols[glassesCols3DS.indexOf(mii.glasses.col)];
+            miiTo.glasses.col=lookupTables.wiiGlassesCols[glassesCols3DS.indexOf(mii.glasses.col)];
             miiTo.facialHair=mii.facialHair;
             if(miiTo.facialHair.mustacheType===4){
                 miiTo.facialHair.mustacheType=2;
@@ -1917,18 +1797,18 @@ var exports={
             miiTo.info.gender=mii.info.gender;
             miiTo.perms.sharing=mii.info.mingle;
             miiTo.perms.copying=mii.info.mingle;
-            miiTo.hair.col=hairCols[hairCols.indexOf(mii.hair.col)];
+            miiTo.hair.col=hairCols[lookupTables.hairCols.indexOf(mii.hair.col)];
             miiTo.hair.flipped=mii.hair.flipped;
             miiTo.hair.style=convTables.hairWiiTo3DS[+mii.hair.type[0]-1][0+(3*(+mii.hair.type[2]-1))+(+mii.hair.type[1]-1)];
             miiTo.face.shape=convTables.faceWiiTo3DS[mii.face.shape];
-            miiTo.face.col=skinCols[skinCols.indexOf(mii.face.col)];
+            miiTo.face.col=skinCols[lookupTables.skinCols.indexOf(mii.face.col)];
             miiTo.face.makeup="None";
             miiTo.face.feature="None";
             if(typeof(convTables.featureWiiTo3DS[wiiFaceFeatures.indexOf(mii.face.feature)])==='string'){
                 miiTo.face.makeup=makeups3DS[+convTables.featureWiiTo3DS[wiiFaceFeatures.indexOf(mii.face.feature)]];
             }
             else{
-                miiTo.face.feature=faceFeatures3DS[convTables.featureWiiTo3DS[wiiFaceFeatures.indexOf(mii.face.feature)]];
+                miiTo.face.feature=lookupTables.faceFeatures3DS[convTables.featureWiiTo3DS[wiiFaceFeatures.indexOf(mii.face.feature)]];
             }
             miiTo.eyes.col=eyeCols[eyeCols.indexOf(mii.eyes.col)];
             miiTo.eyes.type=[+mii.eyes.type[0]-1,(+mii.eyes.type[1]-1)+(3*(+mii.eyes.type[2]-1))];
@@ -1938,7 +1818,7 @@ var exports={
             miiTo.eyes.distApart=mii.eyes.distApart;
             miiTo.eyes.yPos=mii.eyes.yPos;
             miiTo.eyebrows.style=[+mii.eyebrows.type[0]-1,(+mii.eyebrows.type[1]-1)+(3*(+mii.eyebrows.type[2]-1))];
-            miiTo.eyebrows.col=hairCols[hairCols.indexOf(mii.eyebrows.col)];
+            miiTo.eyebrows.col=hairCols[lookupTables.hairCols.indexOf(mii.eyebrows.col)];
             miiTo.eyebrows.size=mii.eyebrows.size;
             miiTo.eyebrows.squash=3;
             miiTo.eyebrows.rot=mii.eyebrows.rotation;
@@ -1954,7 +1834,7 @@ var exports={
             miiTo.mouth.yPos=mii.mouth.yPos;
             miiTo.facialHair.mustacheType=mii.facialHair.mustacheType;
             miiTo.facialHair.beardType=mii.facialHair.beardType;
-            miiTo.facialHair.col=hairCols[hairCols.indexOf(mii.facialHair.col)];
+            miiTo.facialHair.col=hairCols[lookupTables.hairCols.indexOf(mii.facialHair.col)];
             miiTo.facialHair.mustacheSize=mii.facialHair.mustacheSize;
             miiTo.facialHair.mustacheYPos=mii.facialHair.mustacheYPos;
             miiTo.glasses.type=mii.glasses.type;
@@ -2018,10 +1898,10 @@ var exports={
             "creatorName":""
         };
         child.eyebrows.col=child.hair.col;
-        var c=[skinCols.indexOf(mom.face.col),skinCols.indexOf(dad.face.col)];
+        var c=[lookupTables.skinCols.indexOf(mom.face.col),lookupTables.skinCols.indexOf(dad.face.col)];
         if(c[0]>c[1]){
             c[1]=c[0];
-            c[0]=skinCols.indexOf(dad.face.col);
+            c[0]=lookupTables.skinCols.indexOf(dad.face.col);
         }
         child.face.col=skinCols[c[0]+Math.round((c[1]-c[0])/2)];
         child.name=child.info.name;
@@ -2033,16 +1913,16 @@ var exports={
         if(type.toLowerCase()==="wii"){
             var instrs={
                 "base":`Select "${mii.info.gender}", and then "Start from Scratch".`,
-                "col":`On the info page (first tab), set the Favorite Color to ${mii.info.favColor} (${favCols.indexOf(mii.info.favColor)<=5?favCols.indexOf(mii.info.favColor)+1:favCols.indexOf(mii.info.favColor)-5} from the left, ${favCols.indexOf(mii.info.favColor)>5?"bottom":"top"} row).`,
+                "col":`On the info page (first tab), set the Favorite Color to ${mii.info.favColor} ($lookupTables.favCols.indexOf(mii.info.favColor)<=5lookupTables.favCols.indexOf(mii.info.favColor)+1lookupTables.favCols.indexOf(mii.info.favColor)-5} from the left, $lookupTables.favCols.indexOf(mii.info.favColor)>5?"bottom":"top"} row).`,
                 "heightWeight":`On the build page (second tab), set the height to ${Math.round((100/128)*mii.info.height)}%, and the weight to ${Math.round((100/128)*mii.info.weight)}%.`,
                 "faceShape":`On the face page (third tab), set the shape to the one ${Math.floor(mii.face.shape/2)+1} from the top, in the ${mii.face.shape%2===0?"left":"right"} column.`,
-                "skinCol":`On the face page (third tab), set the color to the one ${skinCols.indexOf(mii.face.col)+skinCols.indexOf(mii.face.col)>2?-2:1} from the left, on the ${skinCols.indexOf(mii.face.col)>2?`bottom`:`top`} row.`,
+                "skinCol":`On the face page (third tab), set the color to the one ${lookupTables.skinCols.indexOf(mii.face.col)+lookupTables.skinCols.indexOf(mii.face.col)>2?-2:1} from the left, on the ${lookupTables.skinCols.indexOf(mii.face.col)>2?`bottom`:`top`} row.`,
                 "makeup":`On the face page's makeup tab, set the makeup to \"${mii.face.feature}\" (the one ${Math.ceil((wiiFaceFeatures.indexOf(mii.face.feature)+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][wiiFaceFeatures.indexOf(mii.face.feature)]} from the left).`,
                 "hairStyle":`On the hair page (fourth tab), set the hair style to the one ${mii.hair.type[1]} from the left, ${mii.hair.type[2]} from the top, on page ${mii.hair.type[0]}.`,
                 "hairFlipped":`${mii.hair.flipped?`On the hair page (fourth tab), press the button to flip the hair.`:``}`,
-                "hairColor":`On the hair page (fourth tab), set the hair color to the one ${hairCols.indexOf(mii.hair.col)+(hairCols.indexOf(mii.hair.col)>3?-3:1)} from the left, on the ${hairCols.indexOf(mii.hair.col)>3?`bottom`:`top`} row.`,
+                "hairColor":`On the hair page (fourth tab), set the hair color to the one ${lookupTables.hairCols.indexOf(mii.hair.col)+(lookupTables.hairCols.indexOf(mii.hair.col)>3?-3:1)} from the left, on the ${lookupTables.hairCols.indexOf(mii.hair.col)>3?`bottom`:`top`} row.`,
                 "eyebrowStyle":`On the eyebrow page (fifth tab), set the eyebrow style to the one ${mii.eyebrows.type[1]} from the left, ${mii.eyebrows.type[2]} from the top, on page ${mii.eyebrows.type[0]}.`,
-                "eyebrowColor":`On the eyebrow page (fifth tab), set the eyebrow color to the one ${hairCols.indexOf(mii.eyebrows.col)+(hairCols.indexOf(mii.eyebrows.col)>3?-3:1)} from the left, on the ${hairCols.indexOf(mii.eyebrows.col)>3?`bottom`:`top`} row.`,
+                "eyebrowColor":`On the eyebrow page (fifth tab), set the eyebrow color to the one ${lookupTables.hairCols.indexOf(mii.eyebrows.col)+(lookupTables.hairCols.indexOf(mii.eyebrows.col)>3?-3:1)} from the left, on the ${lookupTables.hairCols.indexOf(mii.eyebrows.col)>3?`bottom`:`top`} row.`,
                 "eyebrowY":`${mii.eyebrows.yPos!==7?`On the eyebrow page (fifth tab), `:``}${mii.eyebrows.yPos<7?`press the up button ${7-mii.eyebrows.yPos} times.`:mii.eyebrows.yPos>7?`press the down button ${mii.eyebrows.yPos-7} times.`:``}`,
                 "eyebrowSize":`${mii.eyebrows.size!==4?`On the eyebrow page (fifth tab), `:``}${mii.eyebrows.size<4?`press the shrink button ${4-mii.eyebrows.size} times.`:mii.eyebrows.size>4?`press the enlarge button ${mii.eyebrows.size-4} times.`:``}`,
                 "eyebrowRot":`${mii.eyebrows.rotation!==6?`On the eyebrow page (fifth tab), `:``}${mii.eyebrows.rotation<6?`press the rotate clockwise button ${6-mii.eyebrows.rotation} times.`:mii.eyebrows.rotation>6?`press the rotate counter-clockwise button ${mii.eyebrows.rotation-6} times.`:``}`,
@@ -2072,7 +1952,7 @@ var exports={
                 "moleY":`${mii.mole.yPos!==20?`On the mole page (within the ninth tab), press the `:``}${mii.mole.yPos>20?`down button ${mii.mole.yPos-20} times.`:mii.mole.yPos<20?`up button ${20-mii.mole.yPos} times.`:``}`,
                 "moleSize":`${mii.mole.size!==4?`On the mole page (within the ninth tab), `:``}${mii.mole.size<4?`press the shrink button ${4-mii.mole.size} times.`:mii.mole.size>4?`press the enlarge button ${mii.mole.size-4} times.`:``}`,
                 "beard":`On the beard page (within the ninth tab), set the beard to the one on the ${[0,1].includes(mii.facialHair.beardType)?`top`:`bottom`}-${[0,2].includes(mii.facialHair.beardType)?`left`:`right`}.`,
-                "beardCol":`On the mustache OR beard pages (within the ninth tab), set the color to the one ${hairCols.indexOf(mii.facialHair.col)+(hairCols.indexOf(mii.facialHair.col)>3?-3:1)} from the left, on the ${hairCols.indexOf(mii.facialHair.col)>3?`bottom`:`top`} row.`,
+                "beardCol":`On the mustache OR beard pages (within the ninth tab), set the color to the one ${lookupTables.hairCols.indexOf(mii.facialHair.col)+(lookupTables.hairCols.indexOf(mii.facialHair.col)>3?-3:1)} from the left, on the ${lookupTables.hairCols.indexOf(mii.facialHair.col)>3?`bottom`:`top`} row.`,
                 "other":`The Nickname of this Mii is ${mii.info.name}.${mii.info.creatorName?` The creator was ${mii.info.creatorName}.`:``} Mingle was turned ${mii.info.mingle?`on`:`off`}.${mii.info.birthday!==0?` Its birthday is ${["","January","February","March","April","May","June","July","August","September","October","November","December"][mii.info.birthMonth]} ${mii.info.birthday}.`:``}`
             };
             if(!full){
@@ -2089,14 +1969,14 @@ var exports={
             var instrs={
                 "base":`Select "Start from Scratch", and then "${mii.info.gender}".`,
                 "faceShape":`On the face page (first tab), set the face shape to the one ${Math.ceil((mii.face.shape+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][mii.face.shape]} from the left.`,
-                "skinCol":`On the face page (first tab), set the color to the one ${skinCols.indexOf(mii.face.col)+1} from the top.`,
-                "makeup":`On the face page's makeup tab, set the makeup to \"${mii.face.makeup}\" (the one ${Math.ceil((makeups3DS.indexOf(mii.face.makeup)+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][makeups3DS.indexOf(mii.face.makeup)]} from the left).`,
-                "feature":`On the face page's wrinkles tab, set the facial feature to \"${mii.face.feature}\" (the one ${Math.ceil((faceFeatures3DS.indexOf(mii.face.feature)+1)/3)+1} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][makeups3DS.indexOf(mii.face.makeup)]} from the left).`,
+                "skinCol":`On the face page (first tab), set the color to the one ${lookupTables.skinCols.indexOf(mii.face.col)+1} from the top.`,
+                "makeup":`On the face page's makeup tab, set the makeup to \"${mii.face.makeup}\" (the one ${Math.ceil((lookupTables.makeups3DS.indexOf(mii.face.makeup)+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][lookupTables.makeups3DS.indexOf(mii.face.makeup)]} from the left).`,
+                "feature":`On the face page's wrinkles tab, set the facial feature to \"${mii.face.feature}\" (the one ${Math.ceil((lookupTables.faceFeatures3DS.indexOf(mii.face.feature)+1)/3)+1} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][lookupTables.makeups3DS.indexOf(mii.face.makeup)]} from the left).`,
                 "hairStyle":`On the hair page (second tab), set the hair style to the one ${Math.ceil((mii.hair.style[1]+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][mii.hair.style[1]]} from the left, on page ${mii.hair.style[0]+1}.`,
                 "hairFlipped":`${mii.hair.flipped?`On the hair page (second tab), press the button to flip the hair.`:``}`,
-                "hairColor":`On the hair page (second tab), set the hair color to the one ${hairCols.indexOf(mii.hair.col)+1} from the top.`,
+                "hairColor":`On the hair page (second tab), set the hair color to the one ${lookupTables.hairCols.indexOf(mii.hair.col)+1} from the top.`,
                 "eyebrowStyle":`On the eyebrow page (third tab), set the eyebrow style to the one ${[1,2,3,1,2,3,1,2,3,1,2,3][mii.eyebrows.style[1]]} from the left, ${Math.ceil((mii.eyebrows.style[1]+1)/3)} from the top, on page ${mii.eyebrows.style[0]+1}.`,
-                "eyebrowColor":`On the eyebrow page (third tab), set the eyebrow color to the one ${hairCols.indexOf(mii.eyebrows.col)+1} from the top.`,
+                "eyebrowColor":`On the eyebrow page (third tab), set the eyebrow color to the one ${lookupTables.hairCols.indexOf(mii.eyebrows.col)+1} from the top.`,
                 "eyebrowY":`${mii.eyebrows.yPos!==7?`On the eyebrow page (third tab), `:``}${mii.eyebrows.yPos<7?`press the up button ${7-mii.eyebrows.yPos} times.`:mii.eyebrows.yPos>7?`press the down button ${mii.eyebrows.yPos-7} times.`:``}`,
                 "eyebrowSize":`${mii.eyebrows.size!==4?`On the eyebrow page (third tab), `:``}${mii.eyebrows.size<4?`press the shrink button ${4-mii.eyebrows.size} times.`:mii.eyebrows.size>4?`press the enlarge button ${mii.eyebrows.size-4} times.`:``}`,
                 "eyebrowRot":`${mii.eyebrows.rot!==6?`On the eyebrow page (third tab), `:``}${mii.eyebrows.rot<6?`press the rotate clockwise button ${6-mii.eyebrows.rot} times.`:mii.eyebrows.rot>6?`press the rotate counter-clockwise button ${mii.eyebrows.rot-6} times.`:``}`,
@@ -2113,12 +1993,12 @@ var exports={
                 "noseY":`${mii.nose.yPos!==9?`On the nose page (fifth tab), `:``}${mii.nose.yPos<9?`press the up button ${9-mii.nose.yPos} times.`:mii.nose.yPos>9?`press the down button ${mii.nose.yPos-9} times.`:``}`,
                 "noseSize":`${mii.nose.size!==4?`On the nose page (fifth tab), `:``}${mii.nose.size<4?`press the shrink button ${4-mii.nose.size} times.`:mii.nose.size>4?`press the enlarge button ${mii.nose.size-4} times.`:``}`,
                 "mouthType":`On the mouth page (sixth tab), set the mouth type to the one ${[1,2,3,1,2,3,1,2,3,1,2,3][mii.mouth.type[1]]} from the left, ${Math.ceil((mii.mouth.type[1]+1)/3)} from the top, on page ${mii.mouth.type[0]+1}.`,
-                "mouthCol":`On the mouth page (sixth tab), set the color to the one ${mouthCols3DS.indexOf(mii.mouth.col)+1} from the top.`,
+                "mouthCol":`On the mouth page (sixth tab), set the color to the one $lookupTables.mouthCols3DS.indexOf(mii.mouth.col)+1} from the top.`,
                 "mouthY":`${mii.mouth.yPos!==13?`On the mouth page (sixth tab), `:``}${mii.mouth.yPos<13?`press the up button ${13-mii.mouth.yPos} times.`:mii.mouth.yPos>13?`press the down button ${mii.mouth.yPos-13} times.`:``}`,
                 "mouthSize":`${mii.mouth.size!==4?`On the mouth page (sixth tab), `:``}${mii.mouth.size<4?`press the shrink button ${4-mii.mouth.size} times.`:mii.mouth.size>4?`press the enlarge button ${mii.mouth.size-4} times.`:``}`,
                 "mouthSquash":`${mii.mouth.squash!==3?`On the mouth page (sixth tab), `:``}${mii.mouth.squash<3?`press the squish button ${3-mii.mouth.squash} times.`:mii.mouth.squash>3?`press the un-squish button ${mii.mouth.squash-3} times.`:``}`,
                 "glasses":`On the glasses page (within the seventh tab), set the glasses to the one ${Math.ceil((mii.glasses.type+1)/3)} from the top, and ${[1,2,3,1,2,3,1,2,3,1,2,3][mii.glasses.type]} from the left.`,
-                "glassesCol":`On the glasses page (within the seventh tab), set the color to the one ${glassesCols3DS.indexOf(mii.glasses.col)+1} from the top.`,
+                "glassesCol":`On the glasses page (within the seventh tab), set the color to the one $lookupTables.glassesCols3DS.indexOf(mii.glasses.col)+1} from the top.`,
                 "glassesY":`${mii.glasses.yPos!==10?`On the glasses page (within the seventh tab), `:``}${mii.glasses.yPos<10?`press the up button ${10-mii.glasses.yPos} times.`:mii.glasses.yPos>10?`press the down button ${mii.glasses.yPos-10} times.`:``}`,
                 "glassesSize":`${mii.glasses.size!==4?`On the glasses page (within the seventh tab), `:``}${mii.glasses.size<4?`press the shrink button ${4-mii.glasses.size} times.`:mii.glasses.size>4?`press the enlarge button ${mii.glasses.size-4} times.`:``}`,
                 "stache":`On the mustache page (within the seventh tab), set the mustache to the one on the ${[0,1].includes(mii.facialHair.mustacheType)?`top`:[2,3].includes(mii.facialHair.mustacheType)?`middle`:`bottom`}-${[0,2,4].includes(mii.facialHair.mustacheType)?`left`:`right`}.`,
@@ -2129,9 +2009,9 @@ var exports={
                 "moleY":`${mii.mole.yPos!==20?`On the mole page (within the seventh tab), press the `:``}${mii.mole.yPos>20?`down button ${mii.mole.yPos-20} times.`:mii.mole.yPos<20?`up button ${20-mii.mole.yPos} times.`:``}`,
                 "moleSize":`${mii.mole.size!==4?`On the mole page (within the seventh tab), `:``}${mii.mole.size<4?`press the shrink button ${4-mii.mole.size} times.`:mii.mole.size>4?`press the enlarge button ${mii.mole.size-4} times.`:``}`,
                 "beard":`On the beard page (within the seventh tab), set the beard to the one on the ${[0,1].includes(mii.facialHair.beardType)?`top`:[2,3].includes(mii.facialHair.beardType)?`middle`:`bottom`}-${[0,2].includes(mii.facialHair.beardType)?`left`:`right`}.`,
-                "beardCol":`On the mustache OR beard pages (within the seventh tab), set the color to the one ${hairCols.indexOf(mii.facialHair.col)+1} from the top.`,
+                "beardCol":`On the mustache OR beard pages (within the seventh tab), set the color to the one ${lookupTables.hairCols.indexOf(mii.facialHair.col)+1} from the top.`,
                 "heightWeight":`On the build page (eighth tab), set the height to ${Math.round((100/128)*mii.info.height)}%, and the weight to ${Math.round((100/128)*mii.info.weight)}%.`,
-                "col":`On the info page (after pressing "Next"), set the Favorite Color to ${mii.info.favColor} (${favCols.indexOf(mii.info.favColor)<=5?favCols.indexOf(mii.info.favColor)+1:favCols.indexOf(mii.info.favColor)-5} from the left, ${favCols.indexOf(mii.info.favColor)>5?"bottom":"top"} row).`,
+                "col":`On the info page (after pressing "Next"), set the Favorite Color to ${mii.info.favColor} ($lookupTables.favCols.indexOf(mii.info.favColor)<=5lookupTables.favCols.indexOf(mii.info.favColor)+1lookupTables.favCols.indexOf(mii.info.favColor)-5} from the left, $lookupTables.favCols.indexOf(mii.info.favColor)>5?"bottom":"top"} row).`,
                 "other":`The Nickname of this Mii is ${mii.info.name}.${mii.info.creatorName?` The creator was ${mii.info.creatorName}.`:``} ${mii.info.birthday!==0?` Its birthday is ${["","January","February","March","April","May","June","July","August","September","October","November","December"][mii.info.birthMonth]} ${mii.info.birthday}.`:``}`
             };
             if(!full){
@@ -2168,26 +2048,26 @@ var exports={
             return dest;
         }
         studioMii[0x16] = mii.info.gender==="Male"?0:1;
-        studioMii[0x15] = favCols.indexOf(mii.info.favColor);
+        studioMii[0x15] =lookupTables.favCols.indexOf(mii.info.favColor);
         studioMii[0x1E] = mii.info.height;
         studioMii[2] = mii.info.weight;
         studioMii[0x13] = tables.faces[mii.face.shape];
-        studioMii[0x11] = skinCols.indexOf(mii.face.col);
-        studioMii[0x14] = faceFeatures3DS.indexOf(mii.face.feature);
-        studioMii[0x12] = makeups3DS.indexOf(mii.face.makeup);
+        studioMii[0x11] = lookupTables.skinCols.indexOf(mii.face.col);
+        studioMii[0x14] = lookupTables.faceFeatures3DS.indexOf(mii.face.feature);
+        studioMii[0x12] = lookupTables.makeups3DS.indexOf(mii.face.makeup);
         studioMii[0x1D] = tables.hairs[mii.hair.style[0]][mii.hair.style[1]];
-        studioMii[0x1B] = hairCols.indexOf(mii.hair.col);
+        studioMii[0x1B] = lookupTables.hairCols.indexOf(mii.hair.col);
         if (!studioMii[0x1B]) studioMii[0x1B] = 8;
         studioMii[0x1C] = mii.hair.flipped?1:0;
         studioMii[7] = tables.eyes[mii.eyes.type[0]][mii.eyes.type[1]];
-        studioMii[4] = eyeCols.indexOf(mii.eyes.col) + 8;
+        studioMii[4] = lookupTables.eyeCols.indexOf(mii.eyes.col) + 8;
         studioMii[6] = mii.eyes.size;
         studioMii[3] = mii.eyes.squash;
         studioMii[5] = mii.eyes.rot;
         studioMii[8] = mii.eyes.distApart;
         studioMii[9] = mii.eyes.yPos;
         studioMii[0xE] = tables.eyebrows[mii.eyebrows.style[0]][mii.eyebrows.style[1]];
-        studioMii[0xB] = hairCols.indexOf(mii.eyebrows.col);
+        studioMii[0xB] = lookupTables.hairCols.indexOf(mii.eyebrows.col);
         if (!studioMii[0xB]) studioMii[0xB] = 8;
         studioMii[0xD] = mii.eyebrows.size;
         studioMii[0xA] = mii.eyebrows.squash;
@@ -2198,7 +2078,7 @@ var exports={
         studioMii[0x2B] = mii.nose.size;
         studioMii[0x2D] = mii.nose.yPos;
         studioMii[0x26] = tables.mouths[mii.mouth.type[0]][mii.mouth.type[1]];
-        studioMii[0x24] = mouthCols3DS.indexOf(mii.mouth.col);
+        studioMii[0x24] =lookupTables.hairCols.indexOf(mii.mouth.col);
         if (studioMii[0x24] < 4) {
             studioMii[0x24] += 19;
         } else {
@@ -2209,12 +2089,12 @@ var exports={
         studioMii[0x27] = mii.mouth.yPos;
         studioMii[0x29] = mii.facialHair.mustacheType;
         studioMii[1] = mii.facialHair.beardType;
-        studioMii[0] = hairCols.indexOf(mii.facialHair.col);
+        studioMii[0] = lookupTables.hairCols.indexOf(mii.facialHair.col);
         if (!studioMii[0]) studioMii[0] = 8;
         studioMii[0x28] = mii.facialHair.mustacheSize;
         studioMii[0x2A] = mii.facialHair.mustacheYPos;
         studioMii[0x19] = mii.glasses.type;
-        studioMii[0x17] = glassesCols3DS.indexOf(mii.glasses.col);
+        studioMii[0x17] =lookupTables.glassesCols3DS.indexOf(mii.glasses.col);
         if (!studioMii[0x17]) {
             studioMii[0x17] = 8;
         } else if (studioMii[0x17] < 6) {

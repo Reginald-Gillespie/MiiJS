@@ -1186,12 +1186,16 @@ function setBits(buffer, byteOffset, bitOffset, bitLength, value) {
         const mask = ((1 << bitLength) - 1) << shift;
         buffer[startByte] = (buffer[startByte] & ~mask) | ((value << shift) & mask);
     } else {
-        // Multi-byte spanning (simplified)
-        const rightShift = (endByte - startByte + 1) * 8 - (totalBitOffset % 8) - bitLength;
-        let tempValue = value << rightShift;
-        
+        const totalBits = (endByte - startByte + 1) * 8;
+        const shiftAmount = totalBits - ((totalBitOffset % 8) + bitLength);
+        let tempValue = (value << shiftAmount) & ((1 << totalBits) - 1);
+
         for (let i = endByte; i >= startByte; i--) {
-            buffer[i] = (buffer[i] & 0) | (tempValue & 0xFF);
+            // mask for this byte
+            const byteIndex = endByte - i;
+            const byteMask = 0xFF >>> (8 * byteIndex + shiftAmount - bitOffset) & 0xFF;
+            // clear only the bits we're overwriting
+            buffer[i] = (buffer[i] & ~byteMask) | (tempValue & 0xFF);
             tempValue >>>= 8;
         }
     }
@@ -1299,7 +1303,7 @@ const WII_MII_SCHEMA = {
     'eyes.rotation': { byteOffset: 0x29, bitOffset: 0, bitLength: 3, decoder: 'number' },
     'eyes.yPos': { byteOffset: 0x29, bitOffset: 3, bitLength: 5, decoder: 'number' },
     'eyes.col': { byteOffset: 0x2A, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'eyeCols' },
-    'eyes.size': { byteOffset: 0x2A, bitOffset: 4, bitLength: 3, decoder: 'number' },
+    'eyes.size': { byteOffset: 0x2A, bitOffset: 4, bitLength: 2, decoder: 'number' },
     'eyes.distApart': { byteOffset: 0x2A, bitOffset: 7, bitLength: 4, decoder: 'number' },
     'nose.type': { byteOffset: 0x2C, bitOffset: 0, bitLength: 4, decoder: 'lookup', lookupTable: 'wiiNoses' },
     'nose.size': { byteOffset: 0x2C, bitOffset: 4, bitLength: 4, decoder: 'number' },

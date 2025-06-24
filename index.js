@@ -1177,26 +1177,27 @@ function extractBits(data, byteOffset, bitOffset, bitLength) {
     return value & mask;
 }
 function setBits(buffer, byteOffset, bitOffset, bitLength, value) {
-    const totalBitOffset = byteOffset * 8 + bitOffset;
-    const startByte = Math.floor(totalBitOffset / 8);
-    const endByte = Math.floor((totalBitOffset + bitLength - 1) / 8);
-    
-    if (startByte === endByte) {
-        const shift = 8 - ((totalBitOffset % 8) + bitLength);
-        const mask = ((1 << bitLength) - 1) << shift;
-        buffer[startByte] = (buffer[startByte] & ~mask) | ((value << shift) & mask);
-    } else {
-        const totalBits = (endByte - startByte + 1) * 8;
-        const shiftAmount = totalBits - ((totalBitOffset % 8) + bitLength);
-        let tempValue = (value << shiftAmount) & ((1 << totalBits) - 1);
+    // Calculate the absolute bit position from the start
+    const absoluteBitPos = byteOffset * 8 + bitOffset;
 
-        for (let i = endByte; i >= startByte; i--) {
-            // mask for this byte
-            const byteIndex = endByte - i;
-            const byteMask = 0xFF >>> (8 * byteIndex + shiftAmount - bitOffset) & 0xFF;
-            // clear only the bits we're overwriting
-            buffer[i] = (buffer[i] & ~byteMask) | (tempValue & 0xFF);
-            tempValue >>>= 8;
+    // Process each bit of the value
+    for (let i = 0; i < bitLength; i++) {
+        const currentBitPos = absoluteBitPos + i;
+        const currentByteIndex = Math.floor(currentBitPos / 8);
+        const currentBitInByte = currentBitPos % 8;
+
+        // Extract the bit from the value (MSB first)
+        const bitValue = (value >> (bitLength - 1 - i)) & 1;
+
+        // Create mask for this specific bit position
+        const mask = 1 << (7 - currentBitInByte);
+
+        if (bitValue) {
+            // Set the bit
+            buffer[currentByteIndex] |= mask;
+        } else {
+            // Clear the bit
+            buffer[currentByteIndex] &= ~mask;
         }
     }
 }
@@ -1303,7 +1304,7 @@ const WII_MII_SCHEMA = {
     'eyes.rotation': { byteOffset: 0x29, bitOffset: 0, bitLength: 3, decoder: 'number' },
     'eyes.yPos': { byteOffset: 0x29, bitOffset: 3, bitLength: 5, decoder: 'number' },
     'eyes.col': { byteOffset: 0x2A, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'eyeCols' },
-    'eyes.size': { byteOffset: 0x2A, bitOffset: 4, bitLength: 2, decoder: 'number' },
+    'eyes.size': { byteOffset: 0x2A, bitOffset: 4, bitLength: 3 },
     'eyes.distApart': { byteOffset: 0x2A, bitOffset: 7, bitLength: 4, decoder: 'number' },
     'nose.type': { byteOffset: 0x2C, bitOffset: 0, bitLength: 4, decoder: 'lookup', lookupTable: 'wiiNoses' },
     'nose.size': { byteOffset: 0x2C, bitOffset: 4, bitLength: 4, decoder: 'number' },

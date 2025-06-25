@@ -1202,7 +1202,7 @@ const encoders = {
     },
 };
 
-
+// Decoding system
 function decodeString(data, field) {
     let result = "";
     const maxLength = field.maxLength || 10;
@@ -1218,6 +1218,7 @@ function decodeString(data, field) {
     }
     return result.replace(/\x00/g, "");
 }
+
 function encodeString(str, field) {
     const result = [];
     const maxLength = field.maxLength || 10;
@@ -1235,19 +1236,58 @@ function encodeString(str, field) {
     }
     return result;
 }
+
+/**
+ * Extracts bits from multiple non-contiguous byte locations
+ * @param {Uint8Array} data - The byte array to extract bits from
+ * @param {Array} bitSpecs - Array of {byteOffset, bitOffset, bitLength} objects
+ * @param {boolean} isBigEndian - Endianness for multi-byte operations
+ * @returns {number} The combined bit value
+ */
+function extractMultiBits(data, bitSpecs, isBigEndian = true) {
+    let result = 0;
+    let totalBitsProcessed = 0;
+
+    // Process bit specs in order (they should be ordered from most significant to least significant)
+    for (const spec of bitSpecs) {
+        const bits = extractBits(data, spec.byteOffset, spec.bitOffset, spec.bitLength, isBigEndian);
+        result = (result << spec.bitLength) | bits;
+        totalBitsProcessed += spec.bitLength;
+    }
+
+    return result;
+}
+
+/**
+ * Sets bits across multiple non-contiguous byte locations
+ * @param {Array} buffer - The buffer to modify
+ * @param {Array} bitSpecs - Array of {byteOffset, bitOffset, bitLength} objects
+ * @param {number} value - The value to set
+ */
+function setMultiBits(buffer, bitSpecs, value) {
+    let remainingValue = value;
+    
+    // Process specs in reverse order (from least significant to most significant)
+    for (let i = bitSpecs.length - 1; i >= 0; i--) {
+        const spec = bitSpecs[i];
+        const mask = (1 << spec.bitLength) - 1;
+        const bitsToSet = remainingValue & mask;
+        
+        setBits(buffer, spec.byteOffset, spec.bitOffset, spec.bitLength, bitsToSet);
+        remainingValue >>>= spec.bitLength;
+    }
+}
+
 /**
  * Extracts a sequence of bits from a byte array.
- *
  * @param {Uint8Array} data - The byte array to extract bits from.
  * @param {number} byteOffset - The starting byte offset in the array.
  * @param {number} bitOffset - The starting bit offset within the byte.
  * @param {number} bitLength - The number of bits to extract.
+ * @param {boolean} isBigEndian - Whether to use big endian byte order
  * @returns {number} The extracted bit sequence as an integer.
- *
- * This function calculates the bit-level offset, reads the necessary bytes,
- * shifts and masks the result to isolate the requested bit field.
  */
-function extractBits(data, byteOffset, bitOffset, bitLength, isBigEndian=true) {
+function extractBits(data, byteOffset, bitOffset, bitLength, isBigEndian = true) {
     const totalBitOffset = byteOffset * 8 + bitOffset;
     const startByte = Math.floor(totalBitOffset / 8);
     const endByte = Math.floor((totalBitOffset + bitLength - 1) / 8);
@@ -1302,8 +1342,9 @@ function setBits(buffer, byteOffset, bitOffset, bitLength, value) {
         }
     }
 }
+
 function setNestedProperty(obj, path, value) {
-    // Allows to reference nessted properties in extraction schemas with "name.subcategory.suboption" 
+    // Allows to reference nested properties in extraction schemas with "name.subcategory.suboption" 
     const keys = path.split('.');
     let current = obj;
     
@@ -1316,11 +1357,13 @@ function setNestedProperty(obj, path, value) {
     
     current[keys[keys.length - 1]] = value;
 }
+
 function getNestedProperty(obj, path) {
     // See `setNestedProperty` comment
     return path.split('.').reduce((current, key) => current?.[key], obj);
 }
-function parseFromSchema(data, schema, lookupTables = {}, isBigEndian=true) {
+
+function miiBufferToJson(data, schema, lookupTables = {}, isBigEndian = true) {
     const result = {};
 
     for (const [fieldPath, fieldDef] of Object.entries(schema)) {
@@ -1328,12 +1371,16 @@ function parseFromSchema(data, schema, lookupTables = {}, isBigEndian=true) {
 
         if (fieldDef.type === 'string') {
             value = decodeString(data, fieldDef);
+        } else if (fieldDef.bitSpecs) {
+            // Handle multi-byte fields with non-contiguous bits
+            value = extractMultiBits(data, fieldDef.bitSpecs, isBigEndian);
         } else {
+            // Handle standard contiguous bit fields
             value = extractBits(data, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength, isBigEndian);
         }
 
         // Apply decoder
-        if (fieldDef.decoder && decoders[fieldDef.decoder]) {
+        if (fieldDef.decoder && typeof decoders !== 'undefined' && decoders[fieldDef.decoder]) {
             value = decoders[fieldDef.decoder](value, fieldDef, lookupTables);
         }
 
@@ -1342,6 +1389,7 @@ function parseFromSchema(data, schema, lookupTables = {}, isBigEndian=true) {
 
     return result;
 }
+
 function jsonToMiiBuffer(miiData, schema, lookupTables = {}, totalBytes = 74) {
     const buffer = new Array(totalBytes).fill(0);
 
@@ -1349,22 +1397,27 @@ function jsonToMiiBuffer(miiData, schema, lookupTables = {}, totalBytes = 74) {
         let raw = getNestedProperty(miiData, fieldPath);
 
         // Run encoders
-        if (fieldDef.decoder && encoders[fieldDef.decoder]) {
+        if (fieldDef.decoder && typeof encoders !== 'undefined' && encoders[fieldDef.decoder]) {
             raw = encoders[fieldDef.decoder](raw, fieldDef, lookupTables);
         }
 
-        if (fieldDef.type !== 'string') {
-            setBits(buffer, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength, raw);
-        } else {
+        if (fieldDef.type === 'string') {
             const bytes = encodeString(raw, fieldDef);
             for (let i = 0; i < bytes.length; i++) {
                 buffer[fieldDef.byteOffset + i] = bytes[i];
             }
+        } else if (fieldDef.bitSpecs) {
+            // Handle multi-byte fields with non-contiguous bits
+            setMultiBits(buffer, fieldDef.bitSpecs, raw);
+        } else {
+            // Handle standard contiguous bit fields
+            setBits(buffer, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength, raw);
         }
     }
 
     return Buffer.from(buffer);
 }
+
 
 const WII_MII_SCHEMA = {
     'info.gender': { byteOffset: 0x00, bitOffset: 1, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
@@ -1421,7 +1474,13 @@ const WII_MII_SCHEMA = {
 };
 
 const THREEDS_MII_SCHEMA = {
-    'info.birthday': { byteOffset: 0x18, bitOffset: 6, bitLength: 5, decoder: 'number' },
+    'info.birthday': {
+        bitSpecs: [
+            { byteOffset: 0x19, bitOffset: 6, bitLength: 2 }, // temp2.slice(6, 8)
+            { byteOffset: 0x18, bitOffset: 0, bitLength: 3 }  // temp.slice(0, 3)
+        ],
+        decoder: 'number'
+    },
     'info.birthMonth': { byteOffset: 0x18, bitOffset: 3, bitLength: 4, decoder: 'number' },
     'info.gender': { byteOffset: 0x18, bitOffset: 7, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
     'info.favColor': { byteOffset: 0x19, bitOffset: 2, bitLength: 4, decoder: 'color', colorArray: 'favCols' },
@@ -1433,7 +1492,6 @@ const THREEDS_MII_SCHEMA = {
     'info.weight': { byteOffset: 0x2F, bitOffset: 0, bitLength: 8, decoder: 'number' },
     'perms.sharing': { byteOffset: 0x30, bitOffset: 7, bitLength: 1, decoder: 'boolean', invert: true },
     'perms.copying': { byteOffset: 0x01, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
-    // 'face.shape': { byteOffset: 0x30, bitOffset: 1, bitLength: 4, decoder: 'lookup', lookupTable: 'faces' },
     'face.shape': { byteOffset: 0x30, bitOffset: 3, bitLength: 4, decoder: 'lookup', lookupTable: 'faces' },
     'face.col': { byteOffset: 0x30, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'skinCols' },
     'face.feature': { byteOffset: 0x31, bitOffset: 4, bitLength: 4, decoder: 'lookup', lookupTable: 'faceFeatures3DS' },
@@ -1442,39 +1500,89 @@ const THREEDS_MII_SCHEMA = {
     'hair.col': { byteOffset: 0x33, bitOffset: 5, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
     'hair.flipped': { byteOffset: 0x33, bitOffset: 4, bitLength: 1, decoder: 'boolean' },
     'eyes.type': { byteOffset: 0x34, bitOffset: 2, bitLength: 6, decoder: 'lookup', lookupTable: 'eyes' },
-    'eyes.col': { byteOffset: 0x35, bitOffset: 7, bitLength: 3, decoder: 'color', colorArray: 'eyeCols' },
+    'eyes.col': { 
+        bitSpecs: [
+            { byteOffset: 0x35, bitOffset: 7, bitLength: 1 }, // Most significant bit
+            { byteOffset: 0x34, bitOffset: 0, bitLength: 2 }  // Least significant bits
+        ],
+        decoder: 'color', 
+        colorArray: 'eyeCols' 
+    },
     'eyes.size': { byteOffset: 0x35, bitOffset: 3, bitLength: 4, decoder: 'number' },
     'eyes.squash': { byteOffset: 0x35, bitOffset: 0, bitLength: 3, decoder: 'number' },
     'eyes.rot': { byteOffset: 0x36, bitOffset: 3, bitLength: 5, decoder: 'number' },
-    'eyes.distApart': { byteOffset: 0x36, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'eyes.distApart': { 
+        bitSpecs: [
+            { byteOffset: 0x37, bitOffset: 7, bitLength: 1 }, // Most significant bit
+            { byteOffset: 0x36, bitOffset: 0, bitLength: 3 }  // Least significant bits
+        ],
+        decoder: 'number' 
+    },
     'eyes.yPos': { byteOffset: 0x37, bitOffset: 2, bitLength: 5, decoder: 'number' },
     'eyebrows.style': { byteOffset: 0x38, bitOffset: 3, bitLength: 5, decoder: 'lookup', lookupTable: 'eyebrows' },
     'eyebrows.col': { byteOffset: 0x38, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
     'eyebrows.size': { byteOffset: 0x39, bitOffset: 4, bitLength: 4, decoder: 'number' },
     'eyebrows.squash': { byteOffset: 0x39, bitOffset: 1, bitLength: 3, decoder: 'number' },
     'eyebrows.rot': { byteOffset: 0x3A, bitOffset: 4, bitLength: 4, decoder: 'number' },
-    'eyebrows.distApart': { byteOffset: 0x3A, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'eyebrows.distApart': {
+        bitSpecs: [
+            { byteOffset: 0x3B, bitOffset: 7, bitLength: 1 }, // temp2[7]
+            { byteOffset: 0x3A, bitOffset: 0, bitLength: 3 }  // temp.slice(0, 3)
+        ],
+        decoder: 'number'
+    },
     'eyebrows.yPos': { byteOffset: 0x3B, bitOffset: 2, bitLength: 5, decoder: 'number', offset: -3 },
     'nose.type': { byteOffset: 0x3C, bitOffset: 3, bitLength: 5, decoder: 'lookup', lookupTable: 'noses' },
-    'nose.size': { byteOffset: 0x3C, bitOffset: 7, bitLength: 4, decoder: 'number' },
+    'nose.size': {
+        bitSpecs: [
+            { byteOffset: 0x3D, bitOffset: 7, bitLength: 1 }, // temp2[7]
+            { byteOffset: 0x3C, bitOffset: 0, bitLength: 3 }  // temp.slice(0, 3)
+        ],
+        decoder: 'number'
+    },
     'nose.yPos': { byteOffset: 0x3D, bitOffset: 2, bitLength: 5, decoder: 'number' },
     'mouth.type': { byteOffset: 0x3E, bitOffset: 2, bitLength: 6, decoder: 'lookup', lookupTable: 'mouths' },
-    'mouth.col': { byteOffset: 0x3E, bitOffset: 7, bitLength: 3, decoder: 'color', colorArray: 'mouthCols3DS' },
+    'mouth.col': {
+        bitSpecs: [
+            { byteOffset: 0x3F, bitOffset: 7, bitLength: 1 }, // temp2[7]
+            { byteOffset: 0x3E, bitOffset: 0, bitLength: 2 }  // temp.slice(0, 2)
+        ],
+        decoder: 'color',
+        colorArray: 'mouthCols3DS'
+    },
     'mouth.size': { byteOffset: 0x3F, bitOffset: 3, bitLength: 4, decoder: 'number' },
     'mouth.squash': { byteOffset: 0x3F, bitOffset: 0, bitLength: 3, decoder: 'number' },
     'mouth.yPos': { byteOffset: 0x40, bitOffset: 3, bitLength: 5, decoder: 'number' },
     'facialHair.mustacheType': { byteOffset: 0x40, bitOffset: 0, bitLength: 3, decoder: 'number' },
     'facialHair.beardType': { byteOffset: 0x42, bitOffset: 5, bitLength: 3, decoder: 'number' },
     'facialHair.col': { byteOffset: 0x42, bitOffset: 2, bitLength: 3, decoder: 'color', colorArray: 'hairCols' },
-    'facialHair.mustacheSize': { byteOffset: 0x42, bitOffset: 6, bitLength: 4, decoder: 'number' },
+    'facialHair.mustacheSize': {
+        bitSpecs: [
+            { byteOffset: 0x43, bitOffset: 6, bitLength: 2 }, // temp2.slice(6, 8)
+            { byteOffset: 0x42, bitOffset: 0, bitLength: 2 }  // temp.slice(0, 2)
+        ],
+        decoder: 'number'
+    },
     'facialHair.mustacheYPos': { byteOffset: 0x43, bitOffset: 1, bitLength: 5, decoder: 'number' },
     'glasses.type': { byteOffset: 0x44, bitOffset: 4, bitLength: 4, decoder: 'number' },
     'glasses.col': { byteOffset: 0x44, bitOffset: 1, bitLength: 3, decoder: 'color', colorArray: 'glassesCols3DS' },
-    'glasses.size': { byteOffset: 0x44, bitOffset: 5, bitLength: 4, decoder: 'number' },
+    'glasses.size': {
+        bitSpecs: [
+            { byteOffset: 0x45, bitOffset: 5, bitLength: 3 }, // temp2.slice(5, 8)
+            { byteOffset: 0x44, bitOffset: 0, bitLength: 1 }  // temp[0]
+        ],
+        decoder: 'number'
+    },
     'glasses.yPos': { byteOffset: 0x45, bitOffset: 0, bitLength: 5, decoder: 'number' },
     'mole.on': { byteOffset: 0x46, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
     'mole.size': { byteOffset: 0x46, bitOffset: 3, bitLength: 4, decoder: 'number' },
-    'mole.xPos': { byteOffset: 0x46, bitOffset: 6, bitLength: 5, decoder: 'number' },
+    'mole.xPos': {
+        bitSpecs: [
+            { byteOffset: 0x47, bitOffset: 6, bitLength: 2 }, // temp2.slice(6, 8)
+            { byteOffset: 0x46, bitOffset: 0, bitLength: 3 }  // temp.slice(0, 3)
+        ],
+        decoder: 'number'
+    },
     'mole.yPos': { byteOffset: 0x47, bitOffset: 1, bitLength: 5, decoder: 'number' }
 };
 
@@ -1579,7 +1687,7 @@ var exports = {
             data = Buffer.from(binOrPath);
         }
 
-        const thisMii = parseFromSchema(data, WII_MII_SCHEMA, lookupTables, true);
+        const thisMii = miiBufferToJson(data, WII_MII_SCHEMA, lookupTables, true);
         thisMii.console = 'wii';
 
         return thisMii;
@@ -1605,7 +1713,7 @@ var exports = {
         if (qrCode) {
             var data = Buffer.from(decodeAesCcm(new Uint8Array(qrCode)));
 
-            const miiJson = parseFromSchema(data, THREEDS_MII_SCHEMA, lookupTables, false);
+            const miiJson = miiBufferToJson(data, THREEDS_MII_SCHEMA, lookupTables, false);
             miiJson.console = '3ds';
             return miiJson;
         } else {

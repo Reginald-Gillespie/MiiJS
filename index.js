@@ -1572,7 +1572,7 @@ async function renderMii(studioMii,fflRes=_fflRes) {
   return canvas.toBuffer('image/png');
 }
 
-var exports = {
+module.exports = {
     readWiiBin: async function(binOrPath){
         let data;
         if (/[^01]/ig.test(binOrPath)) {
@@ -2218,4 +2218,3 @@ var exports = {
         return await renderMii(this.convert3DSMiiToStudio(jsonIn),fflRes);
     }
 }
-module.exports=exports;

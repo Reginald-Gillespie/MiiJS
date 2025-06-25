@@ -321,12 +321,68 @@ const lookupTables = {
         '70': '132',
         '71': '633'
     },
+
+    // 3DS fields
     faceFeatures3DS: ["None", "Near Eye Creases", "Cheek Creases", "Far Eye Creases", "Near Nose Creases", "Giant Bags", "Cleft Chin", "Chin Crease", "Sunken Eyes", "Far Cheek Creases", "Lines Near Eyes", "Wrinkles"],
     makeups3DS: ["None", "Blush", "Orange Blush", "Blue Eyes", "Blush 2", "Orange Blush 2", "Blue Eyes and Blush", "Orange Eyes and Blush", "Purple Eyes and Blush 2", "Freckles", "Beard Stubble", "Beard and Mustache Stubble"],
     mouthCols3DS: ["Orange", "Red", "Pink", "Peach", "Black"],
-    glassesCols3DS: ["Black", "Brown", "Red", "Blue", "Yellow", "Grey"]
-};
+    glassesCols3DS: ["Black", "Brown", "Red", "Blue", "Yellow", "Grey"],
 
+    faces: [
+        0x00, 0x01, 0x08,
+        0x02, 0x03, 0x09,
+        0x04, 0x05, 0x0a,
+        0x06, 0x07, 0x0b
+    ],
+    hairs: {
+        paginated: true,
+        values: [
+            [0x21, 0x2f, 0x28, 0x25, 0x20, 0x6b, 0x30, 0x33, 0x37, 0x46, 0x2c, 0x42],
+            [0x34, 0x32, 0x26, 0x31, 0x2b, 0x1f, 0x38, 0x44, 0x3e, 0x73, 0x4c, 0x77],
+            [0x40, 0x51, 0x74, 0x79, 0x16, 0x3a, 0x3c, 0x57, 0x7d, 0x75, 0x49, 0x4b],
+            [0x2a, 0x59, 0x39, 0x36, 0x50, 0x22, 0x17, 0x56, 0x58, 0x76, 0x27, 0x24],
+            [0x2d, 0x43, 0x3b, 0x41, 0x29, 0x1e, 0x0c, 0x10, 0x0a, 0x52, 0x80, 0x81],
+            [0x0e, 0x5f, 0x69, 0x64, 0x06, 0x14, 0x5d, 0x66, 0x1b, 0x04, 0x11, 0x6e],
+            [0x7b, 0x08, 0x6a, 0x48, 0x03, 0x15, 0x00, 0x62, 0x3f, 0x5a, 0x0b, 0x78],
+            [0x05, 0x4a, 0x6c, 0x5e, 0x7c, 0x19, 0x63, 0x45, 0x23, 0x0d, 0x7a, 0x71],
+            [0x35, 0x18, 0x55, 0x53, 0x47, 0x83, 0x60, 0x65, 0x1d, 0x07, 0x0f, 0x70],
+            [0x4f, 0x01, 0x6d, 0x7f, 0x5b, 0x1a, 0x3d, 0x67, 0x02, 0x4d, 0x12, 0x5c],
+            [0x54, 0x09, 0x13, 0x82, 0x61, 0x68, 0x2e, 0x4e, 0x1c, 0x72, 0x7e, 0x6f]
+        ]
+    },
+    eyebrows: {
+        paginated: true,
+        values: [
+            [0x06, 0x00, 0x0c, 0x01, 0x09, 0x13, 0x07, 0x15, 0x08, 0x11, 0x05, 0x04],
+            [0x0b, 0x0a, 0x02, 0x03, 0x0e, 0x14, 0x0f, 0x0d, 0x16, 0x12, 0x10, 0x17]
+        ]
+    },
+    eyes: {
+        paginated: true,
+        values: [
+            [0x02, 0x04, 0x00, 0x08, 0x27, 0x11, 0x01, 0x1a, 0x10, 0x0f, 0x1b, 0x14],
+            [0x21, 0x0b, 0x13, 0x20, 0x09, 0x0c, 0x17, 0x22, 0x15, 0x19, 0x28, 0x23],
+            [0x05, 0x29, 0x0d, 0x24, 0x25, 0x06, 0x18, 0x1e, 0x1f, 0x12, 0x1c, 0x2e],
+            [0x07, 0x2c, 0x26, 0x2a, 0x2d, 0x1d, 0x03, 0x2b, 0x16, 0x0a, 0x0e, 0x2f],
+            [0x30, 0x31, 0x32, 0x35, 0x3b, 0x38, 0x36, 0x3a, 0x39, 0x37, 0x33, 0x34]
+        ]
+    },
+    noses: {
+        paginated: true,
+        values: [
+            [0x01, 0x0a, 0x02, 0x03, 0x06, 0x00, 0x05, 0x04, 0x08, 0x09, 0x07, 0x0B],
+            [0x0d, 0x0e, 0x0c, 0x11, 0x10, 0x0f]
+        ]
+    },
+    mouths: {
+        paginated: true,
+        values: [
+            [0x17, 0x01, 0x13, 0x15, 0x16, 0x05, 0x00, 0x08, 0x0a, 0x10, 0x06, 0x0d],
+            [0x07, 0x09, 0x02, 0x11, 0x03, 0x04, 0x0f, 0x0b, 0x14, 0x12, 0x0e, 0x0c],
+            [0x1b, 0x1e, 0x18, 0x19, 0x1d, 0x1c, 0x1a, 0x23, 0x1f, 0x22, 0x21, 0x20]
+        ]
+    }
+};
 var tables={
     faces: [
         0x00,0x01,0x08,
@@ -613,25 +669,6 @@ var convTables={
         "10",9,11
     ]
 };
-function lookupTable(table,value,paginated){
-  if(paginated){
-    for(var i=0;i<tables[table].length;i++){
-      for(var j=0;j<tables[table][i].length;j++){
-        if(tables[table][i][j]===value){
-          return [i,j];
-        }
-      }
-    }
-  }
-  else{
-    for(var i=0;i<tables[table].length;i++){
-      if(tables[table][i]===value){
-        return i;
-      }
-    }
-  }
-  return undefined;
-}
 var kidNames={
     "Male":[
         "Aaron",
@@ -1111,7 +1148,23 @@ const decoders = {
     enum: (value, field) => field.values[value],
     lookup: (value, field, tables) => {
         const table = tables[field.lookupTable];
-        return Array.isArray(table) ? table[value] : table?.[value.toString()];
+        if (!table) return "ERROR: could not requested lookup table";
+
+        if (table.paginated) {
+            // Handle paginated (2D array) lookup
+            for (let page = 0; page < table.values.length; page++) {
+                for (let index = 0; index < table.values[page].length; index++) {
+                    if (table.values[page][index] === value) {
+                        return [page, index];
+                    }
+                }
+            }
+            return undefined;
+        } else if (Array.isArray(table)) {
+            return table[value];
+        } else {
+            return table[value.toString()];
+        }
     },
     color: (value, field, tables) => tables[field.colorArray]?.[value] || value
 };
@@ -1121,19 +1174,28 @@ const encoders = {
     enum: (value, field) => field.values.indexOf(value),
     lookup: (decodedValue, field, tables) => {
         const table = tables[field.lookupTable];
-        if (!table) return undefined;
+        if (!table) return "ERROR: could not requested lookup table";
 
-        if (Array.isArray(table)) {
+        if (table.paginated) {
+            if (!Array.isArray(decodedValue) || decodedValue.length !== 2) {
+                return undefined;
+            }
+            const [page, index] = decodedValue;
+            if (page >= 0 && page < table.values.length && index >= 0 && index < table.values[page].length) {
+                return table.values[page][index];
+            }
+            return undefined;
+        } else if (Array.isArray(table)) {
             const index = table.indexOf(decodedValue);
             return index !== -1 ? index : undefined;
+        } else {
+            // Handle object lookup
+            for (const [key, val] of Object.entries(table)) {
+                if (val === decodedValue) return parseInt(key);
+            }
+            return undefined;
         }
-
-        for (const [key, val] of Object.entries(table)) {
-            if (val === decodedValue) return key;
-        }
-
-        return undefined;
-    },
+    }, 
     color: (value, field, T) => {
         const arr = T[field.colorArray];
         return arr?.indexOf(value) ?? value;
@@ -1246,15 +1308,6 @@ function getNestedProperty(obj, path) {
     // See `setNestedProperty` comment
     return path.split('.').reduce((current, key) => current?.[key], obj);
 }
-function reverseLookup(value, tableName, lookupTables) {
-    const table = lookupTables[tableName];
-    if (Array.isArray(table)) {
-        return table.indexOf(value);
-    } else if (table) {
-        return Object.keys(table).find(key => table[key] === value) || 0;
-    }
-    return 0;
-}
 function parseFromSchema(data, schema, lookupTables = {}) {
     const result = {};
 
@@ -1360,9 +1413,11 @@ const THREEDS_MII_SCHEMA = {
     'info.birthMonth': { byteOffset: 0x18, bitOffset: 3, bitLength: 4, decoder: 'number' },
     'info.gender': { byteOffset: 0x18, bitOffset: 7, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
     'info.favColor': { byteOffset: 0x19, bitOffset: 2, bitLength: 4, decoder: 'color', colorArray: 'favCols' },
-    'info.favorited': { byteOffset: 0x19, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    // 'info.favorited': { byteOffset: 0x19, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
     'name': { type: 'string', byteOffset: 0x1A, maxLength: 10, endianness: "little" },
+    'info.name': { type: 'string', byteOffset: 0x1A, maxLength: 10, endianness: "little" },
     'creatorName': { type: 'string', byteOffset: 0x48, maxLength: 10, endianness: "little" },
+    'info.creatorName': { type: 'string', byteOffset: 0x48, maxLength: 10, endianness: "little" },
     'info.height': { byteOffset: 0x2E, bitOffset: 0, bitLength: 8, decoder: 'number' },
     'info.weight': { byteOffset: 0x2F, bitOffset: 0, bitLength: 8, decoder: 'number' },
     'perms.sharing': { byteOffset: 0x30, bitOffset: 7, bitLength: 1, decoder: 'boolean', invert: true },

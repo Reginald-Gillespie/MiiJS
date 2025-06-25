@@ -13,13 +13,6 @@ const createGL = require('gl');
 const {FFLCharModelDescDefault,createCharModel,initCharModelTextures,initializeFFL,parseHexOrB64ToUint8Array}=require("./ffl.js");
 const ModuleFFL=require("./ffl-emscripten-single-file.js");
 const FFLShaderMaterial=require("./FFLShaderMaterial.js");
-function getKeyByValue(object, value) {
-    for (var key in object) {
-      if (object[key] === value) {
-        return key;
-      }
-    }
-}
 
 //If FFLResHigh.dat is in the same directory as Node.js is calling the library from, use it by default
 var _fflRes=null;
@@ -27,14 +20,6 @@ if(fs.existsSync("./FFLResHigh.dat")){
     _fflRes=new Uint8Array(fs.readFileSync("./FFLResHigh.dat",""));
 }
 
-function getBinaryFromAddress(addr, bin){
-    let byte = bin.readUInt8(addr);
-    let binaryString = '';
-    for (let i = 7; i >= 0; i--) {
-        binaryString += ((byte >> i) & 1) ? '1' : '0';
-    }
-    return binaryString;
-}
 var NONCE_OFFSET = 0xC;
 var NONCE_LENGTH = 8;
 var TAG_LENGTH = 0x10;
@@ -390,114 +375,6 @@ const lookupTables = {
             [0x1b, 0x1e, 0x18, 0x19, 0x1d, 0x1c, 0x1a, 0x23, 0x1f, 0x22, 0x21, 0x20]
         ]
     }
-};
-var tables={
-    faces: [
-        0x00,0x01,0x08,
-        0x02,0x03,0x09,
-        0x04,0x05,0x0a,
-        0x06,0x07,0x0b
-    ],
-    hairs: [
-        [0x21,0x2f,0x28,
-        0x25,0x20,0x6b,
-        0x30,0x33,0x37,
-        0x46,0x2c,0x42],
-        [0x34,0x32,0x26,
-        0x31,0x2b,0x1f,
-        0x38,0x44,0x3e,
-        0x73,0x4c,0x77],
-        [0x40,0x51,0x74,
-        0x79,0x16,0x3a,
-        0x3c,0x57,0x7d,
-        0x75,0x49,0x4b],
-        [0x2a,0x59,0x39,
-        0x36,0x50,0x22,
-        0x17,0x56,0x58,
-        0x76,0x27,0x24],
-        [0x2d,0x43,0x3b,
-        0x41,0x29,0x1e,
-        0x0c,0x10,0x0a,
-        0x52,0x80,0x81],
-        [0x0e,0x5f,0x69,
-        0x64,0x06,0x14,
-        0x5d,0x66,0x1b,
-        0x04,0x11,0x6e],
-        [0x7b,0x08,0x6a,
-        0x48,0x03,0x15,
-        0x00,0x62,0x3f,
-        0x5a,0x0b,0x78],
-        [0x05,0x4a,0x6c,
-        0x5e,0x7c,0x19,
-        0x63,0x45,0x23,
-        0x0d,0x7a,0x71],
-        [0x35,0x18,0x55,
-        0x53,0x47,0x83,
-        0x60,0x65,0x1d,
-        0x07,0x0f,0x70],
-        [0x4f,0x01,0x6d,
-        0x7f,0x5b,0x1a,
-        0x3d,0x67,0x02,
-        0x4d,0x12,0x5c],
-        [0x54,0x09,0x13,
-        0x82,0x61,0x68,
-        0x2e,0x4e,0x1c,
-        0x72,0x7e,0x6f]
-    ],
-    eyebrows: [
-        [0x06,0x00,0x0c,
-        0x01,0x09,0x13,
-        0x07,0x15,0x08,
-        0x11,0x05,0x04],
-        [0x0b,0x0a,0x02,
-        0x03,0x0e,0x14,
-        0x0f,0x0d,0x16,
-        0x12,0x10,0x17]
-    ],
-    eyes: [
-        [0x02,0x04,0x00,
-        0x08,0x27,0x11,
-        0x01,0x1a,0x10,
-        0x0f,0x1b,0x14],
-        [0x21,0x0b,0x13,
-        0x20,0x09,0x0c,
-        0x17,0x22,0x15,
-        0x19,0x28,0x23],
-        [0x05,0x29,0x0d,
-        0x24,0x25,0x06,
-        0x18,0x1e,0x1f,
-        0x12,0x1c,0x2e],
-        [0x07,0x2c,0x26,
-        0x2a,0x2d,0x1d,
-        0x03,0x2b,0x16,
-        0x0a,0x0e,0x2f],
-        [0x30,0x31,0x32,
-        0x35,0x3b,0x38,
-        0x36,0x3a,0x39,
-        0x37,0x33,0x34]
-    ],
-    noses: [
-        [0x01,0x0a,0x02,
-        0x03,0x06,0x00,
-        0x05,0x04,0x08,
-        0x09,0x07,0x0B],
-        [0x0d,0x0e,0x0c,
-        0x11,0x10,0x0f]
-    ],
-    mouths: [
-        [0x17,0x01,0x13,
-        0x15,0x16,0x05,
-        0x00,0x08,0x0a,
-        0x10,0x06,0x0d],
-        [0x07,0x09,0x02,
-        0x11,0x03,0x04,
-        0x0f,0x0b,0x14,
-        0x12,0x0e,0x0c],
-        [0x1b,0x1e,0x18,
-        0x19,0x1d,0x1c,
-        0x1a,0x23,0x1f,
-        0x22,0x21,0x20]
-    ]
 };
 var convTables={
     face3DSToWii:[0,1,2,2,3,1,4,5,4,6,7,6],
@@ -1781,22 +1658,22 @@ var exports = {
             studioMii[0x15] = lookupTables.favCols.indexOf(miiJson.info.favColor);
             studioMii[0x1E] = miiJson.info.height;
             studioMii[2] = miiJson.info.weight;
-            studioMii[0x13] = tables.faces[miiJson.face.shape];
+            studioMii[0x13] = lookupTables.faces.values[miiJson.face.shape];
             studioMii[0x11] = lookupTables.skinCols.indexOf(miiJson.face.col);
             studioMii[0x14] = lookupTables.faceFeatures3DS.indexOf(miiJson.face.feature);
             studioMii[0x12] = lookupTables.makeups3DS.indexOf(miiJson.face.makeup);
-            studioMii[0x1D] = tables.hairs[miiJson.hair.style[0]][miiJson.hair.style[1]];
+            studioMii[0x1D] = lookupTables.hairs.values[miiJson.hair.style[0]][miiJson.hair.style[1]];
             studioMii[0x1B] = lookupTables.hairCols.indexOf(miiJson.hair.col);
             if (!studioMii[0x1B]) studioMii[0x1B] = 8;
             studioMii[0x1C] = miiJson.hair.flipped?1:0;
-            studioMii[7] = tables.eyes[miiJson.eyes.type[0]][miiJson.eyes.type[1]];
+            studioMii[7] = lookupTables.eyes.values[miiJson.eyes.type[0]][miiJson.eyes.type[1]];
             studioMii[4] = lookupTables.eyeCols.indexOf(miiJson.eyes.col) + 8;
             studioMii[6] = miiJson.eyes.size;
             studioMii[3] = miiJson.eyes.squash;
             studioMii[5] = miiJson.eyes.rot;
             studioMii[8] = miiJson.eyes.distApart;
             studioMii[9] = miiJson.eyes.yPos;
-            studioMii[0xE] = tables.eyebrows[miiJson.eyebrows.style[0]][miiJson.eyebrows.style[1]];
+            studioMii[0xE] = lookupTables.eyebrows.values[miiJson.eyebrows.style[0]][miiJson.eyebrows.style[1]];
             studioMii[0xB] = lookupTables.hairCols.indexOf(miiJson.eyebrows.col);
             if (!studioMii[0xB]) studioMii[0xB] = 8;
             studioMii[0xD] = miiJson.eyebrows.size;
@@ -1804,10 +1681,10 @@ var exports = {
             studioMii[0xC] = miiJson.eyebrows.rot;
             studioMii[0xF] = miiJson.eyebrows.distApart;
             studioMii[0x10] = miiJson.eyebrows.yPos+3;
-            studioMii[0x2C] = tables.noses[miiJson.nose.type[0]][miiJson.nose.type[1]];
+            studioMii[0x2C] = lookupTables.noses.values[miiJson.nose.type[0]][miiJson.nose.type[1]];
             studioMii[0x2B] = miiJson.nose.size;
             studioMii[0x2D] = miiJson.nose.yPos;
-            studioMii[0x26] = tables.mouths[miiJson.mouth.type[0]][miiJson.mouth.type[1]];
+            studioMii[0x26] = lookupTables.mouths.values[miiJson.mouth.type[0]][miiJson.mouth.type[1]];
             studioMii[0x24] = lookupTables.mouthCols3DS.indexOf(miiJson.mouth.col);
             if (studioMii[0x24] < 4) {
                 studioMii[0x24] += 19;
@@ -2275,22 +2152,22 @@ var exports = {
         studioMii[0x15] =lookupTables.favCols.indexOf(mii.info.favColor);
         studioMii[0x1E] = mii.info.height;
         studioMii[2] = mii.info.weight;
-        studioMii[0x13] = tables.faces[mii.face.shape];
+        studioMii[0x13] = lookupTables.faces.values[mii.face.shape];
         studioMii[0x11] = lookupTables.skinCols.indexOf(mii.face.col);
         studioMii[0x14] = lookupTables.faceFeatures3DS.indexOf(mii.face.feature);
         studioMii[0x12] = lookupTables.makeups3DS.indexOf(mii.face.makeup);
-        studioMii[0x1D] = tables.hairs[mii.hair.style[0]][mii.hair.style[1]];
+        studioMii[0x1D] = lookupTables.hairs.values[mii.hair.style[0]][mii.hair.style[1]];
         studioMii[0x1B] = lookupTables.hairCols.indexOf(mii.hair.col);
         if (!studioMii[0x1B]) studioMii[0x1B] = 8;
         studioMii[0x1C] = mii.hair.flipped?1:0;
-        studioMii[7] = tables.eyes[mii.eyes.type[0]][mii.eyes.type[1]];
+        studioMii[7] = lookupTables.eyes.values[mii.eyes.type[0]][mii.eyes.type[1]];
         studioMii[4] = lookupTables.eyeCols.indexOf(mii.eyes.col) + 8;
         studioMii[6] = mii.eyes.size;
         studioMii[3] = mii.eyes.squash;
         studioMii[5] = mii.eyes.rot;
         studioMii[8] = mii.eyes.distApart;
         studioMii[9] = mii.eyes.yPos;
-        studioMii[0xE] = tables.eyebrows[mii.eyebrows.style[0]][mii.eyebrows.style[1]];
+        studioMii[0xE] = lookupTables.eyebrows.values[mii.eyebrows.style[0]][mii.eyebrows.style[1]];
         studioMii[0xB] = lookupTables.hairCols.indexOf(mii.eyebrows.col);
         if (!studioMii[0xB]) studioMii[0xB] = 8;
         studioMii[0xD] = mii.eyebrows.size;
@@ -2298,10 +2175,10 @@ var exports = {
         studioMii[0xC] = mii.eyebrows.rot;
         studioMii[0xF] = mii.eyebrows.distApart;
         studioMii[0x10] = mii.eyebrows.yPos+3;
-        studioMii[0x2C] = tables.noses[mii.nose.type[0]][mii.nose.type[1]];
+        studioMii[0x2C] = lookupTables.noses.values[mii.nose.type[0]][mii.nose.type[1]];
         studioMii[0x2B] = mii.nose.size;
         studioMii[0x2D] = mii.nose.yPos;
-        studioMii[0x26] = tables.mouths[mii.mouth.type[0]][mii.mouth.type[1]];
+        studioMii[0x26] = lookupTables.mouths.values[mii.mouth.type[0]][mii.mouth.type[1]];
         studioMii[0x24] =lookupTables.hairCols.indexOf(mii.mouth.col);
         if (studioMii[0x24] < 4) {
             studioMii[0x24] += 19;

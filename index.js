@@ -328,14 +328,18 @@ const lookupTables = {
     mouthCols3DS: ["Orange", "Red", "Pink", "Peach", "Black"],
     glassesCols3DS: ["Black", "Brown", "Red", "Blue", "Yellow", "Grey"],
 
-    faces: [
-        0x00, 0x01, 0x08,
-        0x02, 0x03, 0x09,
-        0x04, 0x05, 0x0a,
-        0x06, 0x07, 0x0b
-    ],
+    faces: {
+        indexLookup: true,
+        values: [
+            0x00, 0x01, 0x08,
+            0x02, 0x03, 0x09,
+            0x04, 0x05, 0x0a,
+            0x06, 0x07, 0x0b
+        ]
+    },
     hairs: {
         paginated: true,
+        indexLookup: true,
         values: [
             [0x21, 0x2f, 0x28, 0x25, 0x20, 0x6b, 0x30, 0x33, 0x37, 0x46, 0x2c, 0x42],
             [0x34, 0x32, 0x26, 0x31, 0x2b, 0x1f, 0x38, 0x44, 0x3e, 0x73, 0x4c, 0x77],
@@ -351,6 +355,7 @@ const lookupTables = {
         ]
     },
     eyebrows: {
+        indexLookup: true,
         paginated: true,
         values: [
             [0x06, 0x00, 0x0c, 0x01, 0x09, 0x13, 0x07, 0x15, 0x08, 0x11, 0x05, 0x04],
@@ -358,6 +363,7 @@ const lookupTables = {
         ]
     },
     eyes: {
+        indexLookup: true,
         paginated: true,
         values: [
             [0x02, 0x04, 0x00, 0x08, 0x27, 0x11, 0x01, 0x1a, 0x10, 0x0f, 0x1b, 0x14],
@@ -368,6 +374,7 @@ const lookupTables = {
         ]
     },
     noses: {
+        indexLookup: true,
         paginated: true,
         values: [
             [0x01, 0x0a, 0x02, 0x03, 0x06, 0x00, 0x05, 0x04, 0x08, 0x09, 0x07, 0x0B],
@@ -375,6 +382,7 @@ const lookupTables = {
         ]
     },
     mouths: {
+        indexLookup: true,
         paginated: true,
         values: [
             [0x17, 0x01, 0x13, 0x15, 0x16, 0x05, 0x00, 0x08, 0x0a, 0x10, 0x06, 0x0d],
@@ -1150,16 +1158,21 @@ const decoders = {
         const table = tables[field.lookupTable];
         if (!table) return "ERROR: could not requested lookup table";
 
-        if (table.paginated) {
-            // Handle paginated (2D array) lookup
-            for (let page = 0; page < table.values.length; page++) {
-                for (let index = 0; index < table.values[page].length; index++) {
-                    if (table.values[page][index] === value) {
-                        return [page, index];
+        if (table.indexLookup) {
+            if (table.paginated) {
+                // Handle paginated (2D array) lookup
+                for (let page = 0; page < table.values.length; page++) {
+                    for (let index = 0; index < table.values[page].length; index++) {
+                        if (table.values[page][index] === value) {
+                            return [page, index];
+                        }
                     }
                 }
+                return undefined;
+            } else {
+                // Handle non-paginated index lookup
+                return table.values.indexOf(value);
             }
-            return undefined;
         } else if (Array.isArray(table)) {
             return table[value];
         } else {
@@ -1176,15 +1189,19 @@ const encoders = {
         const table = tables[field.lookupTable];
         if (!table) return "ERROR: could not requested lookup table";
 
-        if (table.paginated) {
-            if (!Array.isArray(decodedValue) || decodedValue.length !== 2) {
+        if (table.indexLookup){
+            if (table.paginated) {
+                if (!Array.isArray(decodedValue) || decodedValue.length !== 2) {
+                    return undefined;
+                }
+                const [page, index] = decodedValue;
+                if (page >= 0 && page < table.values.length && index >= 0 && index < table.values[page].length) {
+                    return table.values[page][index];
+                }
                 return undefined;
+            } else {
+                return table.values[decodedValue];
             }
-            const [page, index] = decodedValue;
-            if (page >= 0 && page < table.values.length && index >= 0 && index < table.values[page].length) {
-                return table.values[page][index];
-            }
-            return undefined;
         } else if (Array.isArray(table)) {
             const index = table.indexOf(decodedValue);
             return index !== -1 ? index : undefined;

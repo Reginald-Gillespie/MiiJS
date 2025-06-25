@@ -1247,15 +1247,26 @@ function encodeString(str, field) {
  * This function calculates the bit-level offset, reads the necessary bytes,
  * shifts and masks the result to isolate the requested bit field.
  */
-function extractBits(data, byteOffset, bitOffset, bitLength) {
+function extractBits(data, byteOffset, bitOffset, bitLength, isBigEndian=true) {
     const totalBitOffset = byteOffset * 8 + bitOffset;
     const startByte = Math.floor(totalBitOffset / 8);
     const endByte = Math.floor((totalBitOffset + bitLength - 1) / 8);
 
     let value = 0;
-    for (let i = startByte; i <= endByte; i++) {
-        if (i < data.length) {
-            value = (value << 8) | data[i];
+    
+    if (isBigEndian) {
+        // Big endian: process bytes left to right (original behavior)
+        for (let i = startByte; i <= endByte; i++) {
+            if (i < data.length) {
+                value = (value << 8) | data[i];
+            }
+        }
+    } else {
+        // Little endian: process bytes right to left
+        for (let i = endByte; i >= startByte; i--) {
+            if (i < data.length) {
+                value = (value << 8) | data[i];
+            }
         }
     }
     
@@ -1265,6 +1276,7 @@ function extractBits(data, byteOffset, bitOffset, bitLength) {
     const mask = (1 << bitLength) - 1;
     return value & mask;
 }
+
 function setBits(buffer, byteOffset, bitOffset, bitLength, value) {
     // Calculate the absolute bit position from the start
     const absoluteBitPos = byteOffset * 8 + bitOffset;
@@ -1308,7 +1320,7 @@ function getNestedProperty(obj, path) {
     // See `setNestedProperty` comment
     return path.split('.').reduce((current, key) => current?.[key], obj);
 }
-function parseFromSchema(data, schema, lookupTables = {}) {
+function parseFromSchema(data, schema, lookupTables = {}, isBigEndian=true) {
     const result = {};
 
     for (const [fieldPath, fieldDef] of Object.entries(schema)) {
@@ -1317,7 +1329,7 @@ function parseFromSchema(data, schema, lookupTables = {}) {
         if (fieldDef.type === 'string') {
             value = decodeString(data, fieldDef);
         } else {
-            value = extractBits(data, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength);
+            value = extractBits(data, fieldDef.byteOffset, fieldDef.bitOffset, fieldDef.bitLength, isBigEndian);
         }
 
         // Apply decoder
@@ -1413,7 +1425,6 @@ const THREEDS_MII_SCHEMA = {
     'info.birthMonth': { byteOffset: 0x18, bitOffset: 3, bitLength: 4, decoder: 'number' },
     'info.gender': { byteOffset: 0x18, bitOffset: 7, bitLength: 1, decoder: 'enum', values: ['Male', 'Female'] },
     'info.favColor': { byteOffset: 0x19, bitOffset: 2, bitLength: 4, decoder: 'color', colorArray: 'favCols' },
-    // 'info.favorited': { byteOffset: 0x19, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
     'name': { type: 'string', byteOffset: 0x1A, maxLength: 10, endianness: "little" },
     'info.name': { type: 'string', byteOffset: 0x1A, maxLength: 10, endianness: "little" },
     'creatorName': { type: 'string', byteOffset: 0x48, maxLength: 10, endianness: "little" },
@@ -1422,6 +1433,7 @@ const THREEDS_MII_SCHEMA = {
     'info.weight': { byteOffset: 0x2F, bitOffset: 0, bitLength: 8, decoder: 'number' },
     'perms.sharing': { byteOffset: 0x30, bitOffset: 7, bitLength: 1, decoder: 'boolean', invert: true },
     'perms.copying': { byteOffset: 0x01, bitOffset: 7, bitLength: 1, decoder: 'boolean' },
+    // 'face.shape': { byteOffset: 0x30, bitOffset: 1, bitLength: 4, decoder: 'lookup', lookupTable: 'faces' },
     'face.shape': { byteOffset: 0x30, bitOffset: 3, bitLength: 4, decoder: 'lookup', lookupTable: 'faces' },
     'face.col': { byteOffset: 0x30, bitOffset: 0, bitLength: 3, decoder: 'color', colorArray: 'skinCols' },
     'face.feature': { byteOffset: 0x31, bitOffset: 4, bitLength: 4, decoder: 'lookup', lookupTable: 'faceFeatures3DS' },
@@ -1567,7 +1579,7 @@ var exports = {
             data = Buffer.from(binOrPath);
         }
 
-        const thisMii = parseFromSchema(data, WII_MII_SCHEMA, lookupTables);
+        const thisMii = parseFromSchema(data, WII_MII_SCHEMA, lookupTables, true);
         thisMii.console = 'wii';
 
         return thisMii;
@@ -1593,7 +1605,7 @@ var exports = {
         if (qrCode) {
             var data = Buffer.from(decodeAesCcm(new Uint8Array(qrCode)));
 
-            const miiJson = parseFromSchema(data, THREEDS_MII_SCHEMA, lookupTables);
+            const miiJson = parseFromSchema(data, THREEDS_MII_SCHEMA, lookupTables, false);
             miiJson.console = '3ds';
             return miiJson;
         } else {

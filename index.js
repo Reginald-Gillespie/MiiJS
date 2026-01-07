@@ -12,7 +12,7 @@ const httpsLib = require('https');
 const asmCrypto = require("./asmCrypto.js");
 const path = require("path");
 const createGL = require('gl');
-
+const typeCheat = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3];
 const {
     createCharModel, initCharModelTextures,
     initializeFFL, exitFFL, parseHexOrB64ToUint8Array,
@@ -2518,7 +2518,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         body.userData.isMiiBody = true;
 
         // Recolor body (bakes into texture)
-        var pantsColor=[0x808080,0xFFC000,0x89CFF0,0x913831][["default","special","foreign","favorite","favorited"].indexOf(options.pantsType.toLowerCase())];
+        var pantsColor=[0x808080,0xFFC000,0x89CFF0,0x913831,0x913831][["default","special","foreign","favorite","favorited"].indexOf(options.pantsType?.toLowerCase()||"default")];
         body.traverse((o) => {
             if (o.isMesh) {
                 if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
@@ -2566,7 +2566,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         const bakeAmbient = new THREE.AmbientLight(0xffffff, 0.15);
         const bakeRim = new THREE.DirectionalLight(
             0xffffff,
-            1.5
+            3
         );
         bakeRim.position.set(-3, 7, 1.0);
         bakeAmbient.layers.enable(1);
@@ -2601,6 +2601,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         const planeGeo = new THREE.PlaneGeometry(planeW, planeH);
         const planeMat = new THREE.MeshBasicMaterial({ map: bodyTex, transparent: true, depthWrite: true, depthTest: true });
         const bodyPlane = new THREE.Mesh(planeGeo, planeMat);
+        bodyPlane.userData.isBodyPlane = true;
 
         // Place plane at body world center so the neck peg aligns into head
         bodyPlane.position.copy(bodyCenter);
@@ -3064,7 +3065,7 @@ function make3DSChild(dad, mom, options = {}) {
             "height": 64,
             "weight": 64,
             "gender": g,
-            "favColor": options.favColor || favCols[Math.floor(Math.random() * favCols.length)]
+            "favoriteColor": options.favoriteColor || favCols[Math.floor(Math.random() * favCols.length)]
         },
         "meta": {
             "name": options.name || kidNames[g][Math.floor(Math.random() * kidNames[g].length)],
@@ -3114,7 +3115,6 @@ function make3DSChild(dad, mom, options = {}) {
 function generateInstructions(mii, full) {
     let type = mii.console?.toLowerCase();
     if (type.toLowerCase() === "wii") {
-        var typeCheat = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3];
         var instrs = {
             "base": `Select "${mii.general.gender}", and then "Start from Scratch".`,
             "col": `On the info page (first tab), set the Favorite Color to ${lookupTables.favCols[mii.general.favoriteColor]} (${mii.general.favoriteColor <= 5 ? mii.general.favoriteColor + 1 : mii.general.favoriteColor - 5} from the left, ${mii.general.favoriteColor > 5 ? "bottom" : "top"} row).`,
@@ -3124,7 +3124,7 @@ function generateInstructions(mii, full) {
             "makeup": `On the face page's makeup tab, set the makeup to the one ${Math.ceil((mii.face.feature + 1) / 3)} from the top, and ${typeCheat[mii.face.feature]} from the left.`,
             "hairStyle": `On the hair page (fourth tab), set the hair style to the one ${typeCheat[mii.hair.type]} from the left, ${Math.ceil((mii.hair.type + 1) / 3)} from the top, on page ${mii.hair.page}.`,
             "hairFlipped": `${mii.hair.flipped ? `On the hair page (fourth tab), press the button to flip the hair.` : ``}`,
-            "hairColor": `On the hair page (fourth tab), set the hair color to the one ${mii.hair.col + (mii.hair.col > 3 ? -3 : 1)} from the left, on the ${mii.hair.col > 3 ? `bottom` : `top`} row.`,
+            "hairColor": `On the hair page (fourth tab), set the hair color to the one ${mii.hair.color + (mii.hair.color > 3 ? -3 : 1)} from the left, on the ${mii.hair.color > 3 ? `bottom` : `top`} row.`,
             "eyebrowStyle": `On the eyebrow page (fifth tab), set the eyebrow style to the one ${typeCheat[mii.eyebrows.type]} from the left, ${Math.ceil((mii.eyebrows.type + 1) / 3)} from the top, on page ${mii.eyebrows.page}.`,
             "eyebrowColor": `On the eyebrow page (fifth tab), set the eyebrow color to the one ${mii.eyebrows.color + (mii.eyebrows.color > 3 ? -3 : 1)} from the left, on the ${mii.eyebrows.color > 3 ? `bottom` : `top`} row.`,
             "eyebrowY": `${mii.eyebrows.yPos !== 7 ? `On the eyebrow page (fifth tab), ` : ``}${mii.eyebrows.yPosition < 7 ? `press the up button ${7 - mii.eyebrows.yPosition} times.` : mii.eyebrows.yPosition > 7 ? `press the down button ${mii.eyebrows.yPosition - 7} times.` : ``}`,
@@ -3141,7 +3141,7 @@ function generateInstructions(mii, full) {
             "noseY": `${mii.nose.yPosition !== 9 ? `On the nose page (seventh tab), ` : ``}${mii.nose.yPosition < 9 ? `press the up button ${9 - mii.nose.yPosition} times.` : mii.nose.yPosition > 9 ? `press the down button ${mii.nose.yPosition - 9} times.` : ``}`,
             "noseSize": `${mii.nose.size !== 4 ? `On the nose page (seventh tab), ` : ``}${mii.nose.size < 4 ? `press the shrink button ${4 - mii.nose.size} times.` : mii.nose.size > 4 ? `press the enlarge button ${mii.nose.size - 4} times.` : ``}`,
             "mouthType": `On the mouth page (eighth tab), set the mouth type to the one ${typeCheat[mii.mouth.type]} from the left, ${Math.ceil((mii.mouth.type + 1) / 3)} from the top, on page ${mii.mouth.page}.`,
-            "mouthCol": `On the mouth page (eighth tab), set the color to the one ${mii.mouth.col + 1} from the left.`,
+            "mouthCol": `On the mouth page (eighth tab), set the color to the one ${mii.mouth.color + 1} from the left.`,
             "mouthY": `${mii.mouth.yPosition !== 13 ? `On the mouth page (eighth tab), ` : ``}${mii.mouth.yPosition < 13 ? `press the up button ${13 - mii.mouth.yPosition} times.` : mii.mouth.yPosition > 13 ? `press the down button ${mii.mouth.yPosition - 13} times.` : ``}`,
             "mouthSize": `${mii.mouth.size !== 4 ? `On the mouth page (eighth tab), ` : ``}${mii.mouth.size < 4 ? `press the shrink button ${4 - mii.mouth.size} times.` : mii.mouth.size > 4 ? `press the enlarge button ${mii.mouth.size - 4} times.` : ``}`,
             "glasses": `On the glasses page (within the ninth tab), set the glasses to the one ${Math.ceil((mii.glasses.type + 1) / 3)} from the top, and ${typeCheat[mii.glasses.type]} from the left.`,
@@ -3156,7 +3156,7 @@ function generateInstructions(mii, full) {
             "moleY": `${mii.mole.yPosition !== 20 ? `On the mole page (within the ninth tab), press the ` : ``}${mii.mole.yPosition > 20 ? `down button ${mii.mole.yPosition - 20} times.` : mii.mole.yPosition < 20 ? `up button ${20 - mii.mole.yPosition} times.` : ``}`,
             "moleSize": `${mii.mole.size !== 4 ? `On the mole page (within the ninth tab), ` : ``}${mii.mole.size < 4 ? `press the shrink button ${4 - mii.mole.size} times.` : mii.mole.size > 4 ? `press the enlarge button ${mii.mole.size - 4} times.` : ``}`,
             "beard": `On the beard page (within the ninth tab), set the beard to the one on the ${[0, 1].includes(mii.beard.type) ? `top` : `bottom`}-${[0, 2].includes(mii.beard.type) ? `left` : `right`}.`,
-            "beardCol": `On the mustache OR beard pages (within the ninth tab), set the color to the one ${mii.beard.col + (mii.beard.col > 3 ? -3 : 1)} from the left, on the ${mii.facialHair.col > 3 ? `bottom` : `top`} row.`,
+            "beardCol": `On the mustache OR beard pages (within the ninth tab), set the color to the one ${mii.beard.color + (mii.beard.color > 3 ? -3 : 1)} from the left, on the ${mii.facialHair.color > 3 ? `bottom` : `top`} row.`,
             "other": `The Nickname of this Mii is ${mii.info.name}.${mii.info.creatorName ? ` The creator was ${mii.info.creatorName}.` : ``} Mingle was turned ${mii.info.mingle ? `on` : `off`}.${mii.info.birthday !== 0 ? ` Its birthday is ${["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][mii.info.birthMonth]} ${mii.info.birthday}.` : ``}`
         };
         if (!full) {
@@ -3187,7 +3187,7 @@ function generateInstructions(mii, full) {
             "eyebrowDist": `${mii.eyebrows.distanceApart !== 2 ? `On the eyebrow page (third tab), ` : ``}${mii.eyebrows.distanceApart < 2 ? `press the closer-together button ${2 - mii.eyebrows.distanceApart} times.` : mii.eyebrows.distanceApart > 2 ? `press the further-apart button ${mii.eyebrows.distanceApart - 2} times.` : ``}`,
             "eyebrowSquash": `${mii.eyebrows.squash !== 3 ? `On the eyebrow page (third tab), ` : ``}${mii.eyebrows.squash < 3 ? `press the squish button ${3 - mii.eyebrows.squash} times.` : mii.eyebrows.squash > 3 ? `press the un-squish button ${mii.eyebrows.squash - 3} times.` : ``}`,
             "eyeType": `On the eye page (fourth tab), set the eye type to the one ${typeCheat[mii.eyes.type]} from the left, ${Math.ceil((mii.eyes.type + 1) / 3)} from the top, on page ${mii.eyes.page + 1}.`,
-            "eyeColor": `On the eye page (fourth tab), set the color to the one ${mii.eyes.col + 1} from the top.`,
+            "eyeColor": `On the eye page (fourth tab), set the color to the one ${mii.eyes.color + 1} from the top.`,
             "eyeY": `${mii.eyes.yPosition !== 12 ? `On the eye page (fourth tab), ` : ``}${mii.eyes.yPosition < 12 ? `press the up button ${12 - mii.eyes.yPosition} times.` : mii.eyes.yPosition > 12 ? `press the down button ${mii.eyes.yPosition - 12} times.` : ``}`,
             "eyeSize": `${mii.eyes.size !== 4 ? `On the eye page (fourth tab), ` : ``}${mii.eyes.size < 4 ? `press the shrink button ${4 - mii.eyes.size} times.` : mii.eyes.size > 4 ? `press the enlarge button ${mii.eyes.size - 4} times.` : ``}`,
             "eyeRot": `${mii.eyes.rotation !== (mii.general.gender === "Female" ? 3 : 4) ? `On the eye page (fourth tab), ` : ``}${mii.eyes.rotation < (mii.general.gender === "Female" ? 3 : 4) ? `press the rotate clockwise button ${(mii.general.gender === "Female" ? 3 : 4) - mii.eyes.rotation} times.` : mii.eyes.rotation > (mii.general.gender === "Female" ? 3 : 4) ? `press the rotate counter-clockwise button ${mii.eyes.rotation - (mii.general.gender === "Female" ? 3 : 4)} times.` : ``}`,
@@ -3202,7 +3202,7 @@ function generateInstructions(mii, full) {
             "mouthSize": `${mii.mouth.size !== 4 ? `On the mouth page (sixth tab), ` : ``}${mii.mouth.size < 4 ? `press the shrink button ${4 - mii.mouth.size} times.` : mii.mouth.size > 4 ? `press the enlarge button ${mii.mouth.size - 4} times.` : ``}`,
             "mouthSquash": `${mii.mouth.squash !== 3 ? `On the mouth page (sixth tab), ` : ``}${mii.mouth.squash < 3 ? `press the squish button ${3 - mii.mouth.squash} times.` : mii.mouth.squash > 3 ? `press the un-squish button ${mii.mouth.squash - 3} times.` : ``}`,
             "glasses": `On the glasses page (within the seventh tab), set the glasses to the one ${Math.ceil((mii.glasses.type + 1) / 3)} from the top, and ${typeCheat[mii.glasses.type]} from the left.`,
-            "glassesCol": `On the glasses page (within the seventh tab), set the color to the one ${mii.glasses.col + 1} from the top.`,
+            "glassesCol": `On the glasses page (within the seventh tab), set the color to the one ${mii.glasses.color + 1} from the top.`,
             "glassesY": `${mii.glasses.yPosition !== 10 ? `On the glasses page (within the seventh tab), ` : ``}${mii.glasses.yPosition < 10 ? `press the up button ${10 - mii.glasses.yPosition} times.` : mii.glasses.yPosition > 10 ? `press the down button ${mii.glasses.yPosition - 10} times.` : ``}`,
             "glassesSize": `${mii.glasses.size !== 4 ? `On the glasses page (within the seventh tab), ` : ``}${mii.glasses.size < 4 ? `press the shrink button ${4 - mii.glasses.size} times.` : mii.glasses.size > 4 ? `press the enlarge button ${mii.glasses.size - 4} times.` : ``}`,
             "stache": `On the mustache page (within the seventh tab), set the mustache to the one on the ${[0, 1].includes(mii.beard.mustache.type) ? `top` : [2, 3].includes(mii.beard.mustache.type) ? `middle` : `bottom`}-${[0, 2, 4].includes(mii.beard.mustache.type) ? `left` : `right`}.`,
@@ -3216,7 +3216,7 @@ function generateInstructions(mii, full) {
             "beardCol": `On the mustache OR beard pages (within the seventh tab), set the color to the one ${mii.beard.color + 1} from the top.`,
             "heightWeight": `On the build page (eighth tab), set the height to ${Math.round((100 / 128) * mii.general.height)}%, and the weight to ${Math.round((100 / 128) * mii.general.weight)}%.`,
             "col": `On the info page (after pressing "Next"), set the Favorite Color to ${mii.general.favoriteColor} (${mii.general.favoriteColor <= 5 ? mii.general.favoriteColor + 1 : mii.general.favoriteColor - 5} from the left, ${mii.general.favoriteColor > 5 ? "bottom" : "top"} row).`,
-            "other": `The Nickname of this Mii is ${mii.general.name}.${mii.general.creatorName ? ` The creator was ${mii.general.creatorName}.` : ``} ${mii.general.birthday !== 0 ? ` Its birthday is ${["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][mii.general.birthMonth]} ${mii.general.birthday}.` : ``}`
+            "other": `The Nickname of this Mii is ${mii.meta.name}.${mii.meta.creatorName ? ` The creator was ${mii.meta.creatorName}.` : ``} ${mii.general.birthday !== 0 ? ` Its birthday is ${["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][mii.general.birthMonth]} ${mii.general.birthday}.` : ``}`
         };
         if (!full) {
             var defaultMiiInstrs = structuredClone(mii.general.gender === "Male" ? defaultInstrs["3ds"].male : defaultInstrs["3ds"].female);

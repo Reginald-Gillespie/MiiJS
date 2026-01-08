@@ -3230,78 +3230,82 @@ function generateInstructions(mii, full) {
     }
 }
 
-function miiHeightToFeetInches(value) {
-    const minInches = 36;  // 3'0"
-    const midInches = 69;  // 5'9"
-    const maxInches = 84;  // 7'0"
-    const midPoint = 64;
+function miiHeightToMeasurements(value) {
+    // h in [0, 127]
+    const totalInches = 36 + (48 / 127) * value; // 3' to 7'
+    return { 
+        feet:Math.floor(totalInches / 12),
+        inches:Math.round(totalInches % 12),
+        totalInches,
 
-    let totalInches;
-    if (value <= midPoint) {
-        // Lower half: 0–64 maps to 36–69
-        totalInches = minInches + (value / midPoint) * (midInches - minInches);
-    }
-    else {
-        // Upper half: 64–127 maps to 69–84
-        totalInches = midInches + ((value - midPoint) / (127 - midPoint)) * (maxInches - midInches);
-    }
-
-    const feet = Math.floor(totalInches / 12);
-    const inches = Math.round(totalInches % 12);
-    return { feet, inches, totalInches };
+        centimeters:Math.round(totalInches*2.54)
+    };
 }
 function inchesToMiiHeight(totalInches) {
-    const minInches = 36;
-    const midInches = 69;
-    const maxInches = 84;
-    const midPoint = 64;
-
-    let value;
-    if (totalInches <= midInches) {
-        // Below or equal to midpoint
-        value = ((totalInches - minInches) / (midInches - minInches)) * midPoint;
-    } else {
-        // Above midpoint
-        value = midPoint + ((totalInches - midInches) / (maxInches - midInches)) * (127 - midPoint);
-    }
-
-    return Math.round(Math.max(0, Math.min(value, 127)));
+    return ((totalInches - 36) * 127) / 48;
+}
+function centimetersToMiiHeight(totalCentimeters) {
+    return ((Math.round(totalCentimeters/2.54) - 36) * 127) / 48;
 }
 
-// Getting and setting Mii weights is HIGHLY EXPERIMENTAL and I am very unconfident in its output
 // ---- Tunable anchors (BMI breakpoints) ----
-const BMI_MIN = 16;   // maps to Mii weight 0
-const BMI_MID = 23;   // maps to Mii weight 64 (average look)
-const BMI_MAX = 40;   // maps to Mii weight 127
-function heightWeightToMiiWeight(heightInches, weightLbs) {
-    if (!heightInches || heightInches < 0) throw new Error("heightInches must be >= 0");
-    const bmi = (703 * weightLbs) / (heightInches * heightInches);
-
-    let v;
-    if (bmi <= BMI_MID) {
-        const t = (clamp(bmi, BMI_MIN, BMI_MID) - BMI_MIN) / (BMI_MID - BMI_MIN);
-        v = 0 + t * 64;
+const BMI_MIN = 16;
+const BMI_MID = 22;
+const BMI_MAX = 35;
+function bmiFromWeightSlider(w) {
+    // w in [0, 127]
+    if (w <= 64) {
+        return BMI_MID - (64 - w) * (BMI_MID - BMI_MIN) / 64;
     } else {
-        const t = (clamp(bmi, BMI_MID, BMI_MAX) - BMI_MID) / (BMI_MAX - BMI_MID);
-        v = 64 + t * (127 - 64);
+        return BMI_MID + (w - 64) * (BMI_MAX - BMI_MID) / 63;
     }
-    return Math.round(clamp(v, 0, 127));
 }
 function miiWeightToRealWeight(heightInches, miiWeight) {
-    if (!heightInches || heightInches <= 0) heightInches = 0;
-    const v = clamp(miiWeight, 0, 127);
+    /*
+    Take the height, map it to a reasonable height 0-127 === 3'-7'.
+    Get the average weight for that height.
+    Take the slider 0-127 for weight, assume 64 is the average midpoint.
+    If less than 64, make the Mii's weight more underweight than the average.
+    If higher, make the Mii's weight more overweight than the average.
+    The shorter the height, the less drastic the weight changes.
 
-    let bmi;
-    if (v <= 64) {
-        const t = v / 64;
-        bmi = BMI_MIN + t * (BMI_MID - BMI_MIN);
-    } else {
-        const t = (v - 64) / (127 - 64);
-        bmi = BMI_MID + t * (BMI_MAX - BMI_MID);
+    This is approximate, not guaranteed accurate nor intended to be taken that way. This is for entertainment value only.
+    */
+    if (!heightInches || heightInches < 0) throw new Error("heightInches must be >= 0");
+    const H = miiHeightToMeasurements(heightInches).totalInches;
+    const BMI = bmiFromWeightSlider(miiWeight);
+    return {
+        pounds:BMI * (H * H) / 703,
+        kilograms:Math.round((BMI * (H * H) / 703)*0.4535924)
+    };
+}
+function imperialHeightWeightToMiiWeight(heightInches, weightLbs) {
+    if (!heightInches || heightInches < 0) throw new Error("heightInches must be >= 0");
+
+    const H = miiHeightToMeasurements(heightInches).totalInches;
+    const BMI = weightLbs * 703 / (H * H);
+
+    if (BMI <= BMI_MID) {
+        return 64 - 64 * (BMI_MID - BMI) / (BMI_MID - BMI_MIN);
     }
+    else {
+        return 64 + 63 * (BMI - BMI_MID) / (BMI_MAX - BMI_MID);
+    }
+}
+function metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms) {
+    const heightInches=Math.round(heightCentimeters/2.54);
+    const weightLbs=Math.round(weightKilograms/0.4535924);
+    if (!heightInches || heightInches < 0) throw new Error("heightCentimeters must be >= 0");
 
-    const pounds = (bmi * heightInches * heightInches) / 703;
-    return { pounds, bmi };
+    const H = miiHeightToMeasurements(heightInches).totalInches;
+    const BMI = weightLbs * 703 / (H * H);
+
+    if (BMI <= BMI_MID) {
+        return 64 - 64 * (BMI_MID - BMI) / (BMI_MID - BMI_MIN);
+    }
+    else {
+        return 64 + 63 * (BMI - BMI_MID) / (BMI_MAX - BMI_MID);
+    }
 }
 
 
@@ -3333,10 +3337,13 @@ module.exports = {
     generateInstructions,
 
     //Normalize Height and Weight 0-127 to human measurements
-    miiHeightToFeetInches,
+    miiHeightToMeasurements,
     inchesToMiiHeight,
-    heightWeightToMiiWeight,//EXPERIMENTAL
-    miiWeightToRealWeight,//EXPERIMENTAL
+    centimetersToMiiHeight,
+
+    miiWeightToRealWeight,
+    imperialHeightWeightToMiiWeight,
+    metricHeightWeightToMiiWeight,
 
     /*
     Handle Amiibo Functions

@@ -44,10 +44,15 @@ MiiJS is a complete and comprehensive Mii library for reading, converting, modif
 
 ### Utility Functions
 - **`generateInstructions(miiJson, fullInstructions?)`** - Returns a JSON object of different instruction fields for manually recreating the Mii. If fullInstructions is not set, only the instructions that differ from a default Mii will be returned.
-- **`miiHeightToFeetInches(value)`** - Converts Mii height value (0-127) to real-world feet and inches. Returns `{feet, inches, totalInches}`.
+- **`miiHeightToMeasurements(miiHeight)`** - Converts Mii height value (0-127) to real-world feet and inches. Returns `{feet, inches, totalInches, centimeters}`.
 - **`inchesToMiiHeight(totalInches)`** - Converts real-world height in inches to Mii height value (0-127).
-- **`heightWeightToMiiWeight(heightInches, weightLbs)`** - Converts real-world height and weight to Mii weight value (0-127). **EXPERIMENTAL**
-- **`miiWeightToRealWeight(heightInches, miiWeight)`** - Converts Mii weight value to real-world pounds and BMI. Returns `{pounds, bmi}`. **EXPERIMENTAL**
+- **`centimetersToMiiHeight(totalCentimeters)`** - Converts real-world height in centimeters to Mii height value (0-127).
+- **`miiWeightToRealWeight(miiWeight)`** - Converts Mii weight value (0-127) to real-world weight values. Returns `{pounds, kilograms}`.
+- **`imperialHeightWeightToMiiWeight(heightInches, weightLbs)`** - Converts real-world imperial measurements to Mii weight values.
+- **`metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms)`** - Converts real-world metric measurements to Mii weight values.
+
+### Other Functions
+- **`makeChild(miiJson1, miiJson2, options?)`** - Returns an array of 6 different Mii JSONs, which represent a child generated from the two parent Miis passed to the function at different stages of life. This is somewhat experimental, but should be accurate to my current knowledge. You can pass any or none of { name: "The Name", creatorName: "The Name", favoriteColor: 0-11, gender: 0-1/\*0:Male, 1:Female\*/ }
 
 <hr>
 
@@ -262,41 +267,24 @@ await miijs.write3DSQR(miiJson, './modified_3ds.jpg');
 await miijs.writeWiiBin(wiiVersion, './modified_wii.bin');
 ```
 
-## Complete Workflow Example
+## Making a Child from Two Miis
 ```javascript
-const miijs = require('miijs');
 const fs = require('fs');
+const miijs = require('miijs');
 
-async function processMyMii() {
-    // 1. Read from QR code
-    const mii = await miijs.read3DSQR('./example3DSQR.jpg');
-    console.log('Loaded:', mii.meta.name);
-    
-    // 2. Customize the Mii
-    mii.general.favoriteColor = 0; // Red
-    mii.general.height = miijs.inchesToMiiHeight(66); // 5'6"
-    
-    // 3. Render it
-    const renderBuffer = await miijs.renderMiiWithStudio(mii);
-    fs.writeFileSync('./my_mii_face.png', renderBuffer);
-    
-    // 4. Generate recreation instructions
-    const instructions = miijs.generateInstructions(mii);
-    console.log('\nRecreation steps:', instructions);
-    
-    // 5. Export to multiple formats
-    await miijs.write3DSQR(mii, './my_mii_qr.jpg');
-    
-    const wiiMii = miijs.convertMii(mii, 'wii');
-    await miijs.writeWiiBin(wiiMii, './my_mii_wii.bin');
-    
-    const studioCode = miijs.convertMiiToStudio(mii);
-    console.log('\nStudio URL:', `https://studio.mii.nintendo.com/miis/image.png?data=${studioCode}`);
-    
-    console.log('\nDone! All formats exported.');
+//Read the parents
+const dad = await miijs.read3DSQR('./dad.jpg');
+const mom = await miijs.read3DSQR('./mom.jpg');
+
+//Make the child
+const child = miijs.makeChild(dad,mom);
+
+//Write the child to a file, and then render all of the stages
+fs.writeFileSync(`./${child[0].meta.name}.json`,JSON.stringify(child,null,4));
+for(var i=0;i<child.length;i++){
+    let img=await miijs.renderMii(child[i]);
+    fs.writeFileSync(`./${child[i].meta.name}`,img);
 }
-
-processMyMii().catch(console.error);
 ```
 
 <hr>

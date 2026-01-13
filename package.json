@@ -1,7 +1,7 @@
 {
   "name": "miijs",
-  "version": "2.3.4",
-  "description": "Work with Mii characters in every possible way needed for your project.",
+  "version": "2.4.0",
+  "description": "The most complete and easy to use Mii library on the market.",
   "main": "index.js",
   "scripts": {
     "test": "jest",

@@ -25,1125 +25,7 @@ const FFLShaderMaterial = require("ffl.js/FFLShaderMaterial.js");
 /** @typedef {import('./types').WiiMii} WiiMii */
 
 //Miscellaneous Tables
-const lookupTables = {
-    //Universals
-    favCols: ["Red", "Orange", "Yellow", "Lime", "Green", "Blue", "Cyan", "Pink", "Purple", "Brown", "White", "Black"],
-    skinCols: ["White", "Tanned White", "Darker White", "Tanned Darker", "Mostly Black", "Black"],
-    hairCols: ["Black", "Brown", "Red", "Reddish Brown", "Grey", "Light Brown", "Dark Blonde", "Blonde"],
-    eyeCols: ["Black", "Grey", "Brown", "Lime", "Blue", "Green"],
-
-    //Wii fields
-    wiiFaceFeatures: ["None", "Blush", "Makeup and Blush", "Freckles", "Bags", "Wrinkles on Cheeks", "Wrinkles near Eyes", "Chin Wrinkle", "Makeup", "Stubble", "Wrinkles near Mouth", "Wrinkles"],
-    wiiMouthColors: ["Peach", "Red", "Pink"],
-    wiiGlassesCols: ["Grey", "Brown", "Red", "Blue", "Yellow", "White"],
-    wiiNoses: {
-        "1": 0,
-        "10": 1,
-        "2": 2,
-        "3": 3,
-        "6": 4,
-        "0": 5,
-        "5": 6,
-        "4": 7,
-        "8": 8,
-        "9": 9,
-        "7": 10,
-    },
-    pages: {
-        mouths: {
-            '0': 1,
-            '1': 1,
-            '2': 2,
-            '3': 2,
-            '4': 2,
-            '5': 1,
-            '6': 1,
-            '7': 2,
-            '8': 1,
-            '9': 2,
-            '10': 1,
-            '11': 2,
-            '12': 2,
-            '13': 1,
-            '14': 2,
-            '15': 2,
-            '16': 1,
-            '17': 2,
-            '18': 2,
-            '19': 1,
-            '20': 2,
-            '21': 1,
-            '22': 1,
-            '23': 1
-        },
-        eyebrows: {
-            '0': 1,
-            '1': 1,
-            '2': 2,
-            '3': 2,
-            '4': 1,
-            '5': 1,
-            '6': 1,
-            '7': 1,
-            '8': 1,
-            '9': 1,
-            '10': 2,
-            '11': 2,
-            '12': 1,
-            '13': 2,
-            '14': 2,
-            '15': 2,
-            '16': 2,
-            '17': 1,
-            '18': 2,
-            '19': 1,
-            '20': 2,
-            '21': 1,
-            '22': 2,
-            '23': 2
-        },
-        eyes: {
-            0: 1,
-            1: 1,
-            2: 1,
-            3: 4,
-            4: 1,
-            5: 3,
-            6: 3,
-            7: 4,
-            8: 1,
-            9: 2,
-            10: 4,
-            11: 2,
-            12: 2,
-            13: 3,
-            14: 4,
-            15: 1,
-            16: 1,
-            17: 1,
-            18: 3,
-            19: 2,
-            20: 1,
-            21: 2,
-            22: 4,
-            23: 2,
-            24: 3,
-            25: 2,
-            26: 1,
-            27: 1,
-            28: 3,
-            29: 4,
-            30: 3,
-            31: 3,
-            32: 2,
-            33: 2,
-            34: 2,
-            35: 2,
-            36: 3,
-            37: 3,
-            38: 4,
-            39: 1,
-            40: 2,
-            41: 3,
-            42: 4,
-            43: 4,
-            44: 4,
-            45: 4,
-            46: 3,
-            47: 4
-        },
-        hairs: {
-            '0': 5,
-            '1': 4,
-            '2': 6,
-            '3': 5,
-            '4': 4,
-            '5': 4,
-            '6': 5,
-            '7': 4,
-            '8': 4,
-            '9': 6,
-            '10': 5,
-            '11': 5,
-            '12': 4,
-            '13': 4,
-            '14': 5,
-            '15': 6,
-            '16': 6,
-            '17': 5,
-            '18': 6,
-            '19': 4,
-            '20': 5,
-            '21': 5,
-            '22': 5,
-            '23': 3,
-            '24': 6,
-            '25': 4,
-            '26': 4,
-            '27': 4,
-            '28': 6,
-            '29': 6,
-            '30': 3,
-            '31': 1,
-            '32': 2,
-            '33': 1,
-            '34': 3,
-            '35': 5,
-            '36': 3,
-            '37': 2,
-            '38': 3,
-            '39': 1,
-            '40': 1,
-            '41': 3,
-            '42': 3,
-            '43': 3,
-            '44': 1,
-            '45': 1,
-            '46': 6,
-            '47': 2,
-            '48': 2,
-            '49': 1,
-            '50': 2,
-            '51': 1,
-            '52': 2,
-            '53': 6,
-            '54': 3,
-            '55': 2,
-            '56': 1,
-            '57': 3,
-            '58': 2,
-            '59': 1,
-            '60': 2,
-            '61': 6,
-            '62': 2,
-            '63': 5,
-            '64': 2,
-            '65': 3,
-            '66': 2,
-            '67': 3,
-            '68': 1,
-            '69': 4,
-            '70': 1,
-            '71': 6
-        }
-    },
-    types: {
-        "mouths": {
-            "0": 6,
-            "1": 1,
-            "2": 2,
-            "3": 4,
-            "4": 5,
-            "5": 5,
-            "6": 10,
-            "7": 0,
-            "8": 7,
-            "9": 1,
-            "10": 8,
-            "11": 7,
-            "12": 11,
-            "13": 11,
-            "14": 10,
-            "15": 6,
-            "16": 9,
-            "17": 3,
-            "18": 9,
-            "19": 2,
-            "20": 8,
-            "21": 3,
-            "22": 4,
-            "23": 0
-        },
-        "eyebrows": {
-            "0": 1,
-            "1": 3,
-            "2": 2,
-            "3": 3,
-            "4": 11,
-            "5": 10,
-            "6": 0,
-            "7": 6,
-            "8": 8,
-            "9": 4,
-            "10": 1,
-            "11": 0,
-            "12": 2,
-            "13": 7,
-            "14": 4,
-            "15": 6,
-            "16": 10,
-            "17": 9,
-            "18": 9,
-            "19": 5,
-            "20": 5,
-            "21": 7,
-            "22": 8,
-            "23": 11
-        },
-        "eyes": {
-            "0": 2,
-            "1": 6,
-            "2": 0,
-            "3": 6,
-            "4": 1,
-            "5": 0,
-            "6": 5,
-            "7": 0,
-            "8": 3,
-            "9": 4,
-            "10": 9,
-            "11": 1,
-            "12": 5,
-            "13": 2,
-            "14": 10,
-            "15": 9,
-            "16": 8,
-            "17": 5,
-            "18": 9,
-            "19": 2,
-            "20": 11,
-            "21": 8,
-            "22": 8,
-            "23": 6,
-            "24": 6,
-            "25": 9,
-            "26": 7,
-            "27": 10,
-            "28": 10,
-            "29": 5,
-            "30": 7,
-            "31": 8,
-            "32": 3,
-            "33": 0,
-            "34": 7,
-            "35": 11,
-            "36": 3,
-            "37": 4,
-            "38": 2,
-            "39": 4,
-            "40": 10,
-            "41": 1,
-            "42": 3,
-            "43": 7,
-            "44": 1,
-            "45": 4,
-            "46": 11,
-            "47": 11
-        },
-        "hairs": {
-            "0": 11,
-            "1": 6,
-            "2": 5,
-            "3": 1,
-            "4": 4,
-            "5": 8,
-            "6": 4,
-            "7": 11,
-            "8": 9,
-            "9": 3,
-            "10": 3,
-            "11": 6,
-            "12": 0,
-            "13": 1,
-            "14": 0,
-            "15": 10,
-            "16": 1,
-            "17": 8,
-            "18": 4,
-            "19": 7,
-            "20": 5,
-            "21": 10,
-            "22": 2,
-            "23": 3,
-            "24": 9,
-            "25": 5,
-            "26": 3,
-            "27": 10,
-            "28": 6,
-            "29": 11,
-            "30": 9,
-            "31": 11,
-            "32": 0,
-            "33": 0,
-            "34": 11,
-            "35": 9,
-            "36": 6,
-            "37": 2,
-            "38": 1,
-            "39": 4,
-            "40": 1,
-            "41": 7,
-            "42": 2,
-            "43": 0,
-            "44": 3,
-            "45": 6,
-            "46": 2,
-            "47": 1,
-            "48": 3,
-            "49": 7,
-            "50": 7,
-            "51": 2,
-            "52": 5,
-            "53": 7,
-            "54": 5,
-            "55": 8,
-            "56": 9,
-            "57": 10,
-            "58": 6,
-            "59": 8,
-            "60": 10,
-            "61": 0,
-            "62": 11,
-            "63": 7,
-            "64": 9,
-            "65": 8,
-            "66": 4,
-            "67": 4,
-            "68": 10,
-            "69": 2,
-            "70": 5,
-            "71": 8
-        }
-    },
-    wiiNoses: {
-        '0': 1,
-        '1': 10,
-        '2': 2,
-        '3': 3,
-        '4': 6,
-        '5': 0,
-        '6': 5,
-        '7': 4,
-        '8': 8,
-        '9': 9,
-        '10': 7,
-        '11': 11
-    },
-    mouthTable: {
-        '0': '113',
-        '1': '121',
-        '2': '231',
-        '3': '222',
-        '4': '232',
-        '5': '132',
-        '6': '124',
-        '7': '211',
-        '8': '123',
-        '9': '221',
-        '10': '133',
-        '11': '223',
-        '12': '234',
-        '13': '134',
-        '14': '224',
-        '15': '213',
-        '16': '114',
-        '17': '212',
-        '18': '214',
-        '19': '131',
-        '20': '233',
-        '21': '112',
-        '22': '122',
-        '23': '111'
-    },
-    eyebrowTable: {
-        '0': '121',
-        '1': '112',
-        '2': '231',
-        '3': '212',
-        '4': '134',
-        '5': '124',
-        '6': '111',
-        '7': '113',
-        '8': '133',
-        '9': '122',
-        '10': '221',
-        '11': '211',
-        '12': '131',
-        '13': '223',
-        '14': '222',
-        '15': '213',
-        '16': '224',
-        '17': '114',
-        '18': '214',
-        '19': '132',
-        '20': '232',
-        '21': '123',
-        '22': '233',
-        '23': '234'
-    },
-    eyeTable: {
-        '0': '131',
-        '1': '113',
-        '2': '111',
-        '3': '413',
-        '4': '121',
-        '5': '311',
-        '6': '332',
-        '7': '411',
-        '8': '112',
-        '9': '222',
-        '10': '414',
-        '11': '221',
-        '12': '232',
-        '13': '331',
-        '14': '424',
-        '15': '114',
-        '16': '133',
-        '17': '132',
-        '18': '314',
-        '19': '231',
-        '20': '134',
-        '21': '233',
-        '22': '433',
-        '23': '213',
-        '24': '313',
-        '25': '214',
-        '26': '123',
-        '27': '124',
-        '28': '324',
-        '29': '432',
-        '30': '323',
-        '31': '333',
-        '32': '212',
-        '33': '211',
-        '34': '223',
-        '35': '234',
-        '36': '312',
-        '37': '322',
-        '38': '431',
-        '39': '122',
-        '40': '224',
-        '41': '321',
-        '42': '412',
-        '43': '423',
-        '44': '421',
-        '45': '422',
-        '46': '334',
-        '47': '434'
-    },
-    hairTable: {
-        '0': '534',
-        '1': '413',
-        '2': '632',
-        '3': '521',
-        '4': '422',
-        '5': '433',
-        '6': '522',
-        '7': '434',
-        '8': '414',
-        '9': '612',
-        '10': '512',
-        '11': '513',
-        '12': '411',
-        '13': '421',
-        '14': '511',
-        '15': '624',
-        '16': '621',
-        '17': '533',
-        '18': '622',
-        '19': '423',
-        '20': '532',
-        '21': '524',
-        '22': '531',
-        '23': '312',
-        '24': '614',
-        '25': '432',
-        '26': '412',
-        '27': '424',
-        '28': '613',
-        '29': '634',
-        '30': '314',
-        '31': '134',
-        '32': '211',
-        '33': '111',
-        '34': '334',
-        '35': '514',
-        '36': '313',
-        '37': '231',
-        '38': '321',
-        '39': '122',
-        '40': '121',
-        '41': '323',
-        '42': '331',
-        '43': '311',
-        '44': '112',
-        '45': '113',
-        '46': '631',
-        '47': '221',
-        '48': '212',
-        '49': '123',
-        '50': '223',
-        '51': '131',
-        '52': '232',
-        '53': '623',
-        '54': '332',
-        '55': '233',
-        '56': '114',
-        '57': '324',
-        '58': '213',
-        '59': '133',
-        '60': '224',
-        '61': '611',
-        '62': '234',
-        '63': '523',
-        '64': '214',
-        '65': '333',
-        '66': '222',
-        '67': '322',
-        '68': '124',
-        '69': '431',
-        '70': '132',
-        '71': '633'
-    },
-
-    // 3DS fields
-    faceFeatures3DS: ["None", "Near Eye Creases", "Cheek Creases", "Far Eye Creases", "Near Nose Creases", "Giant Bags", "Cleft Chin", "Chin Crease", "Sunken Eyes", "Far Cheek Creases", "Lines Near Eyes", "Wrinkles"],
-    makeups3DS: ["None", "Blush", "Orange Blush", "Blue Eyes", "Blush 2", "Orange Blush 2", "Blue Eyes and Blush", "Orange Eyes and Blush", "Purple Eyes and Blush 2", "Freckles", "Beard Stubble", "Beard and Mustache Stubble"],
-    mouthCols3DS: ["Orange", "Red", "Pink", "Peach", "Black"],
-    glassesCols3DS: ["Black", "Brown", "Red", "Blue", "Yellow", "Grey"],
-
-    faces: {
-        indexLookup: true,
-        values: [
-            0x00, 0x01, 0x08,
-            0x02, 0x03, 0x09,
-            0x04, 0x05, 0x0a,
-            0x06, 0x07, 0x0b
-        ]
-    },
-    hairs: {
-        paginated: true,
-        indexLookup: true,
-        values: [
-            [0x21, 0x2f, 0x28, 0x25, 0x20, 0x6b, 0x30, 0x33, 0x37, 0x46, 0x2c, 0x42],
-            [0x34, 0x32, 0x26, 0x31, 0x2b, 0x1f, 0x38, 0x44, 0x3e, 0x73, 0x4c, 0x77],
-            [0x40, 0x51, 0x74, 0x79, 0x16, 0x3a, 0x3c, 0x57, 0x7d, 0x75, 0x49, 0x4b],
-            [0x2a, 0x59, 0x39, 0x36, 0x50, 0x22, 0x17, 0x56, 0x58, 0x76, 0x27, 0x24],
-            [0x2d, 0x43, 0x3b, 0x41, 0x29, 0x1e, 0x0c, 0x10, 0x0a, 0x52, 0x80, 0x81],
-            [0x0e, 0x5f, 0x69, 0x64, 0x06, 0x14, 0x5d, 0x66, 0x1b, 0x04, 0x11, 0x6e],
-            [0x7b, 0x08, 0x6a, 0x48, 0x03, 0x15, 0x00, 0x62, 0x3f, 0x5a, 0x0b, 0x78],
-            [0x05, 0x4a, 0x6c, 0x5e, 0x7c, 0x19, 0x63, 0x45, 0x23, 0x0d, 0x7a, 0x71],
-            [0x35, 0x18, 0x55, 0x53, 0x47, 0x83, 0x60, 0x65, 0x1d, 0x07, 0x0f, 0x70],
-            [0x4f, 0x01, 0x6d, 0x7f, 0x5b, 0x1a, 0x3d, 0x67, 0x02, 0x4d, 0x12, 0x5c],
-            [0x54, 0x09, 0x13, 0x82, 0x61, 0x68, 0x2e, 0x4e, 0x1c, 0x72, 0x7e, 0x6f]
-        ]
-    },
-    eyebrows: {
-        indexLookup: true,
-        paginated: true,
-        values: [
-            [0x06, 0x00, 0x0c, 0x01, 0x09, 0x13, 0x07, 0x15, 0x08, 0x11, 0x05, 0x04],
-            [0x0b, 0x0a, 0x02, 0x03, 0x0e, 0x14, 0x0f, 0x0d, 0x16, 0x12, 0x10, 0x17]
-        ]
-    },
-    eyes: {
-        indexLookup: true,
-        paginated: true,
-        values: [
-            [0x02, 0x04, 0x00, 0x08, 0x27, 0x11, 0x01, 0x1a, 0x10, 0x0f, 0x1b, 0x14],
-            [0x21, 0x0b, 0x13, 0x20, 0x09, 0x0c, 0x17, 0x22, 0x15, 0x19, 0x28, 0x23],
-            [0x05, 0x29, 0x0d, 0x24, 0x25, 0x06, 0x18, 0x1e, 0x1f, 0x12, 0x1c, 0x2e],
-            [0x07, 0x2c, 0x26, 0x2a, 0x2d, 0x1d, 0x03, 0x2b, 0x16, 0x0a, 0x0e, 0x2f],
-            [0x30, 0x31, 0x32, 0x35, 0x3b, 0x38, 0x36, 0x3a, 0x39, 0x37, 0x33, 0x34]
-        ]
-    },
-    noses: {
-        indexLookup: true,
-        paginated: true,
-        values: [
-            [0x01, 0x0a, 0x02, 0x03, 0x06, 0x00, 0x05, 0x04, 0x08, 0x09, 0x07, 0x0B],
-            [0x0d, 0x0e, 0x0c, 0x11, 0x10, 0x0f]
-        ]
-    },
-    mouths: {
-        indexLookup: true,
-        paginated: true,
-        values: [
-            [0x17, 0x01, 0x13, 0x15, 0x16, 0x05, 0x00, 0x08, 0x0a, 0x10, 0x06, 0x0d],
-            [0x07, 0x09, 0x02, 0x11, 0x03, 0x04, 0x0f, 0x0b, 0x14, 0x12, 0x0e, 0x0c],
-            [0x1b, 0x1e, 0x18, 0x19, 0x1d, 0x1c, 0x1a, 0x23, 0x1f, 0x22, 0x21, 0x20]
-        ]
-    }
-};
-var convTables = {
-    face3DSToWii: [0, 1, 2, 2, 3, 1, 4, 5, 4, 6, 7, 6],
-    features3DSToWii: ["0", "6", 5, 6, "6", 4, 7, 7, 8, 10, "6", 11],//If typeof===String, choose a makeup in that field's place - there is no suitable replacement. Read the discrepancies in the README for more information.
-    makeup3DSToWii: [0, 1, 1, 2, 1, 1, 2, 2, 2, 3, 9, 9],
-    nose3DSToWii: [
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        [0, 3, 4, 6, 9, 2]
-    ],
-    mouth3DSToWii: [
-        ["111", "121", "131", "112", "122", "132", "113", "123", "133", "114", "124", "134"],
-        ["211", "221", "231", "212", "222", "232", "213", "223", "233", "214", "224", "234"],
-        ["121", "214", "134", "123", "121", "112", "124", "133", "221", "224", "121", "232"]
-    ],
-    hair3DSToWii: [
-        [
-            "111", "221", "121",
-            "231", "211", "121",
-            "212", "131", "233",
-            "132", "112", "222"
-        ],
-        [
-            "232", "223", "321",
-            "123", "311", "134",
-            "114", "124", "234",
-            "114", "134", "234"
-        ],
-        [
-            "214", "523", "433",
-            "214", "531", "512",
-            "523", "433", "134",
-            "414", "523", "134"
-        ],
-        [
-            "331", "333", "324",
-            "332", "333", "334",
-            "312", "322", "322",
-            "113", "122", "313"
-        ],
-        [
-            "113", "322", "133",
-            "333", "323", "314",
-            "411", "621", "521",
-            "424", "424", "424"
-        ],
-        [
-            "511", "411", "411",
-            "422", "522", "523",
-            "534", "523", "434",
-            "422", "533", "424"
-        ],
-        [
-            "511", "531", "534",
-            "623", "521", "524",
-            "534", "523", "523",
-            "424", "513", "523"
-        ],
-        [
-            "411", "523", "512",
-            "513", "432", "432",
-            "621", "431", "514",
-            "421", "432", "514"
-        ],
-        [
-            "623", "614", "633",
-            "633", "633", "624",
-            "434", "633", "634",
-            "624", "624", "634"
-        ],
-        [
-            "634", "413", "412",
-            "413", "413", "412",
-            "611", "622", "632",
-            "611", "622", "632"
-        ],
-        [
-            "423", "632", "423",
-            "612", "612", "613",
-            "631", "631", "613",
-            "631", "631", "613"
-        ]
-    ],
-    eyebrows3DSToWii: [
-        [
-            "111", "121", "131",
-            "112", "122", "132",
-            "113", "123", "133",
-            "114", "124", "134"
-        ],
-        [
-            "211", "221", "231",
-            "212", "222", "232",
-            "213", "223", "233",
-            "214", "224", "234"
-        ]
-    ],
-    eyes3DSToWii: [
-        [
-            "111", "121", "131",
-            "112", "122", "132",
-            "113", "123", "133",
-            "114", "124", "134"
-        ],
-        [
-            "211", "221", "231",
-            "212", "222", "232",
-            "213", "223", "233",
-            "214", "224", "234"
-        ],
-        [
-            "311", "321", "331",
-            "312", "322", "332",
-            "313", "323", "333",
-            "314", "324", "334"
-        ],
-        [
-            "411", "421", "431",
-            "412", "422", "432",
-            "413", "423", "433",
-            "414", "424", "434"
-        ],
-        [
-            "322", "322", "312",
-            "224", "224", "431",
-            "224", "224", "111",
-            "121", "411", "431"
-        ]
-    ],
-    hairWiiTo3DS: [
-        [
-            [0, 0], [0, 2], [0, 7],
-            [0, 10], [3, 10], [0, 9],
-            [4, 0], [1, 3], [3, 8],
-            [1, 6], [1, 7], [1, 5]
-        ],
-        [
-            [0, 4], [0, 1], [0, 3],
-            [0, 6], [0, 11], [1, 0],
-            [2, 5], [1, 1], [0, 8],
-            [2, 0], [2, 6], [1, 8]
-        ],
-        [
-            [1, 4], [1, 2], [3, 0],
-            [4, 0], [3, 6], [3, 3],
-            [3, 11], [4, 4], [4, 3],
-            [4, 5], [3, 2], [3, 5]
-        ],
-        [
-            [4, 6], [7, 9], [7, 7],
-            [9, 5], [5, 9], [7, 5],
-            [9, 1], [10, 2], [7, 0],
-            [6, 1], [5, 8], [8, 9]
-        ],
-        [
-            [5, 0], [6, 4], [2, 4],
-            [4, 8], [5, 4], [5, 5],
-            [6, 10], [6, 8], [5, 10],
-            [7, 8], [6, 5], [6, 6]
-        ],
-        [
-            [9, 6], [4, 7], [10, 6],
-            [10, 1], [9, 10], [9, 8],
-            [10, 8], [8, 1], [2, 0],
-            [9, 1], [8, 9], [8, 8]
-        ]
-    ],
-    faceWiiTo3DS: [
-        0, 1,
-        3, 4,
-        6, 7,
-        9, 10
-    ],
-    featureWiiTo3DS: [
-        0, "1", "6",
-        "9", 5, 2,
-        3, 7, 8,
-        "10", 9, 11
-    ],
-    formatTo: [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [9, 10, 11]
-    ],
-    formatFrom: [
-        "11", "21", "31",
-        "12", "22", "32",
-        "13", "23", "33",
-        "14", "24", "34"
-    ]
-};
-const kidNames = {
-    "Male": [
-        "Aaron",
-        "Adam",
-        "Adrian",
-        "Aiden",
-        "Ayden",
-        "Alex",
-        "Alexander",
-        "Alfie",
-        "Andrew",
-        "Anthony",
-        "Archie",
-        "Austin",
-        "Ben",
-        "Benjamin",
-        "Bentley",
-        "Bill",
-        "Billy",
-        "Blake",
-        "Bradley",
-        "Brandon",
-        "Brayden",
-        "Brody",
-        "Bryson",
-        "Caleb",
-        "Callum",
-        "Cameron",
-        "Carlos",
-        "Charlie",
-        "Charles",
-        "Carson",
-        "Carter",
-        "Chase",
-        "Chris",
-        "Christian",
-        "Cody",
-        "Colton",
-        "Connor",
-        "Cooper",
-        "Damian",
-        "Daniel",
-        "David",
-        "Dexter",
-        "Dominic",
-        "Dylan",
-        "Easton",
-        "Edward",
-        "Eli",
-        "Elijah",
-        "Elliot",
-        "Ethan",
-        "Evan",
-        "Finlay",
-        "Frankie",
-        "Freddie",
-        "Gabriel",
-        "Gavin",
-        "George",
-        "Grayson",
-        "Harrison",
-        "Harvey",
-        "Henry",
-        "Hudson",
-        "Hugo",
-        "Hunter",
-        "Ian",
-        "Isaac",
-        "Isaiah",
-        "Jace",
-        "Jack",
-        "Jackson",
-        "Jaxon",
-        "Jacob",
-        "Jake",
-        "James",
-        "Jason",
-        "Jayden",
-        "Jenson",
-        "Jeremiah",
-        "John",
-        "Juan",
-        "Jonathan",
-        "Jordan",
-        "Jose",
-        "Joseph",
-        "Josiah",
-        "Joshua",
-        "Jude",
-        "Julian",
-        "Justin",
-        "Kai",
-        "Kayden",
-        "Kevin",
-        "Kian",
-        "Landon",
-        "Levi",
-        "Leo",
-        "Logan",
-        "Lucas",
-        "Luke",
-        "Luis",
-        "Lachlan",
-        "Mason",
-        "Matthew",
-        "Max",
-        "Michael",
-        "Miguel",
-        "Nathan",
-        "Nathaniel",
-        "Nicholas",
-        "Noah",
-        "Nolan",
-        "Olly",
-        "Oliver",
-        "Owen",
-        "Parker",
-        "Philip",
-        "Rhys",
-        "Reece",
-        "Rob",
-        "Robert",
-        "Ryan",
-        "Ryder",
-        "Samuel",
-        "Sebastian",
-        "Seth",
-        "Thomas",
-        "Tommy",
-        "Trent",
-        "Tristan",
-        "Tyler",
-        "William",
-        "Liam",
-        "Wyatt",
-        "Xavier",
-        "Zac",
-        "Zachary",
-        "Alex",
-        "Alexis",
-        "Angel",
-        "Bailey",
-        "Darcy",
-        "Darcey",
-        "Genesis",
-        "Kennedy",
-        "Mackenzie",
-        "Morgan",
-        "Peyton",
-        "Sam",
-        "Taylor"
-    ],
-    "Female": [
-        "Aaliyah",
-        "Abigail",
-        "Addison",
-        "Madison",
-        "Maddison",
-        "Alexa",
-        "Alexandra",
-        "Alison",
-        "Allison",
-        "Alyssa",
-        "Amelia",
-        "Amy",
-        "Andrea",
-        "Anna",
-        "Annabelle",
-        "Aria",
-        "Ariana",
-        "Arianna",
-        "Ashley",
-        "Aubree",
-        "Aubrey",
-        "Audrey",
-        "Autumn",
-        "Ava",
-        "Avery",
-        "Bella",
-        "Bethany",
-        "Brianna",
-        "Brooklyn",
-        "Camila",
-        "Caroline",
-        "Charlotte",
-        "Chloe",
-        "Khloe",
-        "Claire",
-        "Ella",
-        "Ellie",
-        "Elenor",
-        "Elizabeth",
-        "Lizabeth",
-        "Liza",
-        "Emily",
-        "Emma",
-        "Eva",
-        "Evie",
-        "Evelyn",
-        "Faith",
-        "Gabriella",
-        "Gianna",
-        "Grace",
-        "Hailey",
-        "Hannah",
-        "Harper",
-        "Heidi",
-        "Hollie",
-        "Holly",
-        "Isabella",
-        "Isobel",
-        "Jasmine",
-        "Jessica",
-        "Jocelyn",
-        "Julia",
-        "Katherine",
-        "Kayla",
-        "Kaylee",
-        "Kimberly",
-        "Kylie",
-        "Lacey",
-        "Lauren",
-        "Layla",
-        "Leah",
-        "Lexie",
-        "Lilian",
-        "Lily",
-        "Lola",
-        "London",
-        "Lucy",
-        "Lydia",
-        "Madeline",
-        "Madelyn",
-        "Maisie",
-        "Makayla",
-        "Maya",
-        "Mya",
-        "Megan",
-        "Melanie",
-        "Mia",
-        "Molly",
-        "Naomi",
-        "Natalie",
-        "Nevaeh",
-        "Olivia",
-        "Paige",
-        "Poppy",
-        "Piper",
-        "Reagan",
-        "Rebecca",
-        "Riley",
-        "Rosie",
-        "Samantha",
-        "Sarah",
-        "Savannah",
-        "Scarlett",
-        "Serenity",
-        "Skye",
-        "Skylar",
-        "Sofia",
-        "Sophia",
-        "Sophie",
-        "Spring",
-        "Stella",
-        "Summer",
-        "Sydney",
-        "Trinity",
-        "Vanessa",
-        "Victoria",
-        "Violet",
-        "Winter",
-        "Zara",
-        "Zoe",
-        "Zoey",
-        "Alex",
-        "Alexis",
-        "Angel",
-        "Bailey",
-        "Darcy",
-        "Darcey",
-        "Genesis",
-        "Kennedy",
-        "Mackenzie",
-        "Morgan",
-        "Peyton",
-        "Sam",
-        "Taylor"
-    ]
-};
+const {lookupTables,convTables,defaultInstrs,childGenTables}=require("./data.json");
 
 //Tools
 function Uint8Cat() {
@@ -1248,7 +130,6 @@ const findPageType = (table2D, id) => {
     }
     return { page: 0, type: 0 };
 };
-const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
 //If FFLResHigh.dat is in the same directory as Node.js is calling the library from, use it by default
 let _fflRes;
@@ -1326,371 +207,6 @@ function encodeAesCcm(data) {
     var ciphertext = asmCrypto.AES_CCM.encrypt(plaintext, aes_key, nonce, undefined, TAG_LENGTH);
     return Uint8Cat(cfsd.subarray(NONCE_OFFSET, NONCE_OFFSET + NONCE_LENGTH), ciphertext.subarray(0, ciphertext.length - 24), ciphertext.subarray(ciphertext.length - TAG_LENGTH, ciphertext.length))
 }
-
-//Defaults
-const defaultInstrs = {
-    wii: {
-        male: {
-            "col": "On the info page (first tab), set the Favorite Color to Red (1 from the left, top row).",
-            "heightWeight": "On the build page (second tab), set the height to 50%, and the weight to 50%.",
-            "faceShape": "On the face page (third tab), set the shape to the one 1 from the top, in the left column.",
-            "skinCol": "On the face page (third tab), set the color to the one 1 from the left, on the top row.",
-            "makeup": "On the face page's makeup tab, set the makeup to \"None\" (the one 1 from the top, and 1 from the left).",
-            "hairStyle": "On the hair page (fourth tab), set the hair style to the one 1 from the left, 1 from the top, on page 1.",
-            "hairFlipped": "",
-            "hairColor": "On the hair page (fourth tab), set the hair color to the one 2 from the left, on the top row.",
-            "eyebrowStyle": "On the eyebrow page (fifth tab), set the eyebrow style to the one 1 from the left, 1 from the top, on page 1.",
-            "eyebrowColor": "On the eyebrow page (fifth tab), set the eyebrow color to the one 2 from the left, on the top row.",
-            "eyebrowY": "",
-            "eyebrowSize": "",
-            "eyebrowRot": "",
-            "eyebrowDist": "",
-            "eyeType": "On the eye page (sixth tab), set the eye type to the one 1 from the left, 1 from the top, on page 1.",
-            "eyeColor": "On the eye page (sixth tab), set the color to the one 1 from the left, on the top row.",
-            "eyeY": "",
-            "eyeSize": "",
-            "eyeRot": "",
-            "eyeDist": "",
-            "noseType": "On the nose page (seventh tab), set the nose to the one 1 from the top, and 1 from the left.",
-            "noseY": "",
-            "noseSize": "",
-            "mouthType": "On the mouth page (eighth tab), set the mouth type to the one 1 from the left, 1 from the top, on page 1.",
-            "mouthCol": "On the mouth page (eighth tab), set the color to the one 1 from the left.",
-            "mouthY": "",
-            "mouthSize": "",
-            "glasses": "On the glasses page (within the ninth tab), set the glasses to the one 1 from the top, and 1 from the left.",
-            "glassesCol": "On the glasses page (within the ninth tab), set the color to the one 1 from the left, on the top row.",
-            "glassesY": "",
-            "glassesSize": "",
-            "stache": "On the mustache page (within the ninth tab), set the mustache to the one on the top-left.",
-            "stacheY": "",
-            "stacheSize": "",
-            "mole": "",
-            "moleX": "",
-            "moleY": "",
-            "moleSize": "",
-            "beard": "On the beard page (within the ninth tab), set the beard to the one on the top-left.",
-            "beardCol": "On the mustache OR beard pages (within the ninth tab), set the color to the one 1 from the left, on the top row."
-        },
-        female: {
-            "col": "On the info page (first tab), set the Favorite Color to Red (1 from the left, top row).",
-            "heightWeight": "On the build page (second tab), set the height to 50%, and the weight to 50%.",
-            "faceShape": "On the face page (third tab), set the shape to the one 1 from the top, in the left column.",
-            "skinCol": "On the face page (third tab), set the color to the one 1 from the left, on the top row.",
-            "makeup": "On the face page's makeup tab, set the makeup to \"None\" (the one 1 from the top, and 1 from the left).",
-            "hairStyle": "On the hair page (fourth tab), set the hair style to the one 1 from the left, 1 from the top, on page 4.",
-            "hairFlipped": "",
-            "hairColor": "On the hair page (fourth tab), set the hair color to the one 2 from the left, on the top row.",
-            "eyebrowStyle": "On the eyebrow page (fifth tab), set the eyebrow style to the one 2 from the left, 1 from the top, on page 1.",
-            "eyebrowColor": "On the eyebrow page (fifth tab), set the eyebrow color to the one 2 from the left, on the top row.",
-            "eyebrowY": "",
-            "eyebrowSize": "",
-            "eyebrowRot": "",
-            "eyebrowDist": "",
-            "eyeType": "On the eye page (sixth tab), set the eye type to the one 2 from the left, 1 from the top, on page 1.",
-            "eyeColor": "On the eye page (sixth tab), set the color to the one 1 from the left, on the top row.",
-            "eyeY": "",
-            "eyeSize": "",
-            "eyeRot": "On the eye page (sixth tab), press the rotate clockwise button 1 times.",
-            "eyeDist": "",
-            "noseType": "On the nose page (seventh tab), set the nose to the one 0 from the top, and 1 from the left.",
-            "noseY": "",
-            "noseSize": "",
-            "mouthType": "On the mouth page (eighth tab), set the mouth type to the one 1 from the left, 1 from the top, on page 1.",
-            "mouthCol": "On the mouth page (eighth tab), set the color to the one 1 from the left.",
-            "mouthY": "",
-            "mouthSize": "",
-            "glasses": "On the glasses page (within the ninth tab), set the glasses to the one 1 from the top, and 1 from the left.",
-            "glassesCol": "On the glasses page (within the ninth tab), set the color to the one 1 from the left, on the top row.",
-            "glassesY": "",
-            "glassesSize": "",
-            "stache": "On the mustache page (within the ninth tab), set the mustache to the one on the top-left.",
-            "stacheY": "",
-            "stacheSize": "",
-            "mole": "",
-            "moleX": "",
-            "moleY": "",
-            "moleSize": "",
-            "beard": "On the beard page (within the ninth tab), set the beard to the one on the top-left.",
-            "beardCol": "On the mustache OR beard pages (within the ninth tab), set the color to the one 1 from the left, on the top row."
-        }
-    },
-    "3ds": {
-        "male": {
-            "faceShape": "On the face page (first tab), set the face shape to the one 1 from the top, and 1 from the left.",
-            "skinCol": "On the face page (first tab), set the color to the one 1 from the top.",
-            "makeup": "On the face page's makeup tab, set the makeup to \"None\" (the one 1 from the top, and 1 from the left).",
-            "feature": "On the face page's wrinkles tab, set the facial feature to \"None\" (the one 2 from the top, and 1 from the left).",
-            "hairStyle": "On the hair page (second tab), set the hair style to the one 1 from the top, and 1 from the left, on page 1.",
-            "hairFlipped": "",
-            "hairColor": "On the hair page (second tab), set the hair color to the one 2 from the top.",
-            "eyebrowStyle": "On the eyebrow page (third tab), set the eyebrow style to the one 1 from the left, 1 from the top, on page 1.",
-            "eyebrowColor": "On the eyebrow page (third tab), set the eyebrow color to the one 2 from the top.",
-            "eyebrowY": "",
-            "eyebrowSize": "",
-            "eyebrowRot": "",
-            "eyebrowDist": "",
-            "eyebrowSquash": "",
-            "eyeType": "On the eye page (fourth tab), set the eye type to the one 1 from the left, 1 from the top, on page 1.",
-            "eyeColor": "On the eye page (fourth tab), set the color to the one 1 from the top.",
-            "eyeY": "",
-            "eyeSize": "",
-            "eyeRot": "",
-            "eyeDist": "",
-            "eyeSquash": "",
-            "noseType": "On the nose page (fifth tab), set the nose to the one 1 from the top, and 1 from the left, on page 0.",
-            "noseY": "",
-            "noseSize": "",
-            "mouthType": "On the mouth page (sixth tab), set the mouth type to the one 1 from the left, 1 from the top, on page 1.",
-            "mouthCol": "On the mouth page (sixth tab), set the color to the one 1 from the top.",
-            "mouthY": "",
-            "mouthSize": "",
-            "mouthSquash": "",
-            "glasses": "On the glasses page (within the seventh tab), set the glasses to the one 1 from the top, and 1 from the left.",
-            "glassesCol": "On the glasses page (within the seventh tab), set the color to the one 1 from the top.",
-            "glassesY": "",
-            "glassesSize": "",
-            "stache": "On the mustache page (within the seventh tab), set the mustache to the one on the top-left.",
-            "stacheY": "",
-            "stacheSize": "",
-            "mole": "",
-            "moleX": "",
-            "moleY": "",
-            "moleSize": "",
-            "beard": "On the beard page (within the seventh tab), set the beard to the one on the top-left.",
-            "beardCol": "On the mustache OR beard pages (within the seventh tab), set the color to the one 1 from the top.",
-            "heightWeight": "On the build page (eighth tab), set the height to 50%, and the weight to 50%.",
-            "col": "On the info page (after pressing \"Next\"), set the Favorite Color to Red (1 from the left, top row)."
-        },
-        "female": {
-            "faceShape": "On the face page (first tab), set the face shape to the one 1 from the top, and 1 from the left.",
-            "skinCol": "On the face page (first tab), set the color to the one 1 from the top.",
-            "makeup": "On the face page's makeup tab, set the makeup to \"None\" (the one 1 from the top, and 1 from the left).",
-            "feature": "On the face page's wrinkles tab, set the facial feature to \"None\" (the one 2 from the top, and 1 from the left).",
-            "hairStyle": "On the hair page (second tab), set the hair style to the one 3 from the top, and 1 from the left, on page 5.",
-            "hairFlipped": "",
-            "hairColor": "On the hair page (second tab), set the hair color to the one 2 from the top.",
-            "eyebrowStyle": "On the eyebrow page (third tab), set the eyebrow style to the one 2 from the left, 1 from the top, on page 1.",
-            "eyebrowColor": "On the eyebrow page (third tab), set the eyebrow color to the one 2 from the top.",
-            "eyebrowY": "",
-            "eyebrowSize": "",
-            "eyebrowRot": "",
-            "eyebrowDist": "",
-            "eyebrowSquash": "",
-            "eyeType": "On the eye page (fourth tab), set the eye type to the one 2 from the left, 1 from the top, on page 1.",
-            "eyeColor": "On the eye page (fourth tab), set the color to the one 1 from the top.",
-            "eyeY": "",
-            "eyeSize": "",
-            "eyeRot": "",
-            "eyeDist": "",
-            "eyeSquash": "",
-            "noseType": "On the nose page (fifth tab), set the nose to the one 1 from the top, and 1 from the left, on page 0.",
-            "noseY": "",
-            "noseSize": "",
-            "mouthType": "On the mouth page (sixth tab), set the mouth type to the one 1 from the left, 1 from the top, on page 1.",
-            "mouthCol": "On the mouth page (sixth tab), set the color to the one 1 from the top.",
-            "mouthY": "",
-            "mouthSize": "",
-            "mouthSquash": "",
-            "glasses": "On the glasses page (within the seventh tab), set the glasses to the one 1 from the top, and 1 from the left.",
-            "glassesCol": "On the glasses page (within the seventh tab), set the color to the one 1 from the top.",
-            "glassesY": "",
-            "glassesSize": "",
-            "stache": "On the mustache page (within the seventh tab), set the mustache to the one on the top-left.",
-            "stacheY": "",
-            "stacheSize": "",
-            "mole": "",
-            "moleX": "",
-            "moleY": "",
-            "moleSize": "",
-            "beard": "On the beard page (within the seventh tab), set the beard to the one on the top-left.",
-            "beardCol": "On the mustache OR beard pages (within the seventh tab), set the color to the one 1 from the top.",
-            "heightWeight": "On the build page (eighth tab), set the height to 50%, and the weight to 50%.",
-            "col": "On the info page (after pressing \"Next\"), set the Favorite Color to Red (1 from the left, top row)."
-        }
-    }
-};
-
-const defaultMii = {
-    "male": {
-        "general": {
-            "type": 3,
-            "birthday": 17,
-            "birthMonth": 4,
-            "height": 0,
-            "weight": 0,
-            "gender": 1,
-            "favoriteColor": 7
-        },
-        "meta": {
-            "name": "Madison",
-            "creatorName": "",
-            "console": "3ds"
-        },
-        "perms": {
-            "sharing": false,
-            "copying": true,
-            "fromCheckMiiOut": false,
-            "mingle": true
-        },
-        "hair": {
-            "page": 0,
-            "type": 7,
-            "color": 7,
-            "flipped": false
-        },
-        "face": {
-            "type": 5,
-            "color": 0,
-            "feature": 0,
-            "makeup": 0
-        },
-        "eyes": {
-            "page": 0,
-            "type": 9,
-            "col": 4,
-            "size": 1,
-            "squash": 3,
-            "rotation": 4,
-            "distanceApart": 3,
-            "yPosition": 11
-        },
-        "eyebrows": {
-            "page": 0,
-            "type": 5,
-            "color": 7,
-            "size": 2,
-            "squash": 4,
-            "rotation": 4,
-            "distanceApart": 4,
-            "yPosition": 6
-        },
-        "nose": {
-            "page": 1,
-            "type": 0,
-            "size": 0,
-            "yPosition": 5
-        },
-        "mouth": {
-            "page": 1,
-            "type": 6,
-            "color": 0,
-            "size": 2,
-            "squash": 3,
-            "yPosition": 10
-        },
-        "beard": {
-            "mustache": {
-                "type": 0,
-                "size": 4,
-                "yPosition": 10
-            },
-            "col": 0,
-            "type": 0
-        },
-        "glasses": {
-            "type": 0,
-            "color": 0,
-            "size": 4,
-            "yPosition": 10
-        },
-        "mole": {
-            "on": false,
-            "size": 4,
-            "xPosition": 2,
-            "yPosition": 20
-        }
-    },
-    "female": {
-        "general": {
-            "type": 3,
-            "birthday": 17,
-            "birthMonth": 4,
-            "height": 0,
-            "weight": 0,
-            "gender": 1,
-            "favoriteColor": 7
-        },
-        "meta": {
-            "name": "Madison",
-            "creatorName": "",
-            "console": "3ds"
-        },
-        "perms": {
-            "sharing": false,
-            "copying": true,
-            "fromCheckMiiOut": false,
-            "mingle": true
-        },
-        "hair": {
-            "page": 0,
-            "type": 7,
-            "color": 7,
-            "flipped": false
-        },
-        "face": {
-            "type": 5,
-            "color": 0,
-            "feature": 0,
-            "makeup": 0
-        },
-        "eyes": {
-            "page": 0,
-            "type": 9,
-            "col": 4,
-            "size": 1,
-            "squash": 3,
-            "rotation": 4,
-            "distanceApart": 3,
-            "yPosition": 11
-        },
-        "eyebrows": {
-            "page": 0,
-            "type": 5,
-            "color": 7,
-            "size": 2,
-            "squash": 4,
-            "rotation": 4,
-            "distanceApart": 4,
-            "yPosition": 6
-        },
-        "nose": {
-            "page": 1,
-            "type": 0,
-            "size": 0,
-            "yPosition": 5
-        },
-        "mouth": {
-            "page": 1,
-            "type": 6,
-            "color": 0,
-            "size": 2,
-            "squash": 3,
-            "yPosition": 10
-        },
-        "beard": {
-            "mustache": {
-                "type": 0,
-                "size": 4,
-                "yPosition": 10
-            },
-            "col": 0,
-            "type": 0
-        },
-        "glasses": {
-            "type": 0,
-            "color": 0,
-            "size": 4,
-            "yPosition": 10
-        },
-        "mole": {
-            "on": false,
-            "size": 4,
-            "xPosition": 2,
-            "yPosition": 20
-        }
-    }
-};
 
 //Functions for working with the Miis
 function encodeStudio(mii) {
@@ -2518,7 +1034,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         body.userData.isMiiBody = true;
 
         // Recolor body (bakes into texture)
-        var pantsColor=[0x808080,0xFFC000,0x89CFF0,0x913831,0x913831][["default","special","foreign","favorite","favorited"].indexOf(options.pantsType?.toLowerCase()||"default")];
+        var pantsColor = [0x808080, 0xFFC000, 0x89CFF0, 0x913831, 0x913831][["default", "special", "foreign", "favorite", "favorited"].indexOf(options.pantsType?.toLowerCase() || "default")];
         body.traverse((o) => {
             if (o.isMesh) {
                 if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
@@ -2676,7 +1192,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         cropBottom = Math.max(0, Math.min(height - 1, bottomPx + (options.fullBodyCropExtraBottomPx ?? 0)));
 
         // Output with bottom crop applied (no top crop)
-        const outH = Math.max(1, isFullBody?height - cropBottom:450);
+        const outH = Math.max(1, isFullBody ? height - cropBottom : 450);
         const outCanvas = createCanvas(width, outH);
         const ctxOut = outCanvas.getContext("2d");
 
@@ -2714,7 +1230,7 @@ async function renderMii(jsonIn, options = {}, fflRes = getFFLRes()) {
         gender: jsonIn.general.gender,
         height: jsonIn.general.height,
         weight: jsonIn.general.weight,
-        pantsType: jsonIn.meta?.type||"Default"
+        pantsType: jsonIn.meta?.type || "Default"
     });
 
     return createFFLMiiIcon(studioMii, options, jsonIn.general.favoriteColor, fflRes);
@@ -3050,67 +1566,175 @@ async function write3DSQR(miiJson, outPath, returnBin, fflRes = getFFLRes()) {
 
     return imageBuffer;
 }
-function make3DSChild(dad, mom, options = {}) {
-    if (!["3ds", "wii u"].includes(dad.meta.console?.toLowerCase())) {
-        dad = convertMii(dad, "wii");
+function makeChild(parent0, parent1, options) {
+    if(parent0.console.toLowerCase()==="wii") parent0=convertMii(parent0,"3DS");
+    if(parent1.console.toLowerCase()==="wii") parent1=convertMii(parent1,"3DS");
+
+    var randomBytes = [];
+    for (var i = 0; i < 8; i++) {
+        //randomBytes[1] is never used, kept here purely for an interesting detail from research
+        randomBytes.push(Math.floor(Math.random() * 2));
     }
-    if (!["3ds", "wii u"].includes(mom.meta.console?.toLowerCase())) {
-        mom = convertMii(dad, "wii");
-    }
-    var g = options.gender || Math.floor(Math.random() * 2);
-    var child = {
-        "general": {
-            "birthMonth": new Date().getMonth() + 1,
-            "birthday": new Date().getDay(),
-            "height": 64,
-            "weight": 64,
-            "gender": g,
-            "favoriteColor": options.favoriteColor || favCols[Math.floor(Math.random() * favCols.length)]
-        },
-        "meta": {
-            "name": options.name || kidNames[g][Math.floor(Math.random() * kidNames[g].length)],
-            "creatorName": "",
-        },
-        "perms": {
-            "sharing": true,
-            "copying": true
-        },
-        "hair": {
-            "page": 8,//Hardcoded, needs to be generated
-            "type": 3,// ^
-            "color": Math.floor(Math.random() * 2) === 1 ? dad.hair.color : mom.hair.color,
-            "flipped": Math.floor(Math.random() * 2) === 0 ? true : false
-        },
-        "face": {
-            "shape": Math.floor(Math.random() * 2) === 1 ? dad.face.shape : mom.face.shape,
-            "feature": Math.floor(Math.random() * 2) === 1 ? dad.face.feature : mom.face.feature,
-            "makeup": g === 0 ? 0 : Math.floor(Math.random() * 2) === 1 ? dad.face.makeup : mom.face.makeup
-        },
-        "eyes": Math.floor(Math.random() * 2) === 1 ? dad.eyes : mom.eyes,
-        "eyebrows": Math.floor(Math.random() * 2) === 1 ? dad.eyebrows : mom.eyebrows,
-        "nose": Math.floor(Math.random() * 2) === 1 ? dad.nose : mom.nose,
-        "mouth": Math.floor(Math.random() * 2) === 1 ? dad.mouth : mom.mouth,
-        "beard": {//Beards can never be generated for children allegedly, confirm before finishing
-            "mustache": {
-                "type": 0,
-                "mustacheSize": 4,
-                "mustacheYPos": 10
-            },
-            "type": 0,
-            "color": 0
-        },
-        "glasses": Math.floor(Math.random() * 2) === 1 ? dad.glasses : mom.glasses,
-        "mole": Math.floor(Math.random() * 2) === 1 ? dad.mole : mom.mole
-    };
+
+    var mainParent = randomBytes[0] === 1 ? parent1 : parent0;
+    var child = structuredClone(mainParent);//We have to clear some defaults doing it this way, but so much of the Mii gen is from this parent it's just quicker to gen this way.
+
+    //Clear some things children don't have or process
+    child.beard.type=0;
+    child.beard.mustache.type=0;
+    child.face.feature=0;
+    child.face.makeup=0;
+    child.glasses.type=0;//For parity with the original, I can find no evidence of child Miis with glasses nor did I find anything referencing glasses processing in research
+    child.hair.flipped=false;//Just for full parity with the original
+    child.console="3DS";
+    child.perms.sharing=parent0.perms.sharing&&parent1.perms.sharing;//Why not?
+    child.perms.copying=parent0.perms.copying&&parent1.perms.copying;//Why not?
+
+    var birthday=new Date();
+    child.general.birthday=birthday.getDate();
+    child.general.birthMonth=birthday.getMonth()+1;
+    child.meta.creatorName=options?.hasOwnProperty("creatorName")?options.creatorName:"";
+    child.meta.type="Default";
+
+    var gender = options?.hasOwnProperty("gender") ? options.gender : Math.floor(Math.random() * 2);
+    child.general.gender = gender;
+    child.meta.name = options?.hasOwnProperty("name")? options.name : childGenTables.names[child.general.gender][Math.floor(Math.random() * childGenTables.names[child.general.gender].length)];
+
+    var matchingParent = parent0.general.gender === gender ? parent0 : parent1;
+    var mainParentFlag = (matchingParent === parent0) ? 0 : 1;
+
+    //Skin color mixing. Intuitively you'd think they'd order them by similarity and pick an average, but no they have an entire table of what skin colors product what child skin color
+    var validValues = childGenTables.skinColorMixing[Math.min(parent0.face.color, parent1.face.color)][Math.max(parent0.face.color, parent1.face.color)].filter(v => v !== -1);
+    child.face.color = validValues[Math.floor(Math.random() * validValues.length)];
+
+    //Each child is sorted into groups of potential hairstyles based on the hairstyle of the parent of the same gender of the child, and then a random hair is selected from that pool at each stage of life
+    var hairGroupIndex = childGenTables.hairStyleGroupMappings[lookupTables.hairs.values[matchingParent.hair.page][matchingParent.hair.type]][gender];
+    child.hair.color = randomBytes[2] === 0 ? parent0.hair.color : parent1.hair.color;
+
+    child.eyes.page = randomBytes[3] === 0 ? parent0.eyes.page : parent1.eyes.page;
+    child.eyes.type = randomBytes[3] === 0 ? parent0.eyes.type : parent1.eyes.type;
+    child.eyes.color = randomBytes[4] === 0 ? parent0.eyes.color : parent1.eyes.color;
+
+    child.eyebrows.page = matchingParent.eyebrows.page;
+    child.eyebrows.type = matchingParent.eyebrows.type;
+
+    child.face.color = [7, 7, 6, 7][Math.min(child.face.color, 3)];
+
     child.eyebrows.color = child.hair.color;
-    var c = [mom.face.color, dad.face.color];
-    if (c[0] > c[1]) {
-        c[1] = c[0];
-        c[0] = dad.face.color;
+
+    child.nose.page = randomBytes[5] === 0 ? parent0.nose.page : parent1.nose.page;
+    child.nose.type = randomBytes[5] === 0 ? parent0.nose.type : parent1.nose.type;
+
+    child.mouth.page = randomBytes[6] === 0 ? parent0.mouth.page : parent1.mouth.page;
+    child.mouth.type = randomBytes[6] === 0 ? parent0.mouth.type : parent1.mouth.type;
+    child.mouth.color = randomBytes[7] === 0 ? parent0.mouth.color : parent1.mouth.color;
+
+    child.mole.on = Math.floor(Math.random() * 2) === 0 ? parent0.mole.on : parent1.mole.on;
+
+    //Child Miis generate the last stage, then build offsets backwards through the younger stages of life starting at the older stages
+    var eyeBase = Math.min(Math.max(child.eyes.yPosition + 2, 0), 18);
+    let browBase = child.eyebrows.yPosition + 2;
+    if (browBase >= 18) {
+        browBase = 18;
     }
-    child.face.color = c[0] + Math.round((c[1] - c[0]) / 2);
-    child.type = "3DS";
-    return child;
+    else if (browBase < 4) {
+        browBase = 3;
+    }
+
+    var mouthBase = Math.min(Math.max(child.mouth.yPosition - 2, 0), 18);
+
+    var eyeYDelta = child.eyes.yPosition - eyeBase;
+    var browYDelta = child.eyebrows.yPosition - browBase;
+    var mouthYDelta = child.mouth.yPosition - mouthBase;
+    var noseSizeDelta = child.nose.size;
+
+    //This should be a 1:1 of final stage height and weight generation
+    var heightParent = Math.floor(Math.random() * 2) === 0 ? parent0 : parent1;
+    var height = (heightParent.general.height >> 3) * 1.4;
+    height *= 1.4 * 1.4;
+    height *= 1.4 * 1.4;
+    child.general.height = Math.round(Math.min(Math.max(height, 0), 127));
+
+    var weightParent = Math.floor(Math.random() * 2) === 0 ? parent0 : parent1;
+    let weight = Math.trunc((weightParent.general.weight + 1) / 4) + 48;
+    for (var iAdj = 0; iAdj < 5; iAdj++) {
+        weight += (weight - 64.0) * 0.2;
+    }
+    child.general.weight = Math.round(Math.min(Math.max(weight, 0), 127));
+
+    child.general.favoriteColor=options?.favoriteColor?options.favoriteColor:(child.general.gender==0?[2,3,5,6]:[0,1,7,8])[Math.floor(Math.random()*4)];//We're not running personality generation here, so we're just making a random color of the personality groups the child had available so as to add some variety to the colors
+
+    //Now we take the baselines above and translate them into the younger years
+    child.stages = [];
+    for (var iStage = 0; iStage < 6; iStage++) {
+        child.stages.push(structuredClone(child));
+
+        child.stages[iStage].eyes.yPosition=Math.floor((eyeYDelta * iStage)/5) + eyeBase;
+        child.stages[iStage].eyebrows.yPosition=Math.floor((browYDelta * iStage)/5) + browBase;
+        child.stages[iStage].mouth.yPosition=Math.floor((mouthYDelta * iStage)/5) + mouthBase;
+        child.stages[iStage].nose.size=Math.floor((noseSizeDelta * iStage)/5);
+
+        if(iStage<4){
+            child.stages[iStage].face.type=5;//Extra technically, I'm fairly certain this still happens just in a different part than I directly researched
+        }
+
+        child.stages[iStage].general.height=Math.floor((child.stages[iStage].general.height/5)*iStage);//Extra, Tomodachi Life just uses alternate models and therefore no official height growth is in-game yet one is displayed, so I mocked up a basic growing up height. Newborn will always be the shortest, stage 5 will always be the actual height, and the values in between are just a range in between. We don't do the same for weight since Mii weights appear to be more of a representative of underweight or overweight for the height.
+
+        delete child.stages[iStage].stages;//Because we're just cloning the baseline object repeatedly to make the stages a little bit cleaner, we need to clear this on subsequent clones
+    }
+
+    //If this looks odd, it is setup in a specific way to mimic the research I did into hair generation as 1:1 as possible
+    let ageGroup = 0;
+    for (let iHairStage = 0; iHairStage < 4; iHairStage++) {
+        const subgroup = childGenTables.hairStyleGroups[hairGroupIndex][ageGroup];
+        const style = subgroup[Math.floor(Math.random() * subgroup.length)];
+        const hairLookup = lookupTable("hairs", style, true);
+        if (!hairLookup) continue;
+        const [hairPage, hairType] = hairLookup;
+        switch(iHairStage){
+            case 0:
+                child.stages[0].hair.page = hairPage;
+                child.stages[0].hair.type = hairType;
+            break;
+            case 1:
+                child.stages[1].hair.page = hairPage;
+                child.stages[1].hair.type = hairType;
+                child.stages[2].hair.page = hairPage;
+                child.stages[2].hair.type = hairType;
+            break;
+            case 2:
+                child.stages[3].hair.page = hairPage;
+                child.stages[3].hair.type = hairType;
+                child.stages[4].hair.page = hairPage;
+                child.stages[4].hair.type = hairType;
+            break;
+            case 3:
+                child.stages[5].hair.page = hairPage;
+                child.stages[5].hair.type = hairType;
+            break;
+        }
+        if (mainParentFlag === 0) {
+            if (iHairStage === 0) {
+                ageGroup = Math.min(ageGroup + 1, 3);
+            }
+            else {
+                if (Math.floor(Math.random() * 3) !== 0) {
+                    ageGroup = Math.min(ageGroup + 1, 3);
+                }
+            }
+        }
+        else {
+            if (iHairStage === 0) {
+                ageGroup = Math.min(ageGroup + 1, 3);
+            }
+            else {
+                if (Math.floor(Math.random() * 4) !== 0) {
+                    ageGroup = Math.min(ageGroup + 1, 3);
+                }
+            }
+        }
+    }
+    return child.stages;
 }
 function generateInstructions(mii, full) {
     let type = mii.console?.toLowerCase();
@@ -3233,19 +1857,19 @@ function generateInstructions(mii, full) {
 function miiHeightToMeasurements(value) {
     // h in [0, 127]
     const totalInches = 36 + (48 / 127) * value; // 3' to 7'
-    return { 
-        feet:Math.floor(totalInches / 12),
-        inches:Math.round(totalInches % 12),
+    return {
+        feet: Math.floor(totalInches / 12),
+        inches: Math.round(totalInches % 12),
         totalInches,
 
-        centimeters:Math.round(totalInches*2.54)
+        centimeters: Math.round(totalInches * 2.54)
     };
 }
 function inchesToMiiHeight(totalInches) {
     return ((totalInches - 36) * 127) / 48;
 }
 function centimetersToMiiHeight(totalCentimeters) {
-    return ((Math.round(totalCentimeters/2.54) - 36) * 127) / 48;
+    return ((Math.round(totalCentimeters / 2.54) - 36) * 127) / 48;
 }
 
 // ---- Tunable anchors (BMI breakpoints) ----
@@ -3275,8 +1899,8 @@ function miiWeightToRealWeight(heightInches, miiWeight) {
     const H = miiHeightToMeasurements(heightInches).totalInches;
     const BMI = bmiFromWeightSlider(miiWeight);
     return {
-        pounds:BMI * (H * H) / 703,
-        kilograms:Math.round((BMI * (H * H) / 703)*0.4535924)
+        pounds: BMI * (H * H) / 703,
+        kilograms: Math.round((BMI * (H * H) / 703) * 0.4535924)
     };
 }
 function imperialHeightWeightToMiiWeight(heightInches, weightLbs) {
@@ -3293,8 +1917,8 @@ function imperialHeightWeightToMiiWeight(heightInches, weightLbs) {
     }
 }
 function metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms) {
-    const heightInches=Math.round(heightCentimeters/2.54);
-    const weightLbs=Math.round(weightKilograms/0.4535924);
+    const heightInches = Math.round(heightCentimeters / 2.54);
+    const weightLbs = Math.round(weightKilograms / 0.4535924);
     if (!heightInches || heightInches < 0) throw new Error("heightCentimeters must be >= 0");
 
     const H = miiHeightToMeasurements(heightInches).totalInches;
@@ -3331,7 +1955,7 @@ module.exports = {
     writeWiiBin,
     write3DSQR,
 
-    //make3DSChild, //WIP
+    makeChild,
 
     //Instructions
     generateInstructions,

@@ -1686,7 +1686,7 @@ function makeChild(parent0, parent1, options) {
         delete child.stages[iStage].stages;//Because we're just cloning the baseline object repeatedly to make the stages a little bit cleaner, we need to clear this on subsequent clones
     }
 
-    //If this looks odd, it is setup in a specific way to mimic the research I did into hair generation as 1:1 as possible
+    //Basically there's a random chance for a hairstyle to not advance throughout the years, so it's possible to end up with a hairstyle from a younger stage. This is slightly more likely for 
     let ageGroup = 0;
     for (let iHairStage = 0; iHairStage < 4; iHairStage++) {
         const subgroup = childGenTables.hairStyleGroups[hairGroupIndex][ageGroup];
@@ -1716,25 +1716,8 @@ function makeChild(parent0, parent1, options) {
                 child.stages[5].hair.type = hairType;
             break;
         }
-        if (child.stages[0].general.gender === 0) {
-            if (iHairStage === 0) {
-                ageGroup = Math.min(ageGroup + 1, 3);
-            }
-            else {
-                if (Math.floor(Math.random() * 3) !== 0) {
-                    ageGroup = Math.min(ageGroup + 1, 3);
-                }
-            }
-        }
-        else {
-            if (iHairStage === 0) {
-                ageGroup = Math.min(ageGroup + 1, 3);
-            }
-            else {
-                if (Math.floor(Math.random() * 4) !== 0) {
-                    ageGroup = Math.min(ageGroup + 1, 3);
-                }
-            }
+        if (iHairStage === 0 || Math.floor(Math.random() * (child.stages[0].general.gender === 0 ? 3 : 4)) !== 0) {//For each stage of life there is a 33% chance for boys, and a 25% chance for girls, of staying on the same hairstyle as they had already. However, they are guaranteed to never have the same hairstyle stage as their newborn stage.
+            ageGroup = Math.min(ageGroup + 1, 3);
         }
     }
     return child.stages;

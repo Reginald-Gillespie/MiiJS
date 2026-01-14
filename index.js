@@ -1570,6 +1570,12 @@ function makeChild(parent0, parent1, options) {
     if(parent0.console.toLowerCase()==="wii") parent0=convertMii(parent0,"3DS");
     if(parent1.console.toLowerCase()==="wii") parent1=convertMii(parent1,"3DS");
 
+    if(parent0.general.gender!==0){
+        let tempHolder=structuredClone(parent0);
+        parent0=structuredClone(parent1);
+        parent1=structuredClone(tempHolder);
+    }
+
     var randomBytes = [];
     for (var i = 0; i < 8; i++) {
         //randomBytes[1] is never used, kept here purely for an interesting detail from research
@@ -1601,7 +1607,6 @@ function makeChild(parent0, parent1, options) {
     child.meta.name = options?.hasOwnProperty("name")? options.name : childGenTables.names[child.general.gender][Math.floor(Math.random() * childGenTables.names[child.general.gender].length)];
 
     var matchingParent = parent0.general.gender === gender ? parent0 : parent1;
-    var mainParentFlag = (matchingParent === parent0) ? 0 : 1;
 
     //Skin color mixing. Intuitively you'd think they'd order them by similarity and pick an average, but no they have an entire table of what skin colors product what child skin color
     var validValues = childGenTables.skinColorMixing[Math.min(parent0.face.color, parent1.face.color)][Math.max(parent0.face.color, parent1.face.color)].filter(v => v !== -1);
@@ -1617,8 +1622,6 @@ function makeChild(parent0, parent1, options) {
 
     child.eyebrows.page = matchingParent.eyebrows.page;
     child.eyebrows.type = matchingParent.eyebrows.type;
-
-    child.face.color = [7, 7, 6, 7][Math.min(child.face.color, 3)];
 
     child.eyebrows.color = child.hair.color;
 
@@ -1713,7 +1716,7 @@ function makeChild(parent0, parent1, options) {
                 child.stages[5].hair.type = hairType;
             break;
         }
-        if (mainParentFlag === 0) {
+        if (child.stages[0].general.gender === 0) {
             if (iHairStage === 0) {
                 ageGroup = Math.min(ageGroup + 1, 3);
             }

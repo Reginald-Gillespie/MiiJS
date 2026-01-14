@@ -1686,7 +1686,7 @@ function makeChild(parent0, parent1, options) {
         delete child.stages[iStage].stages;//Because we're just cloning the baseline object repeatedly to make the stages a little bit cleaner, we need to clear this on subsequent clones
     }
 
-    //Basically there's a random chance for a hairstyle to not advance throughout the years, so it's possible to end up with a hairstyle from a younger stage. This is slightly more likely for 
+    //Basically there's a random chance for a hairstyle to not advance throughout the years, so it's possible to end up with a hairstyle from a younger stage. This is slightly more likely for boys than girls.
     let ageGroup = 0;
     for (let iHairStage = 0; iHairStage < 4; iHairStage++) {
         const subgroup = childGenTables.hairStyleGroups[hairGroupIndex][ageGroup];

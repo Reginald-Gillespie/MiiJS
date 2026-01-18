@@ -47,7 +47,7 @@ MiiJS is a complete and comprehensive Mii library for reading, converting, modif
 - **`miiHeightToMeasurements(miiHeight)`** - Converts Mii height value (0-127) to real-world feet and inches. Returns `{feet, inches, totalInches, centimeters}`.
 - **`inchesToMiiHeight(totalInches)`** - Converts real-world height in inches to Mii height value (0-127).
 - **`centimetersToMiiHeight(totalCentimeters)`** - Converts real-world height in centimeters to Mii height value (0-127).
-- **`miiWeightToRealWeight(miiWeight)`** - Converts Mii weight value (0-127) to real-world weight values. Returns `{pounds, kilograms}`.
+- **`miiHeightWeightToRealWeight(miiWeight)`** - Converts Mii weight value (0-127) to real-world weight values. Returns `{pounds, kilograms}`.
 - **`imperialHeightWeightToMiiWeight(heightInches, weightLbs)`** - Converts real-world imperial measurements to Mii weight values.
 - **`metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms)`** - Converts real-world metric measurements to Mii weight values.
 

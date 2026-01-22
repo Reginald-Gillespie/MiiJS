@@ -12,7 +12,6 @@ const httpsLib = require('https');
 const asmCrypto = require("./asmCrypto.js");
 const path = require("path");
 const createGL = require('gl');
-const typeCheat = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3];
 const {
     createCharModel, initCharModelTextures,
     initializeFFL, exitFFL, parseHexOrB64ToUint8Array,
@@ -20,6 +19,7 @@ const {
 } = require("./fflWrapper.js");
 const ModuleFFL = require("ffl.js/examples/ffl-emscripten-single-file.js");
 const FFLShaderMaterial = require("ffl.js/FFLShaderMaterial.js");
+const typeCheat = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3];
 
 // Typedefs for intellisence
 /** @typedef {import('./types').WiiMii} WiiMii */
@@ -1881,7 +1881,6 @@ function miiWeightToRealWeight(heightInches, miiWeight) {
 
     This is approximate, not guaranteed accurate nor intended to be taken that way. This is for entertainment value only.
     */
-    if (!heightInches || heightInches < 0) throw new Error("heightInches must be >= 0");
     const H = miiHeightToMeasurements(heightInches).totalInches;
     const BMI = bmiFromWeightSlider(miiWeight);
     return {
@@ -1890,8 +1889,6 @@ function miiWeightToRealWeight(heightInches, miiWeight) {
     };
 }
 function imperialHeightWeightToMiiWeight(heightInches, weightLbs) {
-    if (!heightInches || heightInches < 0) throw new Error("heightInches must be >= 0");
-
     const H = miiHeightToMeasurements(heightInches).totalInches;
     const BMI = weightLbs * 703 / (H * H);
 
@@ -1905,8 +1902,6 @@ function imperialHeightWeightToMiiWeight(heightInches, weightLbs) {
 function metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms) {
     const heightInches = Math.round(heightCentimeters / 2.54);
     const weightLbs = Math.round(weightKilograms / 0.4535924);
-    if (!heightInches || heightInches < 0) throw new Error("heightCentimeters must be >= 0");
-
     const H = miiHeightToMeasurements(heightInches).totalInches;
     const BMI = weightLbs * 703 / (H * H);
 

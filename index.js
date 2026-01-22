@@ -181,7 +181,7 @@ var aes_key = new Uint8Array([0x59, 0xFC, 0x81, 0x7E, 0x64, 0x46, 0xEA, 0x61, 0x
 var pad = new Uint8Array([0, 0, 0, 0]);
 function decodeAesCcm(data) {
     var nonce = Uint8Cat(data.subarray(0, NONCE_LENGTH), pad);
-    var ciphertext = data.subarray(NONCE_LENGTH, 0x70);
+    var ciphertext = data.subarray(NONCE_LENGTH, data.length);
     var plaintext = asmCrypto.AES_CCM.decrypt(ciphertext, aes_key, nonce, undefined, TAG_LENGTH);
     return Uint8Cat(plaintext.subarray(0, NONCE_OFFSET), data.subarray(0, NONCE_LENGTH), plaintext.subarray(NONCE_OFFSET, plaintext.length - 4));
 }
@@ -278,10 +278,21 @@ function convertMii(jsonIn, typeTo) {
             miiTo.beard.mustache.type = 0;
             miiTo.beard.type = 1;
         }
-        if (mii.beard.type > 3) {
-            mii.beard.type = 3;
+        if (miiTo.beard.type > 3) {
+            miiTo.beard.type = 3;
         }
-        miiTo.console = "wii";
+
+        //System IDs are only 4 bytes on the Wii
+        if(miiTo.meta.systemId){
+            miiTo.meta.systemId=miiTo.meta.systemId.slice(0,8);
+        }
+
+        if(miiTo.meta.miiId){
+            //Convert from secs since 1/1/10 to 4 sec intervals since 1/1/06
+            miiTo.meta.miiId=((Math.floor((parseInt(miiTo.meta.miiId.replaceAll(' ','').slice(1),16)+126230400)/4)<<3)|miiTo.meta.type==="Special"?0b010:0b100).toString(16).toUpperCase();
+        }
+
+        miiTo.console = "Wii";
     }
     else if (typeFrom === "wii") {
         miiTo.perms.sharing = mii.perms.mingle;
@@ -291,12 +302,9 @@ function convertMii(jsonIn, typeTo) {
         const hairConv = convTables.hairWiiTo3DS[mii.hair.page][mii.hair.type];
         miiTo.hair.page = hairConv[0];
         miiTo.hair.type = hairConv[1];
-        miiTo.hair.color = mii.hair.color;
-        miiTo.hair.flipped = mii.hair.flipped;
 
         // Convert face
         miiTo.face.type = convTables.faceWiiTo3DS[mii.face.type];
-        miiTo.face.color = mii.face.color;
         miiTo.face.makeup = 0;
         miiTo.face.feature = 0;
 
@@ -308,62 +316,20 @@ function convertMii(jsonIn, typeTo) {
             miiTo.face.feature = +convTables.featureWiiTo3DS[mii.face.feature];
         }
 
-        // Convert eyes - preserve page/type structure
-        miiTo.eyes.page = mii.eyes.page;
-        miiTo.eyes.type = mii.eyes.type;
-        miiTo.eyes.color = mii.eyes.color;
-        miiTo.eyes.size = mii.eyes.size;
         miiTo.eyes.squash = 3; // Default for 3DS
-        miiTo.eyes.rotation = mii.eyes.rotation;
-        miiTo.eyes.distanceApart = mii.eyes.distanceApart;
-        miiTo.eyes.yPosition = mii.eyes.yPosition;
-
-        // Convert eyebrows - preserve page/type structure
-        miiTo.eyebrows.page = mii.eyebrows.page;
-        miiTo.eyebrows.type = mii.eyebrows.type;
-        miiTo.eyebrows.color = mii.eyebrows.color;
-        miiTo.eyebrows.size = mii.eyebrows.size;
         miiTo.eyebrows.squash = 3; // Default for 3DS
-        miiTo.eyebrows.rotation = mii.eyebrows.rotation;
-        miiTo.eyebrows.distanceApart = mii.eyebrows.distanceApart;
-        miiTo.eyebrows.yPosition = mii.eyebrows.yPosition;
-
-        // Convert nose - preserve page/type structure
         miiTo.nose.page = mii.nose.page || 0;
-        miiTo.nose.type = mii.nose.type;
-        miiTo.nose.size = mii.nose.size;
-        miiTo.nose.yPosition = mii.nose.yPosition;
-
-        // Convert mouth - preserve page/type structure
-        miiTo.mouth.page = mii.mouth.page;
-        miiTo.mouth.type = mii.mouth.type;
-        miiTo.mouth.color = mii.mouth.color;
-        miiTo.mouth.size = mii.mouth.size;
         miiTo.mouth.squash = 3; // Default for 3DS
-        miiTo.mouth.yPosition = mii.mouth.yPosition;
 
-        // Convert glasses
-        miiTo.glasses.type = mii.glasses.type;
-        miiTo.glasses.color = mii.glasses.color;
-        miiTo.glasses.size = mii.glasses.size;
-        miiTo.glasses.yPosition = mii.glasses.yPosition;
+        //System IDs are twice as long on 3DS
+        if(miiTo.meta.systemId){
+            miiTo.meta.systemId+=miiTo.meta.systemId;
+        }
 
-        // Convert beard
-        miiTo.beard.mustache.type = mii.beard.mustache.type;
-        miiTo.beard.mustache.size = mii.beard.mustache.size;
-        miiTo.beard.mustache.yPosition = mii.beard.mustache.yPosition;
-        miiTo.beard.type = mii.beard.type;
-        miiTo.beard.color = mii.beard.color;
-
-        // Convert mole
-        miiTo.mole.on = mii.mole.on;
-        miiTo.mole.size = mii.mole.size;
-        miiTo.mole.xPosition = mii.mole.xPosition;
-        miiTo.mole.yPosition = mii.mole.yPosition;
-
-        // Copy general info
-        miiTo.general = { ...mii.general };
-        miiTo.meta = { ...mii.meta };
+        if(miiTo.meta.miiId){
+            //Convert from 4 sec intervals since 1/1/06, to secs since 1/1/10.
+            miiTo.meta.miiId=((((parseInt(miiTo.meta.miiId.replaceAll(' ',''),16)>>>3)*4-126230400)<<4)|miiTo.meta.type==="Special"?0b1000:0b0000).toString(16).toUpperCase();
+        }
 
         miiTo.console = "3DS";
     }
@@ -612,7 +578,7 @@ async function readWiiBin(binOrPath) {
         case "110":
             thisMii.meta.type = "Foreign";
             break;
-        default:
+        default://100
             thisMii.meta.type = "Default";
             break;
     }
@@ -639,12 +605,13 @@ async function readWiiBin(binOrPath) {
     thisMii.general.birthMonth = parseInt(temp.slice(2, 6), 2);
     thisMii.general.birthday = parseInt(temp.slice(6, 8) + temp2.slice(0, 3), 2);
     thisMii.general.favoriteColor = parseInt(temp2.slice(3, 7), 2);//0-11, refer to cols array
+    thisMii.meta.favorited = temp2[7]=="1";
     thisMii.general.height = parseInt(get(0x16), 2);//0-127
     thisMii.general.weight = parseInt(get(0x17), 2);//0-127
-    thisMii.perms.fromCheckMiiOut = get(0x21)[7] === "0" ? false : true;
+    thisMii.perms.fromCheckMiiOut = get(0x21)[7] == "1";
     temp = get(0x34);
     temp2 = get(0x35);
-    thisMii.mole.on = temp[0] === "0" ? false : true;//0 for Off, 1 for On
+    thisMii.mole.on = temp[0] == "1";//0 for Off, 1 for On
     thisMii.mole.size = parseInt(temp.slice(1, 5), 2);//0-8, default 4
     thisMii.mole.xPosition = parseInt(temp2.slice(2, 7), 2);//0-16, Default 2
     thisMii.mole.yPosition = parseInt(temp.slice(5, 8) + temp2.slice(0, 2), 2);//Top to bottom
@@ -653,7 +620,7 @@ async function readWiiBin(binOrPath) {
     thisMii.hair.page = +lookupTables.hairTable["" + parseInt(temp.slice(0, 7), 2)][0] - 1;
     thisMii.hair.type = +convTables.formatTo[lookupTables.hairTable["" + parseInt(temp.slice(0, 7), 2)][2] - 1][lookupTables.hairTable["" + parseInt(temp.slice(0, 7), 2)][1] - 1];//0-71, Needs lookup table
     thisMii.hair.color = parseInt(temp[7] + temp2.slice(0, 2), 2);//0-7, refer to hairCols array
-    thisMii.hair.flipped = temp2[2] === "0" ? false : true;
+    thisMii.hair.flipped = temp2[2] == "1";
     temp = get(0x24);
     temp2 = get(0x25);
     thisMii.eyebrows.page = +lookupTables.eyebrowTable["" + parseInt(temp.slice(0, 5), 2)][0] - 1;
@@ -709,6 +676,10 @@ function decode3DSMii(data) {
         }
     };
     const get = address => getBinaryFromAddress(address, data);
+    miiJson.perms.copying = get(0x01)[7] === "1" ? true : false;
+    miiJson.meta.type=get(0x4)[0]=="1"?"Default":"Special";
+    miiJson.meta.systemId=get(0x4).toString(16)+get(0x5).toString(16)+get(0x6).toString(16)+get(0x7).toString(16)+get(0x8).toString(16)+get(0x9).toString(16)+get(0xA).toString(16)+get(0xB).toString(16);
+    miiJson.meta.miiId=get(0xC).toString(16)+get(0xD).toString(16)+get(0xE).toString(16)+get(0xF).toString(16);
     var temp = get(0x18);
     var temp2 = get(0x19);
     miiJson.general.birthday = parseInt(temp2.slice(6, 8) + temp.slice(0, 3), 2);
@@ -742,7 +713,6 @@ function decode3DSMii(data) {
     temp = get(0x30);
     miiJson.perms.sharing = temp[7] === "1" ? false : true;
     miiJson.general.favoriteColor = parseInt(temp2.slice(2, 6), 2);
-    miiJson.perms.copying = get(0x01)[7] === "1" ? true : false;
     miiJson.hair.page = lookupTable("hairs", parseInt(get(0x32), 2), true)[0];
     miiJson.hair.type = lookupTable("hairs", parseInt(get(0x32), 2), true)[1];
     miiJson.face.type = lookupTable("faces", parseInt(temp.slice(3, 7), 2), false);
@@ -811,11 +781,10 @@ function decode3DSMii(data) {
     temp2 = get(0x47);
     miiJson.mole.xPosition = parseInt(temp2.slice(6, 8) + temp.slice(0, 3), 2);
     miiJson.mole.yPosition = parseInt(temp2.slice(1, 6), 2);
-    miiJson.meta.type = "Default";//qk, Make this actually retrieve MiiID, SystemID, and Mii type
     miiJson.console = "3DS";
     return miiJson;
 }
-async function read3DSQR(binOrPath, returnDecryptedBin) {
+async function read3DSQR(binOrPath, returnDecryptedBin, returnEncryptedBin) {
     let qrCode;
     if (Buffer.isBuffer(binOrPath)) {//Buffer
         qrCode = binOrPath;
@@ -841,6 +810,9 @@ async function read3DSQR(binOrPath, returnDecryptedBin) {
         });
     }
     if (qrCode) {
+        if (returnEncryptedBin) {
+            return new Uint8Array(qrCode);
+        }
         var data;
         data = Buffer.from(decodeAesCcm(new Uint8Array(qrCode)));
         if (returnDecryptedBin) {
@@ -1245,7 +1217,7 @@ async function writeWiiBin(jsonIn, outPath) {
     miiBin += mii.general.birthMonth.toString(2).padStart(4, "0");
     miiBin += mii.general.birthday.toString(2).padStart(5, "0");
     miiBin += mii.general.favoriteColor.toString(2).padStart(4, "0");
-    miiBin += '0';
+    miiBin += mii.perms.favorited?'1':'0';
     for (var i = 0; i < 10; i++) {
         if (i < mii.meta.name.length) {
             miiBin += mii.meta.name.charCodeAt(i).toString(2).padStart(16, "0");
@@ -1256,23 +1228,39 @@ async function writeWiiBin(jsonIn, outPath) {
     }
     miiBin += mii.general.height.toString(2).padStart(8, "0");
     miiBin += mii.general.weight.toString(2).padStart(8, "0");
-    let miiId = "";
+    let miiTypeIdentifier = "";
     switch (mii.meta.type) {
         case "Special":
-            miiId = "01000110";
+            miiTypeIdentifier = "010";
             break;
         case "Foreign":
-            miiId = "11000110";
+            miiTypeIdentifier = "110";
             break;
         default:
-            miiId = "10001001";
+            miiTypeIdentifier = "100";
             break;
     }
-    for (var i = 0; i < 3; i++) {
-        miiId += Math.floor(Math.random() * 255).toString(2).padStart(8, "0");
+    if(mii.meta.miiId){
+        let temp=mii.meta.miiId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('');
+        if(temp.length<29){
+            miiBin+=`${miiTypeIdentifier}${temp.padStart(29,'0')}`;
+        }
+        else{
+            miiBin+=`${miiTypeIdentifier}${temp.slice(3,32)}`;
+        }
     }
-    miiBin += miiId;
-    miiBin += "11111111".repeat(4);//System ID
+    else{
+        //Calculate the number of seconds since Jan 1, 2006, divided by 4.
+        const miiIdBase = Math.floor((Date.now() - Date.UTC(2006, 0, 1)) / 4000).toString(2).padStart(29,'0');
+        miiBin+=`${miiTypeIdentifier}${miiIdBase}`;
+    }
+    if(mii.meta.systemId){
+        //Parse a string of Hex Bytes, be it 12 34 AB CD, or 1234ABCD into a string of 0s and 1s and sanitize input
+        miiBin+=mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(32,'0').slice(0,32);
+    }
+    else{
+        miiBin += "11111111".repeat(4);//FF FF FF FF, completely nonsense System ID if none is set
+    }
     miiBin += mii.face.type.toString(2).padStart(3, "0");
     miiBin += mii.face.color.toString(2).padStart(3, "0");
     miiBin += mii.face.feature.toString(2).padStart(4, "0");
@@ -1315,7 +1303,7 @@ async function writeWiiBin(jsonIn, outPath) {
     miiBin += mii.mouth.yPosition.toString(2).padStart(5, "0");
     miiBin += mii.glasses.type.toString(2).padStart(4, "0");
     miiBin += mii.glasses.color.toString(2).padStart(3, "0");
-    miiBin += "0";
+    miiBin += "0";//Invalidates Mii when set to 1
     miiBin += mii.glasses.size.toString(2).padStart(3, "0");
     miiBin += mii.glasses.yPosition.toString(2).padStart(5, "0");
     miiBin += mii.beard.mustache.type.toString(2).padStart(2, "0");
@@ -1359,26 +1347,41 @@ async function write3DSQR(miiJson, outPath, returnBin, fflRes = getFFLRes()) {
 
     //Make the binary
     var mii = miiJson;
-    var miiBin = "00000011";
+    var miiBin = "00000011";//Mii version, which for 3DS is 3
     //If Special Miis are being used improperly, fix it and warn the user
     if (mii.meta.type.toLowerCase() === "special" && (mii.console.toLowerCase() === "wii u" || mii.console.toLowerCase() === "wiiu")) {
         mii.meta.type = "Default";
-        console.warn("Wii Us do not work with Special Miis. Reverted to Default Mii.");
+        console.warn("Wii Us do not work with Special Miis. Reverted output to Default Mii.");
     }
     if (mii.perms.sharing && mii.meta.type === "Special") {
         mii.perms.sharing = false;
         console.warn("Cannot have Sharing enabled for Special Miis. Disabled Sharing in the output.");
     }
-    miiBin += "0000000";
+    //Revisit this if translating MiiJS out of English ever, for now this is fine
+    miiBin += "0000000";//00 JPN/US/EUR, 01 CHN, 10 KOR, 11 TWN Character Set | Region Lock Off 00 | Profanity Flag 0/1
     miiBin += mii.perms.copying ? "1" : "0";
     miiBin += "00000000";
     miiBin += "00110000";
-    miiBin += "1000101011010010000001101000011100011000110001100100011001100110010101100111111110111100000001110101110001000101011101100000001110100100010000000000000000000000".slice(0, 8 * 8);
-    miiBin += mii.meta.type === "Special" ? "0" : "1";
-    miiBin += "0000000";
-    for (var i = 0; i < 3; i++) {
-        miiBin += Math.floor(Math.random() * 255).toString(2).padStart(8, "0");
+    if(mii.meta.systemId){
+        miiBin+=mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(64,'0').slice(0,64);
     }
+    else{
+        //Donor System ID
+        miiBin += "1000101011010010000001101000011100011000110001100100011001100110010101100111111110111100000001110101110001000101011101100000001110100100010000000000000000000000".slice(0, 64);
+    }
+    miiBin+=mii.meta.type === "Special" ? "0" : "1";
+    miiBin+="001";
+    let temp='';
+    if(mii.meta.miiId){
+        //Convert Mii ID to binary
+        temp+=mii.meta.miiId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('');
+    }
+    else{
+        //Number of seconds since Jan 1, 2010
+        temp+=Math.floor((Date.now()-Date.UTC(2010,0,1))/1000).toString(2);
+    }
+    //Sanitize Mii ID
+    miiBin+=temp.padStart(27,'0').slice(0,27);
     miiBin += "0000000001000101011101100000001110100100010000000000000000000000";
     miiBin += mii.general.birthday.toString(2).padStart(5, "0").slice(2, 5);
     miiBin += mii.general.birthMonth.toString(2).padStart(4, "0");

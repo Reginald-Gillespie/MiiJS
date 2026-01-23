@@ -287,9 +287,16 @@ function convertMii(jsonIn, typeTo) {
             miiTo.meta.systemId=miiTo.meta.systemId.slice(0,8);
         }
 
-        if(miiTo.meta.miiId){
-            //Convert from secs since 1/1/10 to 4 sec intervals since 1/1/06
-            miiTo.meta.miiId=((Math.floor((parseInt(miiTo.meta.miiId.replaceAll(' ','').slice(1),16)+126230400)/4)<<3)|miiTo.meta.type==="Special"?0b010:0b100).toString(16).toUpperCase();
+        if (miiTo.meta.miiId) {
+            const miiIdInt = parseInt(miiTo.meta.miiId.replaceAll(' ', ''), 16);
+            // Extract 28-bit timestamp (bits 0-27), multiply by 2 to get seconds since 2010
+            const secsSince2010 = (miiIdInt & 0x0FFFFFFF) * 2;
+            // Convert to 4-second intervals since 2006
+            const secondsOffset = 126230400; // Seconds between 2006 and 2010
+            const intervals = Math.floor((secsSince2010 + secondsOffset) / 4);
+            // Combine with type bits
+            const typePrefix = miiTo.meta.type === "Special" ? 0b010 : 0b100;
+            miiTo.meta.miiId = ((typePrefix << 29) | intervals).toString(16).toUpperCase().padStart(8, '0');
         }
 
         miiTo.console = "Wii";
@@ -323,12 +330,19 @@ function convertMii(jsonIn, typeTo) {
 
         //System IDs are twice as long on 3DS
         if(miiTo.meta.systemId){
-            miiTo.meta.systemId+=miiTo.meta.systemId;
+            miiTo.meta.systemId=miiTo.meta.systemId.padEnd(16,'0');
         }
 
-        if(miiTo.meta.miiId){
-            //Convert from 4 sec intervals since 1/1/06, to secs since 1/1/10.
-            miiTo.meta.miiId=((((parseInt(miiTo.meta.miiId.replaceAll(' ',''),16)>>>3)*4-126230400)<<4)|miiTo.meta.type==="Special"?0b1000:0b0000).toString(16).toUpperCase();
+        if (miiTo.meta.miiId) {
+            const miiIdInt = parseInt(miiTo.meta.miiId.replaceAll(' ', ''), 16);
+            // Extract 29-bit timestamp (bits 0-28), multiply by 4 to get seconds since 2006
+            const secsSince2006 = (miiIdInt & 0x1FFFFFFF) * 4;
+            // Convert to 2-second intervals since 2010
+            const secondsOffset = 126230400; // Seconds between 2006 and 2010
+            const intervals = Math.floor((secsSince2006 - secondsOffset) / 2);
+            // Combine with flag bits
+            const flags = miiTo.meta.type === "Special" ? 0b0001 : 0b1001;
+            miiTo.meta.miiId = ((intervals & 0x0FFFFFFF) | (flags << 28)).toString(16).toUpperCase().padStart(8, '0');
         }
 
         miiTo.console = "3DS";
@@ -570,7 +584,7 @@ async function readWiiBin(binOrPath) {
     }
     thisMii.meta.creatorName = cname.replaceAll("\x00", "");
     thisMii.general.gender = +get(0x00)[1];//0 for Male, 1 for Female
-    thisMii.meta.miiId = parseInt(get(0x18), 2).toString(16) + parseInt(get(0x19), 2).toString(16) + parseInt(get(0x1A), 2).toString(16) + parseInt(get(0x1B), 2).toString(16);
+    thisMii.meta.miiId = data.readUInt32BE(0x18).toString(16).padStart(8, '0');
     switch (thisMii.meta.miiId.slice(0, 3)) {
         case "010":
             thisMii.meta.type = "Special";
@@ -582,7 +596,7 @@ async function readWiiBin(binOrPath) {
             thisMii.meta.type = "Default";
             break;
     }
-    thisMii.meta.systemId = parseInt(get(0x1C), 2).toString(16) + parseInt(get(0x1D), 2).toString(16) + parseInt(get(0x1E), 2).toString(16) + parseInt(get(0x1F), 2).toString(16);
+    thisMii.meta.systemId = data.readUInt32BE(0x1C).toString(16).padStart(8, '0').toUpperCase();
     var temp = get(0x20);
     thisMii.face.type = parseInt(temp.slice(0, 3), 2);//0-7
     thisMii.face.color = parseInt(temp.slice(3, 6), 2);//0-5
@@ -677,9 +691,13 @@ function decode3DSMii(data) {
     };
     const get = address => getBinaryFromAddress(address, data);
     miiJson.perms.copying = get(0x01)[7] === "1" ? true : false;
-    miiJson.meta.type=get(0x4)[0]=="1"?"Default":"Special";
-    miiJson.meta.systemId=get(0x4).toString(16)+get(0x5).toString(16)+get(0x6).toString(16)+get(0x7).toString(16)+get(0x8).toString(16)+get(0x9).toString(16)+get(0xA).toString(16)+get(0xB).toString(16);
-    miiJson.meta.miiId=get(0xC).toString(16)+get(0xD).toString(16)+get(0xE).toString(16)+get(0xF).toString(16);
+    const miiIdValue = data.readUInt32BE(0x0C);
+    const systemIdHigh = data.readUInt32BE(0x04);
+    const systemIdLow = data.readUInt32BE(0x08);
+
+    miiJson.meta.type = (miiIdValue & 0x80000000) === 0 ? "Special" : "Default";
+    miiJson.meta.systemId = systemIdHigh.toString(16).padStart(8, '0') + systemIdLow.toString(16).padStart(8, '0');
+    miiJson.meta.miiId = miiIdValue.toString(16).padStart(8, '0');
     var temp = get(0x18);
     var temp2 = get(0x19);
     miiJson.general.birthday = parseInt(temp2.slice(6, 8) + temp.slice(0, 3), 2);
@@ -1240,23 +1258,17 @@ async function writeWiiBin(jsonIn, outPath) {
             miiTypeIdentifier = "100";
             break;
     }
-    if(mii.meta.miiId){
-        let temp=mii.meta.miiId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('');
-        if(temp.length<29){
-            miiBin+=`${miiTypeIdentifier}${temp.padStart(29,'0')}`;
-        }
-        else{
-            miiBin+=`${miiTypeIdentifier}${temp.slice(3,32)}`;
-        }
+    if (mii.meta.miiId) {
+        let temp = mii.meta.miiId.replaceAll(' ', '').match(/.{1,2}/g).map(b => parseInt(b, 16).toString(2).padStart(8, '0')).join('');
+        miiBin += `${miiTypeIdentifier}${temp.padStart(32, '0').slice(-29)}`; // Take rightmost 29 bits
     }
-    else{
-        //Calculate the number of seconds since Jan 1, 2006, divided by 4.
-        const miiIdBase = Math.floor((Date.now() - Date.UTC(2006, 0, 1)) / 4000).toString(2).padStart(29,'0');
-        miiBin+=`${miiTypeIdentifier}${miiIdBase}`;
+    else {
+        // Calculate the number of 4-second intervals since Jan 1, 2006
+        const miiIdBase = Math.floor((Date.now() - Date.UTC(2006, 0, 1)) / 4000).toString(2).padStart(29, '0');
+        miiBin += `${miiTypeIdentifier}${miiIdBase}`;
     }
     if(mii.meta.systemId){
-        //Parse a string of Hex Bytes, be it 12 34 AB CD, or 1234ABCD into a string of 0s and 1s and sanitize input
-        miiBin+=mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(32,'0').slice(0,32);
+        miiBin += mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(32,'0').slice(-32); // Use slice(-32)
     }
     else{
         miiBin += "11111111".repeat(4);//FF FF FF FF, completely nonsense System ID if none is set
@@ -1363,25 +1375,23 @@ async function write3DSQR(miiJson, outPath, returnBin, fflRes = getFFLRes()) {
     miiBin += "00000000";
     miiBin += "00110000";
     if(mii.meta.systemId){
-        miiBin+=mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(64,'0').slice(0,64);
+        miiBin += mii.meta.systemId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('').padStart(64,'0').slice(-64); // Use slice(-64)
     }
     else{
         //Donor System ID
-        miiBin += "1000101011010010000001101000011100011000110001100100011001100110010101100111111110111100000001110101110001000101011101100000001110100100010000000000000000000000".slice(0, 64);
+        miiBin += "1000101011010010000001101000011100011000110001100100011001100110010101100111111110111100000001110101110001000101011101100000001110100100010000000000000000000000";
     }
-    miiBin+=mii.meta.type === "Special" ? "0" : "1";
-    miiBin+="001";
-    let temp='';
-    if(mii.meta.miiId){
-        //Convert Mii ID to binary
-        temp+=mii.meta.miiId.replaceAll(' ','').match(/.{1,2}/g).map(b=>parseInt(b,16).toString(2).padStart(8,'0')).join('');
+    miiBin += mii.meta.type === "Special" ? "0" : "1";
+    miiBin += "001";
+    let temp = '';
+    if (mii.meta.miiId) {
+        // Convert Mii ID to binary
+        temp += mii.meta.miiId.replaceAll(' ', '').match(/.{1,2}/g).map(b => parseInt(b, 16).toString(2).padStart(8, '0')).join('');
+    } else {
+        // Number of 2-second intervals since Jan 1, 2010
+        temp += Math.floor((Date.now() - Date.UTC(2010, 0, 1)) / 2000).toString(2);
     }
-    else{
-        //Number of seconds since Jan 1, 2010
-        temp+=Math.floor((Date.now()-Date.UTC(2010,0,1))/1000).toString(2);
-    }
-    //Sanitize Mii ID
-    miiBin+=temp.padStart(27,'0').slice(0,27);
+    miiBin += temp.padStart(32, '0').slice(-27); // Take rightmost 27 bits
     miiBin += "0000000001000101011101100000001110100100010000000000000000000000";
     miiBin += mii.general.birthday.toString(2).padStart(5, "0").slice(2, 5);
     miiBin += mii.general.birthMonth.toString(2).padStart(4, "0");
@@ -1916,6 +1926,25 @@ function metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms) {
     }
 }
 
+function miiIdToTimestamp(miiId, mode){
+    miiId = miiId.replaceAll(' ', '');
+    const idBigInt = BigInt('0x' + miiId);
+    
+    switch(mode.toLowerCase().replaceAll(' ', '')){
+        case "3ds":
+        case "wiiu":
+            const seconds3ds = (idBigInt & 0x0FFFFFFFn) * 2n;
+            return new Date(Number(BigInt(Date.UTC(2010, 0, 1)) + seconds3ds * 1000n));
+        
+        case "wii":
+            // Extract bits 0-27 (28 bits), multiply by 4 for seconds
+            const secondsWii = (idBigInt & 0x0FFFFFFFn) * 4n;
+            return new Date(Number(BigInt(Date.UTC(2006, 0, 1)) + secondsWii * 1000n));
+        
+        default:
+            return "No valid mode specified";
+    }
+}
 
 
 module.exports = {
@@ -1952,6 +1981,8 @@ module.exports = {
     miiWeightToRealWeight,
     imperialHeightWeightToMiiWeight,
     metricHeightWeightToMiiWeight,
+
+    miiIdToTimestamp,
 
     /*
     Handle Amiibo Functions

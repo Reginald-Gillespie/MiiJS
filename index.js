@@ -2109,6 +2109,102 @@ function miiIdToTimestamp(miiId, mode){
     }
 }
 
+const formats=require("./formats.js");
+function bufferToBitString(buf) {
+    let out = '';
+    for (let i = 0; i < buf.length; i++) {
+        out += buf[i].toString(2).padStart(8, '0');
+    }
+    return out;
+}
+function isValidUTF16(bits) {
+    if (bits.length % 16) return false;
+
+    for (let i = 0; i < bits.length; i += 16) {
+        const u = parseInt(bits.slice(i, i + 16), 2);
+
+        // high surrogate must be followed by a low surrogate
+        if (u >= 0xD800 && u <= 0xDBFF) {
+            if (i + 32 > bits.length) return false;
+            const n = parseInt(bits.slice(i + 16, i + 32), 2);
+            if (!(n >= 0xDC00 && n <= 0xDFFF)) return false;
+            i += 16; // consumed the low surrogate too
+        }
+        // low surrogate without a preceding high surrogate is invalid
+        else if (u >= 0xDC00 && u <= 0xDFFF) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function validate(buf, format, verbose) {
+    if (!Buffer.isBuffer(buf)) return false;
+    format = format ? format.toLowerCase().replaceAll(".", '') : null;
+    let matches = [];
+    Object.keys(formats).forEach(form => {
+        if (!(format === form || format === 'all' || format === 'any' || !format)) return;
+        if (buf.length !== formats[form].length) return;
+
+        let bits = bufferToBitString(buf);
+        let offset = 0;
+        let valid = true;
+        let wordBits = null;
+        let wordPos = 0;
+        let wordEnd = 0;
+        if (formats[form].hasOwnProperty('struct')) {
+            for (const field of formats[form].struct) {
+                // Start a word window (does NOT consume offset)
+                if (field.word) {
+                    const raw = bits.slice(offset, offset + field.length);
+                    const bytes = raw.match(/.{1,8}/g) || [];
+                    wordBits = bytes.map(b => b.split('').reverse().join('')).join('');
+                    wordPos = 0;
+                    wordEnd = field.length;
+                    continue;
+                }
+                let slice;
+                const inWord = wordBits && wordPos + field.length <= wordEnd;
+                if (inWord) {
+                    slice = wordBits.slice(wordPos, wordPos + field.length);
+                } else {
+                    slice = bits.slice(offset, offset + field.length);
+                }
+
+                if (field.text) {
+                    valid = isValidUTF16(slice);
+                    if (!valid) {
+                        if (verbose) console.warn(`${form} contains text that does not match UTF-16`);
+                        break;
+                    }
+                } else if (field.max || field.min) {
+                    // If slice came from wordBits, it's LSB->MSB; reverse it before parseInt.
+                    const numBits = inWord ? slice.split('').reverse().join('') : slice;
+                    const subset = parseInt(numBits, 2);
+
+                    if (subset < (field.min || 0) || subset > (field.max || subset + 1)) {
+                        valid = false;
+                        if (verbose) console.log(`${form} fails due to ${field.name} being ${subset}, which is outside the stated bounds of ${field.min || 0}-${field.max || subset + 1}`);
+                        break;
+                    }
+                }
+
+                // advance positions
+                offset += field.length;
+                if (inWord) {
+                    wordPos += field.length;
+                    if (wordPos >= wordEnd) wordBits = null; //Finished this word block
+                }
+            }
+        }
+
+        if (valid) matches.push(form);
+    });
+
+    return matches;
+}
+
 // Export for browser global when bundled
 const MiiJSExports = {
     ...require("./amiiboHandler.js"),
@@ -2155,6 +2251,7 @@ const MiiJSExports = {
     metricHeightWeightToMiiWeight,
 
     miiIdToTimestamp,
+    validateMii,
 
     // Crypto utilities (useful for browser)
     decodeAesCcm,

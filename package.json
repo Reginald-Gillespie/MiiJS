@@ -3,9 +3,38 @@
   "version": "2.4.1",
   "description": "The most complete and easy to use Mii library on the market.",
   "main": "index.js",
+  "browser": "dist/miijs.browser.js",
+  "module": "dist/miijs.browser.esm.js",
+  "exports": {
+    ".": {
+      "browser": "./dist/miijs.browser.js",
+      "import": "./dist/miijs.browser.esm.js",
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./browser": {
+      "import": "./dist/miijs.browser.esm.js",
+      "default": "./dist/miijs.browser.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "dist/",
+    "shims/",
+    "Enums.js",
+    "asmCrypto.js",
+    "amiiboHandler.js",
+    "fflWrapper.js",
+    "data.json",
+    "types.d.ts",
+    "patch-ffl.js"
+  ],
   "scripts": {
     "test": "jest",
-    "postinstall": "node ./patch-ffl.js"
+    "postinstall": "node ./patch-ffl.js",
+    "build": "node build-browser.js",
+    "serve": "node build-browser.js --serve",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -26,6 +55,7 @@
   },
   "homepage": "https://github.com/Stewared/MiiJS#readme",
   "dependencies": {
+    "buffer": "^6.0.3",
     "canvas": "^3.1.0",
     "ffl.js": "github:ariankordi/FFL.js#06ede8f",
     "gl": "^8.1.6",
@@ -40,6 +70,10 @@
     "three": "^0.162.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.6",
+    "@babel/preset-env": "^7.28.6",
+    "babel-jest": "^30.2.0",
+    "esbuild": "^0.27.2",
     "jest": "^30.0.1"
   }
 }

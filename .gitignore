@@ -3,10 +3,15 @@
 package-lock.json
 node_modules
 FFLResHigh.dat
-__tests__
 TODO.md
 experiments
 FFLResHigh*
 *maddie*
-test*
 export*
+
+# Testing related
+test*
+__tests__
+babel.config.json
+jest.config.js
+webpage-example

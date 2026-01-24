@@ -3598,22 +3598,30 @@ function BigNumber_extGCD(a, b) {
 }
 
 function getRandomValues(buf) {
-    if (typeof process !== 'undefined') {
-        var nodeCrypto = require('crypto');
-        var bytes = nodeCrypto.randomBytes(buf.length);
-        buf.set(bytes);
-        return;
+    if (typeof process !== 'undefined' && typeof require === 'function') {
+        try {
+            var nodeCrypto = eval('require')('crypto');
+            var bytes = nodeCrypto.randomBytes(buf.length);
+            buf.set(bytes);
+            return;
+        } catch (e) {
+            // Fall through to browser methods
+        }
     }
-    if (window.crypto && window.crypto.getRandomValues) {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(buf);
         return;
     }
-    if (self.crypto && self.crypto.getRandomValues) {
+    if (typeof self !== 'undefined' && self.crypto && self.crypto.getRandomValues) {
         self.crypto.getRandomValues(buf);
         return;
     }
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+        globalThis.crypto.getRandomValues(buf);
+        return;
+    }
     // @ts-ignore
-    if (window.msCrypto && window.msCrypto.getRandomValues) {
+    if (typeof window !== 'undefined' && window.msCrypto && window.msCrypto.getRandomValues) {
         // @ts-ignore
         window.msCrypto.getRandomValues(buf);
         return;

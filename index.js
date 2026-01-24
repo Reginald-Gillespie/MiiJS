@@ -1,25 +1,44 @@
-//Imports
-const fs = require('fs');
-const nodeCanvas = require('canvas');
-const { createCanvas, loadImage, ImageData } = nodeCanvas;
+//Imports - Environment detection
+const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+// Node.js-only imports (conditionally loaded)
+let fs, nodeCanvas, createCanvas, loadImage, ImageData, Jimp, JSDOM, httpsLib, path, createGL;
+let ModuleFFL, FFLShaderMaterial, fflWrapper;
+
+if (isNode) {
+    fs = require('fs');
+    nodeCanvas = require('canvas');
+    createCanvas = nodeCanvas.createCanvas;
+    loadImage = nodeCanvas.loadImage;
+    ImageData = nodeCanvas.ImageData;
+    Jimp = require('jimp');
+    JSDOM = require("jsdom").JSDOM;
+    httpsLib = require('https');
+    path = require("path");
+    createGL = require('gl');
+    ModuleFFL = require("ffl.js/examples/ffl-emscripten-single-file.js");
+    FFLShaderMaterial = require("ffl.js/FFLShaderMaterial.js");
+    fflWrapper = require("./fflWrapper.js");
+}
+
+// Cross-platform imports
 const jsQR = require('jsqr');
-const Jimp = require('jimp');
 const THREE = require('three');
 var GLTFLoader = null;
 const QRCodeStyling = require("qr-code-styling");
-const { JSDOM } = require("jsdom");
-const httpsLib = require('https');
 const asmCrypto = require("./asmCrypto.js");
-const path = require("path");
-const createGL = require('gl');
 const typeCheat = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3];
-const {
-    createCharModel, initCharModelTextures,
-    initializeFFL, exitFFL, parseHexOrB64ToUint8Array,
-    setIsWebGL1State, getCameraForViewType, ViewType
-} = require("./fflWrapper.js");
-const ModuleFFL = require("ffl.js/examples/ffl-emscripten-single-file.js");
-const FFLShaderMaterial = require("ffl.js/FFLShaderMaterial.js");
+
+// FFL exports (only available in Node.js)
+const createCharModel = isNode ? fflWrapper.createCharModel : null;
+const initCharModelTextures = isNode ? fflWrapper.initCharModelTextures : null;
+const initializeFFL = isNode ? fflWrapper.initializeFFL : null;
+const exitFFL = isNode ? fflWrapper.exitFFL : null;
+const parseHexOrB64ToUint8Array = isNode ? fflWrapper.parseHexOrB64ToUint8Array : null;
+const setIsWebGL1State = isNode ? fflWrapper.setIsWebGL1State : null;
+const getCameraForViewType = isNode ? fflWrapper.getCameraForViewType : null;
+const ViewType = isNode ? fflWrapper.ViewType : null;
 
 // Typedefs for intellisence
 /** @typedef {import('./types').WiiMii} WiiMii */
@@ -42,19 +61,30 @@ function Uint8Cat() {
     return dest;
 }
 async function downloadImage(url) {
-    return new Promise((resolve, reject) => {
-        httpsLib.get(url, (res) => {
-            if (res.statusCode === 200) {
-                const data = [];
-                res.on('data', chunk => data.push(chunk));
-                res.on('end', () => resolve(Buffer.concat(data)));
-                res.on('error', reject);
-            } else {
-                res.resume();
-                reject(new Error(`Request Failed With a Status Code: ${res.statusCode}`));
-            }
+    if (isBrowser) {
+        // Browser: use fetch
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Request Failed With a Status Code: ${response.status}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+    } else {
+        // Node.js: use https
+        return new Promise((resolve, reject) => {
+            httpsLib.get(url, (res) => {
+                if (res.statusCode === 200) {
+                    const data = [];
+                    res.on('data', chunk => data.push(chunk));
+                    res.on('end', () => resolve(Buffer.concat(data)));
+                    res.on('error', reject);
+                } else {
+                    res.resume();
+                    reject(new Error(`Request Failed With a Status Code: ${res.statusCode}`));
+                }
+            });
         });
-    });
+    }
 }
 function byteToString(int) {
     var str = int.toString(16);
@@ -62,7 +92,13 @@ function byteToString(int) {
     return str;
 }
 function getBinaryFromAddress(addr, bin) {
-    let byte = bin.readUInt8(addr);
+    // Support both Buffer (Node.js) and Uint8Array (browser)
+    let byte;
+    if (typeof bin.readUInt8 === 'function') {
+        byte = bin.readUInt8(addr);
+    } else {
+        byte = bin[addr];
+    }
     let binaryString = '';
     for (let i = 7; i >= 0; i--) {
         binaryString += ((byte >> i) & 1) ? '1' : '0';
@@ -149,6 +185,12 @@ function getFFLRes() {
         "../../afl/AFLResHigh.dat"
     ];
 
+    // Only search for files in Node.js environment
+    if (!isNode || !fs) {
+        console.warn('FFLResHigh.dat loading only available in Node.js. Use renderMiiWithStudio for browser rendering.');
+        return _fflRes = null;
+    }
+
     for (const filePath of searchPaths) {
         try {
             if (fs.existsSync(filePath)) {
@@ -158,7 +200,7 @@ function getFFLRes() {
                     // Convert Buffer to Uint8Array explicitly
                     const buffer = fs.readFileSync(filePath);
                     _fflRes = new Uint8Array(buffer);
-                    console.log(`Loaded FFLResHigh.dat from: ${filePath} (${_fflRes.length} bytes)`);
+                    // console.log(`Loaded FFLResHigh.dat from: ${filePath} (${_fflRes.length} bytes)`);
                     return _fflRes;
                 }
             }
@@ -247,8 +289,16 @@ function decodeStudio(encoded) {
     return out;
 }
 function convertMii(jsonIn, typeTo) {
-    typeFrom = jsonIn.console?.toLowerCase();
-    if (typeFrom == null || typeTo === typeFrom) {
+    const typeFrom = jsonIn.console?.toLowerCase();
+    if (typeFrom == null) {
+        return jsonIn;
+    }
+    // If no target type specified, convert to the other format
+    if (!typeTo) {
+        typeTo = typeFrom === "wii" ? "3ds" : "wii";
+    }
+    typeTo = typeTo.toLowerCase();
+    if (typeTo === typeFrom) {
         return jsonIn;
     }
     let mii = jsonIn;
@@ -565,14 +615,36 @@ function convertStudioToMii(input) {
 
 async function readWiiBin(binOrPath) {
     let data;
-    if (Buffer.isBuffer(binOrPath)) {
+    
+    // Handle Uint8Array input (browser-friendly)
+    if (binOrPath instanceof Uint8Array) {
+        // In browser, use Uint8Array directly; in Node.js, convert to Buffer
+        data = typeof Buffer !== "undefined" ? Buffer.from(binOrPath) : binOrPath;
+    }
+    else if (typeof Buffer !== "undefined" && Buffer.isBuffer(binOrPath)) {
         data = binOrPath;
     }
-    else if (/[^01]/ig.test(binOrPath)) {
+    else if (typeof binOrPath === 'string' && /[^01]/ig.test(binOrPath)) {
+        // It's a file path - only works in Node.js
+        if (!isNode || !fs) {
+            throw new Error("File path reading only available in Node.js. Pass a Uint8Array or Buffer in browser.");
+        }
         data = await fs.promises.readFile(binOrPath);
     }
+    else if (typeof binOrPath === 'string') {
+        // Binary string of 0s and 1s - convert to bytes
+        const bytes = [];
+        for (let i = 0; i < binOrPath.length; i += 8) {
+            bytes.push(parseInt(binOrPath.slice(i, i + 8), 2));
+        }
+        data = typeof Buffer !== "undefined" ? Buffer.from(bytes) : new Uint8Array(bytes);
+    }
+    else if (binOrPath instanceof ArrayBuffer) {
+        const arr = new Uint8Array(binOrPath);
+        data = typeof Buffer !== "undefined" ? Buffer.from(arr) : arr;
+    }
     else {
-        data = Buffer.from(binOrPath);
+        throw new Error("Invalid input type for readWiiBin");
     }
     var thisMii = {
         general: {},
@@ -593,16 +665,28 @@ async function readWiiBin(binOrPath) {
 
     const get = address => getBinaryFromAddress(address, data);
 
+    // Parse Mii name (10 UTF-16BE characters starting at byte 2)
     var name = "";
     for (var i = 0; i < 10; i++) {
-        name += data.slice(3 + i * 2, 4 + i * 2) + "";
+        const offset = 2 + i * 2;
+        // Read as big-endian UTF-16
+        const charCode = (data[offset] << 8) | data[offset + 1];
+        if (charCode !== 0) {
+            name += String.fromCharCode(charCode);
+        }
     }
-    thisMii.meta.name = name.replaceAll("\x00", "");
+    thisMii.meta.name = name;
+    
+    // Parse creator name (10 UTF-16BE characters starting at byte 54)
     var cname = "";
     for (var i = 0; i < 10; i++) {
-        cname += data.slice(55 + i * 2, 56 + i * 2) + "";
+        const offset = 54 + i * 2;
+        const charCode = (data[offset] << 8) | data[offset + 1];
+        if (charCode !== 0) {
+            cname += String.fromCharCode(charCode);
+        }
     }
-    thisMii.meta.creatorName = cname.replaceAll("\x00", "");
+    thisMii.meta.creatorName = cname;
     thisMii.general.gender = +get(0x00)[1];//0 for Male, 1 for Female
     thisMii.meta.miiId = parseInt(get(0x18), 2).toString(16) + parseInt(get(0x19), 2).toString(16) + parseInt(get(0x1A), 2).toString(16) + parseInt(get(0x1B), 2).toString(16);
     switch (thisMii.meta.miiId.slice(0, 3)) {
@@ -817,10 +901,22 @@ function decode3DSMii(data) {
 }
 async function read3DSQR(binOrPath, returnDecryptedBin) {
     let qrCode;
-    if (Buffer.isBuffer(binOrPath)) {//Buffer
+    
+    // Handle Uint8Array input (browser-friendly)
+    if (binOrPath instanceof Uint8Array) {
         qrCode = binOrPath;
     }
-    else if (/[^01]/ig.test(binOrPath)) {//File path
+    else if (typeof Buffer !== "undefined" && Buffer.isBuffer(binOrPath)) {
+        qrCode = binOrPath;
+    }
+    else if (binOrPath instanceof ArrayBuffer) {
+        qrCode = new Uint8Array(binOrPath);
+    }
+    else if (typeof binOrPath === 'string' && /[^01]/ig.test(binOrPath)) {
+        // It's a file path - only works in Node.js
+        if (!isNode || !fs) {
+            throw new Error("File path reading only available in Node.js. Pass a Uint8Array or use read3DSQRFromImage in browser.");
+        }
         var data = await fs.promises.readFile(binOrPath);
         var img = await loadImage(data);
         const canvas = createCanvas(img.width, img.height);
@@ -833,16 +929,22 @@ async function read3DSQR(binOrPath, returnDecryptedBin) {
             return;
         }
     }
-    else {//String of 0s and 1s
+    else if (typeof binOrPath === 'string') {
+        // String of 0s and 1s
         var d = binOrPath.match(/(0|1){1,8}/g);
         qrCode = [];
         d.forEach(byte => {
             qrCode.push(parseInt(byte, 2));
         });
     }
+    else {
+        throw new Error("Invalid input type for read3DSQR");
+    }
+    
     if (qrCode) {
         var data;
-        data = Buffer.from(decodeAesCcm(new Uint8Array(qrCode)));
+        const qrArray = qrCode instanceof Uint8Array ? qrCode : new Uint8Array(qrCode);
+        data = typeof Buffer !== "undefined" ? Buffer.from(decodeAesCcm(qrArray)) : new Uint8Array(decodeAesCcm(qrArray));
         if (returnDecryptedBin) {
             return data;
         }
@@ -860,6 +962,16 @@ async function read3DSQR(binOrPath, returnDecryptedBin) {
         console.error('Failed to read Mii.');
     }
 }
+
+// Browser-friendly QR code reader from ImageData
+async function read3DSQRFromImageData(imageData, returnDecryptedBin) {
+    const qrCode = jsQR(imageData.data, imageData.width, imageData.height)?.binaryData;
+    if (!qrCode) {
+        throw new Error("Failed to read QR Code from image data.");
+    }
+    return read3DSQR(new Uint8Array(qrCode), returnDecryptedBin);
+}
+
 async function renderMiiWithStudio(jsonIn) {
     if (!["3ds", "wii u"].includes(jsonIn.console?.toLowerCase())) {
         jsonIn = convertMii(jsonIn);
@@ -1222,6 +1334,12 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
 }
 
 async function renderMii(jsonIn, options = {}, fflRes = getFFLRes()) {
+    // FFL rendering requires Node.js environment
+    if (!isNode) {
+        console.warn("renderMii with FFL requires Node.js. Falling back to Mii Studio rendering.");
+        return renderMiiWithStudio(jsonIn);
+    }
+    
     if (!["3ds", "wii u"].includes(jsonIn.console?.toLowerCase())) {
         jsonIn = convertMii(jsonIn);
     }
@@ -1343,15 +1461,26 @@ async function writeWiiBin(jsonIn, outPath) {
     for (var i = 0; i < toWrite.length; i++) {
         buffers.push(parseInt(toWrite[i], 2));
     }
-    toWrite = Buffer.from(buffers);
+    
+    // Return Uint8Array for browser compatibility, Buffer for Node.js
+    const result = typeof Buffer !== "undefined" ? Buffer.from(buffers) : new Uint8Array(buffers);
+    
     if (outPath) {
-        await fs.promises.writeFile(outPath, toWrite);
+        if (!isNode || !fs) {
+            throw new Error("File writing only available in Node.js. Omit outPath to get the binary data.");
+        }
+        await fs.promises.writeFile(outPath, result);
     }
     else {
-        return toWrite;
+        return result;
     }
 }
 async function write3DSQR(miiJson, outPath, returnBin, fflRes = getFFLRes()) {
+    // This function requires Node.js-specific modules
+    if (!isNode) {
+        throw new Error("write3DSQR requires Node.js environment (uses Jimp, JSDOM, and node-canvas). Use write3DSBin for browser-compatible binary output.");
+    }
+    
     //Convert the Mii if it isn't in 3DS format
     if (!["3ds", "wii u"].includes(miiJson.console?.toLowerCase())) {
         miiJson = convertMii(miiJson);
@@ -1918,9 +2047,12 @@ function metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms) {
     }
 }
 
-
-
-module.exports = {
+// Export for browser global when bundled
+const MiiJSExports = {
+    // Environment detection
+    isBrowser,
+    isNode,
+    
     // Data
     Enums: require("./Enums"),
 
@@ -1932,6 +2064,7 @@ module.exports = {
     //Read
     readWiiBin,
     read3DSQR,
+    read3DSQRFromImageData, // Browser-friendly QR reader
 
     //Render
     renderMiiWithStudio,
@@ -1955,10 +2088,24 @@ module.exports = {
     imperialHeightWeightToMiiWeight,
     metricHeightWeightToMiiWeight,
 
-    /*
-    Handle Amiibo Functions
-    insertMiiIntoAmiibo(amiiboDump, decrypted3DSMiiBuffer),
-    extractMiiFromAmiibo(amiiboDump)
-    */
-    ...require("./amiiboHandler.js")
+    // Crypto utilities (useful for browser)
+    decodeAesCcm,
+    encodeAesCcm,
+    encodeStudio,
+    decodeStudio,
+};
+
+// Add Amiibo functions only in Node.js (uses crypto module)
+if (isNode) {
+    Object.assign(MiiJSExports, require("./amiiboHandler.js"));
+}
+
+// Export for CommonJS
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MiiJSExports;
+}
+
+// Export for browser global
+if (typeof window !== 'undefined') {
+    window.MiiJS = MiiJSExports;
 }

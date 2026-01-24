@@ -417,65 +417,68 @@ function convertMiiToStudio(jsonIn) {
         jsonIn = convertMii(jsonIn);
     }
     var mii = jsonIn;
-    var studioMii = new Uint8Array();
-    studioMii[0] = mii.beard.color;
-    studioMii[1] = mii.beard.type;
+    var studioMii = new Uint8Array([0x08, 0x00, 0x40, 0x03, 0x08, 0x04, 0x04, 0x02, 0x02, 0x0c, 0x03, 0x01, 0x06, 0x04, 0x06, 0x02, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x04, 0x00, 0x0a, 0x01, 0x00, 0x21, 0x40, 0x04, 0x00, 0x02, 0x14, 0x03, 0x13, 0x04, 0x17, 0x0d, 0x04, 0x00, 0x0a, 0x04, 0x01, 0x09]);
+    studioMii[0x16] = mii.general.gender;
+    studioMii[0x15] = mii.general.favoriteColor;
+    studioMii[0x1E] = mii.general.height;
     studioMii[2] = mii.general.weight;
-    studioMii[3] = mii.eyes.squash;
-    studioMii[4] = mii.eyes.color + 8;
-    studioMii[5] = mii.eyes.rotation;
-    studioMii[6] = mii.eyes.size;
+    studioMii[0x13] = lookupTables.faces.values[mii.face.type];
+    studioMii[0x11] = mii.face.color;
+    studioMii[0x14] = mii.face.feature;
+    studioMii[0x12] = mii.face.makeup;
+    studioMii[0x1D] = lookupTables.hairs.values[mii.hair.page][mii.hair.type];
+    studioMii[0x1B] = mii.hair.color;
+    if (!studioMii[0x1B]) studioMii[0x1B] = 8;
+    studioMii[0x1C] = mii.hair.flipped ? 1 : 0;
     studioMii[7] = lookupTables.eyes.values[mii.eyes.page][mii.eyes.type];
+    studioMii[4] = mii.eyes.color + 8;
+    studioMii[6] = mii.eyes.size;
+    studioMii[3] = mii.eyes.squash;
+    studioMii[5] = mii.eyes.rotation;
     studioMii[8] = mii.eyes.distanceApart;
     studioMii[9] = mii.eyes.yPosition;
-    studioMii[0xA] = mii.eyebrows.squash;
-    studioMii[0xB] = mii.eyebrows.color;
-    studioMii[0xC] = mii.eyebrows.rotation;
-    studioMii[0xD] = mii.eyebrows.size;
     studioMii[0xE] = lookupTables.eyebrows.values[mii.eyebrows.page][mii.eyebrows.type];
+    studioMii[0xB] = mii.eyebrows.color;
+    if (!studioMii[0xB]) studioMii[0xB] = 8;
+    studioMii[0xD] = mii.eyebrows.size;
+    studioMii[0xA] = mii.eyebrows.squash;
+    studioMii[0xC] = mii.eyebrows.rotation;
     studioMii[0xF] = mii.eyebrows.distanceApart;
     studioMii[0x10] = mii.eyebrows.yPosition + 3;
-    studioMii[0x11] = mii.face.color;
-    studioMii[0x12] = mii.face.makeup;
-    studioMii[0x13] = lookupTables.faces.values[mii.face.type];
-    studioMii[0x14] = mii.face.feature;
-    studioMii[0x15] = mii.general.favoriteColor;
-    studioMii[0x16] = mii.general.gender;
-    studioMii[0x17] = mii.glasses.color;
-    if (studioMii[0x17] < 6) {
-        studioMii[0x17] += 13;
-    }
-    else {
-        studioMii[0x17] = 0;
-    }
-    studioMii[0x18] = mii.glasses.size;
-    studioMii[0x19] = mii.glasses.type;
-    studioMii[0x1A] = mii.glasses.yPosition;
-    studioMii[0x1B] = mii.hair.color;
-    studioMii[0x1C] = mii.hair.flipped ? 1 : 0;
-    studioMii[0x1D] = lookupTables.hairs.values[mii.hair.page][mii.hair.type];
-    studioMii[0x1E] = mii.general.height;
-    studioMii[0x1F] = mii.mole.size;
-    studioMii[0x20] = mii.mole.on ? 1 : 0;
-    studioMii[0x21] = mii.mole.xPosition;
-    studioMii[0x22] = mii.mole.yPosition;
-    studioMii[0x23] = mii.mouth.squash;
+    studioMii[0x2C] = lookupTables.noses.values[mii.nose.page][mii.nose.type];
+    studioMii[0x2B] = mii.nose.size;
+    studioMii[0x2D] = mii.nose.yPosition;
+    studioMii[0x26] = lookupTables.mouths.values[mii.mouth.page][mii.mouth.type];
     studioMii[0x24] = mii.mouth.color;
     if (studioMii[0x24] < 4) {
         studioMii[0x24] += 19;
-    }
-    else {
+    } else {
         studioMii[0x24] = 0;
     }
     studioMii[0x25] = mii.mouth.size;
-    studioMii[0x26] = lookupTables.mouths.values[mii.mouth.page][mii.mouth.type];
+    studioMii[0x23] = mii.mouth.squash;
     studioMii[0x27] = mii.mouth.yPosition;
-    studioMii[0x28] = mii.beard.mustache.size;
     studioMii[0x29] = mii.beard.mustache.type;
+    studioMii[1] = mii.beard.type;
+    studioMii[0] = mii.beard.color;
+    if (!studioMii[0]) studioMii[0] = 8;
+    studioMii[0x28] = mii.beard.mustache.size;
     studioMii[0x2A] = mii.beard.mustache.yPosition;
-    studioMii[0x2B] = mii.nose.size;
-    studioMii[0x2C] = lookupTables.noses.values[mii.nose.page][mii.nose.type];
-    studioMii[0x2D] = mii.nose.yPosition;
+    studioMii[0x19] = mii.glasses.type;
+    studioMii[0x17] = mii.glasses.color;
+    if (!studioMii[0x17]) {
+        studioMii[0x17] = 8;
+    } else if (studioMii[0x17] < 6) {
+        studioMii[0x17] += 13;
+    } else {
+        studioMii[0x17] = 0;
+    }
+    studioMii[0x18] = mii.glasses.size;
+    studioMii[0x1A] = mii.glasses.yPosition;
+    studioMii[0x20] = mii.mole.on ? 1 : 0;
+    studioMii[0x1F] = mii.mole.size;
+    studioMii[0x21] = mii.mole.xPosition;
+    studioMii[0x22] = mii.mole.yPosition;
     return encodeStudio(studioMii);
 }
 function convertStudioToMii(input) {
@@ -2139,7 +2142,7 @@ function isValidUTF16(bits) {
     return true;
 }
 
-function validate(buf, format, verbose) {
+function validateMii(buf, format, verbose) {
     if (!Buffer.isBuffer(buf)) return false;
     format = format ? format.toLowerCase().replaceAll(".", '') : null;
     let matches = [];

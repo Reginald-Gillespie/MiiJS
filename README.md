@@ -50,6 +50,7 @@ MiiJS is a complete and comprehensive Mii library for reading, converting, modif
 - **`miiWeightToRealWeight(miiWeight)`** - Converts Mii weight value (0-127) to real-world weight values. Returns `{pounds, kilograms}`.
 - **`imperialHeightWeightToMiiWeight(heightInches, weightLbs)`** - Converts real-world imperial measurements to Mii weight values.
 - **`metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms)`** - Converts real-world metric measurements to Mii weight values.
+- **`miiIdToTimestamp(miiId, consoleMiiIdIsFrom)`** - Converts the Mii ID into a JS Date/Timestamp.
 
 ### Other Functions
 - **`makeChild(miiJson1, miiJson2, options?)`** - Returns an array of 6 different Mii JSONs, which represent a child generated from the two parent Miis passed to the function at different stages of life. This is somewhat experimental, but should be accurate to my current knowledge. You can pass any or none of { name: "The Name", creatorName: "The Name", favoriteColor: 0-11, gender: 0-1/\*0:Male, 1:Female\*/ }
@@ -62,12 +63,11 @@ MiiJS is a complete and comprehensive Mii library for reading, converting, modif
 ```javascript
 const miijs = require('miijs');
 
-// Read from file path
+// Read from file path for image, or buffer of the data - encrypted or decrypted
 const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
 console.log('Mii Name:', miiJson.meta.name);
-console.log('Favorite Color:', miiJson.general.favoriteColor);
 
-// Or get just the decrypted binary data
+// Get the decrypted binary data
 const decryptedBin = await miijs.read3DSQR('./example3DSQR.jpg', true);
 console.log('Decrypted binary length:', decryptedBin.length);
 ```
@@ -79,7 +79,6 @@ const miijs = require('miijs');
 // Read from file path
 const miiJson = await miijs.readWiiBin('./exampleWii.bin');
 console.log('Mii Name:', miiJson.meta.name);
-console.log('Gender:', miiJson.general.gender === 0 ? 'Male' : 'Female');
 
 // Or pass binary data directly
 const fs = require('fs');
@@ -94,13 +93,10 @@ const miijs = require('miijs');
 // First, read or create a Mii JSON
 const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
 
-// Write QR code with Studio rendering (no FFLResHigh.dat needed)
+// Write QR code. If FFLResHigh.dat is in the same directory, will be used automatically. You can pass a buffer containing FFLResHigh.dat as a fourth parameter. Will use Studio rendering instead of local without FFLResHigh.dat.
 await miijs.write3DSQR(miiJson, './output_qr.jpg');
-
-// Or with local rendering (requires FFLResHigh.dat in project root or passed as buffer)
-const fs = require('fs');
-const fflRes = fs.readFileSync('./FFLResHigh.dat');
-await miijs.write3DSQR(miiJson, './output_qr_local.jpg', fflRes);
+//The third parameter asks MiiJS to return an encrypted 3DS data instead
+const encryptedData=await miijs.write3DSQR(miiJson,'',true);
 ```
 
 ## Writing a Wii Mii Binary
@@ -108,11 +104,8 @@ await miijs.write3DSQR(miiJson, './output_qr_local.jpg', fflRes);
 const miijs = require('miijs');
 const fs = require('fs');
 
-// Read a Mii (from any format)
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Convert to Wii format first if needed
-const wiiMii = miijs.convertMii(miiJson, 'wii');
+// Read a Mii
+const miiJson = await miijs.readWiiBin('./exampleWii.bin');
 
 // Write to file
 await miijs.writeWiiBin(wiiMii, './output_wii.bin');
@@ -127,16 +120,16 @@ fs.writeFileSync('./manual_write.bin', buffer);
 const miijs = require('miijs');
 
 // Read a 3DS Mii
-const ds3Mii = await miijs.read3DSQR('./example3DSQR.jpg');
+const mii3DS = await miijs.read3DSQR('./example3DSQR.jpg');
 
 // Convert to Wii format
-const wiiMii = miijs.convertMii(ds3Mii, 'wii');
+const miiWii = miijs.convertMii(mii3DS, 'wii');
 
 // Convert back to 3DS
-const backTo3DS = miijs.convertMii(wiiMii, '3ds');
+const backTo3DS = miijs.convertMii(miiWii, '3ds');
 
 // Auto-detect and convert to opposite
-const autoConverted = miijs.convertMii(ds3Mii);
+const autoConverted = miijs.convertMii(mii3DS);
 ```
 
 ## Converting to/from Studio Format
@@ -151,7 +144,6 @@ console.log('Studio URL:', `https://studio.mii.nintendo.com/miis/image.png?data=
 // Convert Studio format back to JSON
 const studioData = '000d142a303f434b717a7b84939ba6b2bbbec5cbc9d0e2ea...';
 const miiFromStudio = miijs.convertStudioToMii(studioData);
-console.log('Converted Mii:', miiFromStudio.meta.name);
 ```
 
 ## Rendering Miis
@@ -162,16 +154,15 @@ const fs = require('fs');
 // Read a Mii
 const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
 
-// Render using Studio API (simple, no setup needed)
+// Render using Studio API (simple, no setup needed, requires internet access)
 const studioPng = await miijs.renderMiiWithStudio(miiJson);
 fs.writeFileSync('./mii_studio_render.png', studioPng);
 
 // Render locally with full body (requires FFLResHigh.dat)
+// FFLResHigh.dat can be placed in the project directory to automatically use
 const fflRes = fs.readFileSync('./FFLResHigh.dat');
 const localPng = await miijs.renderMii(miiJson, fflRes);
 fs.writeFileSync('./mii_local_render.png', localPng);
-
-// Shirt color comes from miiJson.general.favoriteColor
 ```
 
 ## Working with Amiibos
@@ -183,13 +174,11 @@ const fs = require('fs');
 const amiiboDump = fs.readFileSync('./exampleAmiiboDump.bin');
 
 // Extract the Mii from the Amiibo (returns 92 bytes decrypted)
-const miiData = miijs.extractMiiFromAmiibo(amiiboDump);
-
+let miiData = miijs.extractMiiFromAmiibo(amiiboDump);
 // Convert the raw Mii data to readable JSON
-// (miiData is already decrypted 3DS format)
-const miiJson = miijs.decode3DSMii(miiData); // Note: decode3DSMii not exported, use read3DSQR workflow
+const miiJson = miijs.read3DSQR(miiData);
 
-// Better workflow: Read from QR, get decrypted data, insert into Amiibo
+// Read from QR, get decrypted data, insert into Amiibo
 const qrMiiJson = await miijs.read3DSQR('./example3DSQR.jpg');
 const decryptedMiiData = await miijs.read3DSQR('./example3DSQR.jpg', true);
 
@@ -224,23 +213,28 @@ Object.entries(fullInstructions).forEach(([field, instruction]) => {
 ```javascript
 const miijs = require('miijs');
 
-// Convert Mii height (0-127) to feet/inches
-const heightInfo = miijs.miiHeightToFeetInches(64); // midpoint value
-console.log(`Height: ${heightInfo.feet}'${heightInfo.inches}" (${heightInfo.totalInches} inches)`);
+// Convert Mii height (0-127) to feet/inches and centimeters
+const heightInfo = miijs.miiHeightToMeasurements(64); // midpoint value
+console.log(`Height: ${heightInfo.feet}'${heightInfo.inches}" (${heightInfo.centimeters} cm)`);
 
 // Convert real height to Mii value
-const miiHeightValue = miijs.inchesToMiiHeight(72); // 6'0"
+const miiHeightValue = miijs.inchesToMiiHeight(72);
 console.log('Mii height value for 6\'0":', miiHeightValue);
 
-// EXPERIMENTAL: Convert real weight to Mii weight
-const heightInches = 69; // 5'9"
-const weightLbs = 160;
-const miiWeightValue = miijs.heightWeightToMiiWeight(heightInches, weightLbs);
+// Convert Mii weight to real weight (requires height)
+const miiHeight = 64;
+const miiWeight = 64;
+const weightInfo = miijs.miiWeightToRealWeight(miiHeight, miiWeight);
+console.log(`Weight: ${weightInfo.pounds.toFixed(1)} lbs (${weightInfo.kilograms} kg)`);
+
+// Convert real weight to Mii weight value
+const heightInches=70;
+const weightLbs = 150;
+const miiWeightValue = miijs.imperialHeightWeightToMiiWeight(heightInches, weightLbs);
 console.log('Mii weight value:', miiWeightValue);
 
-// EXPERIMENTAL: Convert Mii weight to real weight
-const weightInfo = miijs.miiWeightToRealWeight(heightInches, 64);
-console.log(`Weight: ${weightInfo.pounds.toFixed(1)} lbs, BMI: ${weightInfo.bmi.toFixed(1)}`);
+// Or use metric
+const miiWeightMetric = miijs.metricHeightWeightToMiiWeight(175, 72.5);
 ```
 
 ## Creating and Modifying a Mii
@@ -251,10 +245,10 @@ const miijs = require('miijs');
 const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
 
 // Modify properties
-miiJson.meta.name = 'Custom Name';
-miiJson.general.favoriteColor = 5; // Blue
-miiJson.hair.color = 0; // Black
-miiJson.eyes.color = 2; // Brown
+miiJson.meta.name = 'CustomName';
+miiJson.general.favoriteColor = 5;
+miiJson.hair.color = 0;
+miiJson.eyes.color = 2;
 
 // Make it a Special Mii (3DS only)
 miiJson.meta.type = 'Special';
@@ -285,6 +279,19 @@ for(var i=0;i<child.length;i++){
     let img=await miijs.renderMii(child[i]);
     fs.writeFileSync(`./${child[i].meta.name}`,img);
 }
+```
+
+## Getting the Time the Mii Was Created From the Mii ID
+```javascript
+const miijs=require('miijs');
+
+//Read miis into JSON 
+const mii3DS=await miijs.read3DSQR('./example_mii.jpg');
+const miiWii=await miijs.readWiiBin('./example_mii.bin');
+
+//Same process for both, returns a JS Date/Timestamp
+console.log(miijs.miiIdToTimestamp(mii3DS.meta.miiId,mii3DS.console));
+console.log(miijs.miiIdToTimestamp(miiWii.meta.miiId,miiWii.console));
 ```
 
 <hr>

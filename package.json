@@ -1,6 +1,6 @@
 {
   "name": "miijs",
-  "version": "2.5.1",
+  "version": "2.5.3",
   "description": "The most complete and easy to use Mii library on the market.",
   "main": "index.js",
   "browser": "dist/miijs.browser.js",
@@ -17,18 +17,6 @@
       "default": "./dist/miijs.browser.js"
     }
   },
-  "files": [
-    "index.js",
-    "dist/",
-    "shims/",
-    "Enums.js",
-    "asmCrypto.js",
-    "amiiboHandler.js",
-    "fflWrapper.js",
-    "data.json",
-    "types.d.ts",
-    "patch-ffl.js"
-  ],
   "scripts": {
     "test": "jest",
     "postinstall": "node ./patch-ffl.js",

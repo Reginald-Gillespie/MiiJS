@@ -62,7 +62,7 @@ module.exports={
             },
             //0x2
             {
-                name: "faceShape",
+                name: "faceType",
                 length: 3,
                 max: 7
             },
@@ -73,7 +73,7 @@ module.exports={
             },
             //Last two bits of 0x2 - 0x21
             {
-                name: "facialFeature",
+                name: "faceFeature",
                 length: 4,
                 max: 11
             },
@@ -263,7 +263,7 @@ module.exports={
             },
             //0x31
             {
-                name: "glasesSize",
+                name: "glassesSize",
                 length: 3,
                 max: 7
             },
@@ -394,7 +394,7 @@ module.exports={
             },
             //0x2
             {
-                name: "faceShape",
+                name: "faceType",
                 length: 3,
                 max: 7
             },
@@ -405,7 +405,7 @@ module.exports={
             },
             //Last two bits of 0x2 - 0x21
             {
-                name: "facialFeature",
+                name: "faceFeature",
                 length: 4,
                 max: 11
             },
@@ -2528,7 +2528,7 @@ module.exports={
                 max: 59
             },
             {
-                name: "charSet",
+                name: "charset",
                 length: 2,
                 max: 3
             },

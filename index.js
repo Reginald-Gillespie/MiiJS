@@ -2254,7 +2254,6 @@ const MiiJSExports = {
     metricHeightWeightToMiiWeight,
 
     miiIdToTimestamp,
-    validateMii,
 
     // Crypto utilities (useful for browser)
     decodeAesCcm,

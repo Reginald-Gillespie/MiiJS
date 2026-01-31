@@ -1087,9 +1087,59 @@ function fitCameraToObject(camera, object3D) {
     camera.updateProjectionMatrix();
 }
 
-let cachedGLContext = null;
-let cachedRenderer = null;
-let cachedBodyGLTFs = {};
+// Resource pool for concurrent rendering
+let cachedBodyGLTFs = {}; // GLTF templates - safe to share, we clone from these
+let rendererPool = [];    // Available renderer/gl pairs
+let rendererPoolInUse = 0; // Count of renderers currently in use
+
+function acquireRenderer(width, height) {
+    // Try to get an available renderer from pool
+    if (rendererPool.length > 0) {
+        const pooled = rendererPool.pop();
+        rendererPoolInUse++;
+        return { ...pooled, isPooled: true };
+    }
+    
+    // Create a new renderer
+    const gl = createGL(width, height);
+    const canvas = {
+        width, height, style: {},
+        addEventListener() { }, removeEventListener() { },
+        getContext: (t) => (t === "webgl" ? gl : null),
+    };
+    const renderer = new THREE.WebGLRenderer({ canvas, context: gl, alpha: true });
+    renderer.setSize(width, height, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    setIsWebGL1State(!renderer.capabilities.isWebGL2);
+    
+    rendererPoolInUse++;
+    return { renderer, gl, isPooled: false };
+}
+
+function releaseRenderer(rendererInfo) {
+    rendererPoolInUse--;
+    
+    // If this was the first one (pool was empty when acquired) and nothing else is using renderers,
+    // keep it in the pool for future use
+    if (rendererPool.length === 0 && rendererPoolInUse === 0) {
+        // Clear state and return to pool
+        rendererInfo.renderer.setRenderTarget(null);
+        rendererInfo.renderer.clear(true, true, true);
+        rendererPool.push({ renderer: rendererInfo.renderer, gl: rendererInfo.gl });
+    } else if (rendererInfo.isPooled) {
+        // Return pooled renderer back to pool
+        rendererInfo.renderer.setRenderTarget(null);
+        rendererInfo.renderer.clear(true, true, true);
+        rendererPool.push({ renderer: rendererInfo.renderer, gl: rendererInfo.gl });
+    } else {
+        // This was a newly created renderer while others were in use - dispose it
+        try {
+            rendererInfo.renderer.dispose();
+            rendererInfo.gl.finish();
+        } catch { }
+    }
+}
+
 async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
     options ||= {};
     const isFullBody = !!options.fullBody;
@@ -1098,22 +1148,9 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
     const BODY_SCALE_Y_RANGE = [0.55, 1.35];
     const FULLBODY_CROP_BOTTOM_PX_RANGE = [220, 40]; // [at minYScale, at maxYScale]
 
-    if (!cachedRenderer) {
-        const gl = createGL(width, height);
-        const canvas = {
-            width, height, style: {},
-            addEventListener() { }, removeEventListener() { },
-            getContext: (t) => (t === "webgl" ? gl : null),
-        };
-        cachedRenderer = new THREE.WebGLRenderer({ canvas, context: gl, alpha: true });
-        cachedRenderer.setSize(width, height, false);
-        cachedRenderer.outputColorSpace = THREE.SRGBColorSpace;
-        setIsWebGL1State(!cachedRenderer.capabilities.isWebGL2);
-    
-        cachedGLContext = gl;
-    }
-    const renderer = cachedRenderer;
-    const gl = cachedGLContext;
+    const rendererInfo = acquireRenderer(width, height);
+    const renderer = rendererInfo.renderer;
+    const gl = rendererInfo.gl;
 
 
     // const gl = createGL(width, height);
@@ -1151,6 +1188,8 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
     scene.background = null;
 
     let ffl, currentCharModel;
+    // Track per-render resources for cleanup
+    let body, bodyTex, planeGeo, planeMat, bodyPlane;
 
     try {
         // Head (FFL)
@@ -1180,7 +1219,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
 
             cachedBodyGLTFs[bodyKey] = gltf;
         }
-        const body = cachedBodyGLTFs[bodyKey].scene.clone(); // Clone for instance
+        body = cachedBodyGLTFs[bodyKey].scene.clone(); // Clone for instance
         body.position.y -= 110;
         body.userData.isMiiBody = true;
 
@@ -1251,7 +1290,7 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         bakeAmbient.dispose?.(); bakeRim.dispose?.();
 
         // --- BODY PLANE (unlit; texture carries shading)
-        const bodyTex = new THREE.CanvasTexture(bodyCanvas);
+        bodyTex = new THREE.CanvasTexture(bodyCanvas);
         bodyTex.colorSpace = THREE.SRGBColorSpace;
         bodyTex.generateMipmaps = false;
         bodyTex.minFilter = THREE.LinearFilter;
@@ -1265,9 +1304,9 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
 
         const planeW = Math.max(1e-4, bodySize.x);
         const planeH = Math.max(1e-4, bodySize.y);
-        const planeGeo = new THREE.PlaneGeometry(planeW, planeH);
-        const planeMat = new THREE.MeshBasicMaterial({ map: bodyTex, transparent: true, depthWrite: true, depthTest: true });
-        const bodyPlane = new THREE.Mesh(planeGeo, planeMat);
+        planeGeo = new THREE.PlaneGeometry(planeW, planeH);
+        planeMat = new THREE.MeshBasicMaterial({ map: bodyTex, transparent: true, depthWrite: true, depthTest: true });
+        bodyPlane = new THREE.Mesh(planeGeo, planeMat);
         bodyPlane.userData.isBodyPlane = true;
 
         // Place plane at body world center so the neck peg aligns into head
@@ -1363,10 +1402,27 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         throw err;
     } finally {
         try {
+            // Dispose per-render resources
             currentCharModel?.dispose?.();
             exitFFL(ffl?.module, ffl?.resourceDesc);
-            renderer.dispose();
-            gl.finish();
+            
+            // Dispose body clone and its materials
+            if (body) {
+                body.traverse((o) => {
+                    if (o.isMesh) {
+                        o.geometry?.dispose?.();
+                        o.material?.dispose?.();
+                    }
+                });
+            }
+            
+            // Dispose body plane resources
+            bodyTex?.dispose?.();
+            planeGeo?.dispose?.();
+            planeMat?.dispose?.();
+            
+            // Release renderer back to pool or dispose
+            releaseRenderer(rendererInfo);
         } catch { }
         console.debug = _realDebug;
     }

@@ -797,7 +797,7 @@ function decode3DSMii(data) {
     miiJson.meta.miiId = miiIdValue.toString(16).padStart(8, '0');
     var temp = get(0x18);
     var temp2 = get(0x19);
-    miiJson.meta.favorited=+temp2[1];
+    miiJson.meta.favorited = temp2[1] === "1";
     miiJson.general.favoriteColor = parseInt(temp2.slice(2, 6), 2);
     miiJson.general.birthday = parseInt(temp2.slice(6, 8) + temp.slice(0, 3), 2);
     miiJson.general.birthMonth = parseInt(temp.slice(3, 7), 2);
@@ -1357,6 +1357,10 @@ async function renderMii(jsonIn, options = {}, fflRes = getFFLRes()) {
     // FFL rendering requires Node.js environment
     if (!isNode) {
         console.warn("renderMii with FFL requires Node.js. Falling back to Mii Studio rendering.");
+        return renderMiiWithStudio(jsonIn);
+    }
+
+    if (!fflRes) {
         return renderMiiWithStudio(jsonIn);
     }
     
@@ -2234,6 +2238,7 @@ const MiiJSExports = {
     //Render
     renderMiiWithStudio,
     renderMii,
+    getFFLRes,
 
     //Write
     writeWiiBin,

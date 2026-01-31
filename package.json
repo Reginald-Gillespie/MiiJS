@@ -57,6 +57,9 @@
     "struct-fu": "^1.2.1",
     "three": "^0.162.0"
   },
+  "overrides": {
+    "tar": "^7.5.7"
+  },
   "devDependencies": {
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",

@@ -7,6 +7,10 @@
   "module": "dist/miijs.browser.esm.js",
   "exports": {
     ".": {
+      "node": {
+        "import": "./index.js",
+        "require": "./index.js"
+      },
       "browser": "./dist/miijs.browser.js",
       "import": "./dist/miijs.browser.esm.js",
       "require": "./index.js",

@@ -1086,17 +1086,38 @@ function fitCameraToObject(camera, object3D) {
     camera.lookAt(center);
     camera.updateProjectionMatrix();
 }
+
+let cachedGLContext = null;
+let cachedRenderer = null;
+let cachedBodyGLTFs = {};
 async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
     options ||= {};
     const isFullBody = !!options.fullBody;
-
     const width = 450;
     const height = 900;
     const BODY_SCALE_Y_RANGE = [0.55, 1.35];
     const FULLBODY_CROP_BOTTOM_PX_RANGE = [220, 40]; // [at minYScale, at maxYScale]
 
-    const gl = createGL(width, height);
-    if (!gl) throw new Error("Failed to create WebGL 1 context");
+    if (!cachedRenderer) {
+        const gl = createGL(width, height);
+        const canvas = {
+            width, height, style: {},
+            addEventListener() { }, removeEventListener() { },
+            getContext: (t) => (t === "webgl" ? gl : null),
+        };
+        cachedRenderer = new THREE.WebGLRenderer({ canvas, context: gl, alpha: true });
+        cachedRenderer.setSize(width, height, false);
+        cachedRenderer.outputColorSpace = THREE.SRGBColorSpace;
+        setIsWebGL1State(!cachedRenderer.capabilities.isWebGL2);
+    
+        cachedGLContext = gl;
+    }
+    const renderer = cachedRenderer;
+    const gl = cachedGLContext;
+
+
+    // const gl = createGL(width, height);
+    // if (!gl) throw new Error("Failed to create WebGL 1 context");
 
     // Normalize potential gender inputs; And the body files for females and males have different mesh names for some reason, so adjust for that too
     let shirtMesh = "mesh_1_";
@@ -1111,21 +1132,10 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
     }
     if (options.gender === "Female") shirtMesh = "mesh_0_";
 
-    // Fake canvas
-    const canvas = {
-        width, height, style: {},
-        addEventListener() { }, removeEventListener() { },
-        getContext: (t) => (t === "webgl" ? gl : null),
-    };
     globalThis.self ??= { cancelAnimationFrame: () => { } };
-
-    const renderer = new THREE.WebGLRenderer({ canvas, context: gl, alpha: true });
-    renderer.setSize(width, height, false);
-    setIsWebGL1State(!renderer.capabilities.isWebGL2);
 
     // Color mgmt + silence warnings
     THREE.ColorManagement.enabled = true;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
     const _warn = console.warn;
     console.warn = function (...args) {
         const s = String(args[0] ?? "");
@@ -1134,12 +1144,13 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
         return _warn.apply(this, args);
     };
 
+    const _realDebug = console.debug;
+    console.debug = () => { };
+
     const scene = new THREE.Scene();
     scene.background = null;
 
     let ffl, currentCharModel;
-    const _realDebug = console.debug;
-    console.debug = () => { };
 
     try {
         // Head (FFL)
@@ -1154,14 +1165,22 @@ async function createFFLMiiIcon(data, options, shirtColor, fflRes) {
             const mod = await import("three/examples/jsm/loaders/GLTFLoader.js");
             GLTFLoader = mod.GLTFLoader;
         }
-        const absPath = path.resolve(__dirname, `./mii${options.gender}Body.glb`);
-        const buf = fs.readFileSync(absPath);
-        const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-        const loader = new GLTFLoader();
-        const gltf = await new Promise((res, rej) =>
-            loader.parse(ab, path.dirname(absPath) + path.sep, res, rej)
-        );
-        const body = gltf.scene;
+
+        // Cache GLTF body models
+        const bodyKey = options.gender;
+        if (!cachedBodyGLTFs[bodyKey]) {
+            const absPath = path.resolve(__dirname, `./mii${options.gender}Body.glb`);
+            const buf = await fs.promises.readFile(absPath);
+
+            const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+            const loader = new GLTFLoader();
+            const gltf = await new Promise((res, rej) =>
+                loader.parse(ab, path.dirname(absPath) + path.sep, res, rej)
+            );
+
+            cachedBodyGLTFs[bodyKey] = gltf;
+        }
+        const body = cachedBodyGLTFs[bodyKey].scene.clone(); // Clone for instance
         body.position.y -= 110;
         body.userData.isMiiBody = true;
 

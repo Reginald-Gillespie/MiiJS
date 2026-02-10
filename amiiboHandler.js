@@ -1,14 +1,20 @@
+// Takes Amiibo dumps that are either 532 bytes or 540 bytes, and manipulates a 96 byte FFSD Mii in/out of the dump from offset 0x4C.
+import { Buffer, createCipheriv, createDecipheriv, createHmac } from "./platform.js";
+import {decodeMii,encodeMii} from "./miiProcess.js";
+import {MiiFormats} from "./formats.js";
 
-// Takes Amiibo dumps that are either 532 bytes or 540 bytes, and manipulates a 96 byte (C/F)FSD Mii in/out of the dump from offset 0x4C.
-
-const { Buffer } = require('buffer');
-const isBrowser = typeof window !== 'undefined' && typeof window.crypto !== 'undefined';
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const nodeCrypto = isNode ? require('crypto') : null;
-const subtleCrypto = (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle)
-    ? globalThis.crypto.subtle
-    : (nodeCrypto && nodeCrypto.webcrypto ? nodeCrypto.webcrypto.subtle : null);
-
+// Returns polyfilled buffer if type is buffer type, else false
+function isBuffer(inp) { // TODO: move to utils or smth
+    const isValidBuffer = 
+    Buffer.isBuffer(inp)
+    || inp instanceof Uint8Array
+    || inp instanceof ArrayBuffer
+    || inp instanceof SharedArrayBuffer;
+    // || (Array.isArray(inp) && inp.every(x => Number.isInteger(x) && x >= 0 && x <= 255));
+    
+    if (!isValidBuffer) return false;
+    else return Buffer.from(inp);
+}
 const NFC3D_AMIIBO_SIZE = 520;
 
 function calcSeed(dump) {
@@ -49,7 +55,7 @@ function drbgGenerateBytes(hmacKey, seed, outputSize) {
         iterBuffer[0] = (iteration >> 8) & 0xFF;
         iterBuffer[1] = iteration & 0xFF;
         seed.copy(iterBuffer, 2);
-        const hmac = nodeCrypto.createHmac('sha256', hmacKey);
+        const hmac = createHmac('sha256', hmacKey);
         hmac.update(iterBuffer);
         const output = hmac.digest();
         const toCopy = Math.min(32, outputSize - offset);
@@ -69,7 +75,11 @@ function deriveKeys(typeString, magicBytes, magicBytesSize, xorPad, hmacKey, bas
     };
 }
 
-function tagToInternal(tag) {
+function decryptAmiibo(tag) {
+    tag=isBuffer(tag);
+    if(!tag){
+        throw new Error(`Tag is not a valid Buffer type`);
+    }
     const internal = Buffer.alloc(NFC3D_AMIIBO_SIZE);
     tag.slice(0x008, 0x010).copy(internal, 0x000);
     tag.slice(0x080, 0x0A0).copy(internal, 0x008);
@@ -78,76 +88,74 @@ function tagToInternal(tag) {
     tag.slice(0x034, 0x054).copy(internal, 0x1B4);
     tag.slice(0x000, 0x008).copy(internal, 0x1D4);
     tag.slice(0x054, 0x080).copy(internal, 0x1DC);
-    return internal;
-}
-function internalToTag(internal) {
-    const tag = Buffer.alloc(NFC3D_AMIIBO_SIZE);
-    internal.slice(0x000, 0x008).copy(tag, 0x008);
-    internal.slice(0x008, 0x028).copy(tag, 0x080);
-    internal.slice(0x028, 0x04C).copy(tag, 0x010);
-    internal.slice(0x04C, 0x1B4).copy(tag, 0x0A0);
-    internal.slice(0x1B4, 0x1D4).copy(tag, 0x034);
-    internal.slice(0x1D4, 0x1DC).copy(tag, 0x000);
-    internal.slice(0x1DC, 0x208).copy(tag, 0x054);
-    return tag;
-}
-
-function decryptAmiibo(tag) {
-    const internal = tagToInternal(tag);
     const seed = calcSeed(internal);
     const dataKeys = deriveKeys(Buffer.from("756E666978656420696E666F7300",'hex'), Buffer.from("DB4B9E3F45278F397EFF9B4FB9930000",'hex'), 14, Buffer.from("044917DC76B49640D6F83939960FAED4EF392FAAB21428AA21FB54E545054766",'hex'), Buffer.from("1D164B375B72A55728B91D64B6A3C205",'hex'), seed);
     const tagKeys = deriveKeys(Buffer.from("6C6F636B65642073656372657400",'hex'), Buffer.from("FDC8A07694B89E4C47D37DE8CE5C74C1",'hex'), 16, Buffer.from("044917DC76B49640D6F83939960FAED4EF392FAAB21428AA21FB54E545054766",'hex'), Buffer.from("7F752D2873A20017FEF85C0575904B6D",'hex'), seed);
     const plain = Buffer.alloc(NFC3D_AMIIBO_SIZE);
-    const cipher = nodeCrypto.createDecipheriv('aes-128-ctr', dataKeys.aesKey, dataKeys.aesIV);
+    const cipher = createDecipheriv('aes-128-ctr', dataKeys.aesKey, dataKeys.aesIV);
     cipher.setAutoPadding(false);
     const decrypted = cipher.update(internal.slice(0x02C, 0x1B4));
     decrypted.copy(plain, 0x02C);
     internal.slice(0x000, 0x008).copy(plain, 0x000);
     internal.slice(0x028, 0x02C).copy(plain, 0x028);
     internal.slice(0x1D4, 0x208).copy(plain, 0x1D4);
-    const tagHmac = nodeCrypto.createHmac('sha256', tagKeys.hmacKey);
+    const tagHmac = createHmac('sha256', tagKeys.hmacKey);
     tagHmac.update(plain.slice(0x1D4, 0x208));
     const computedTagHmac = tagHmac.digest();
     computedTagHmac.copy(plain, 0x1B4);
-    const dataHmac = nodeCrypto.createHmac('sha256', dataKeys.hmacKey);
+    const dataHmac = createHmac('sha256', dataKeys.hmacKey);
     dataHmac.update(plain.slice(0x029, 0x208));
     const computedDataHmac = dataHmac.digest();
     computedDataHmac.copy(plain, 0x008);
     return plain;
 }
 function encryptAmiibo(plain) {
+    plain=isBuffer(plain);
+    if(!plain){
+        throw new Error(`Tag is not a valid Buffer type`);
+    }
     const seed = calcSeed(plain);
     const dataKeys = deriveKeys(Buffer.from("756E666978656420696E666F7300",'hex'), Buffer.from("DB4B9E3F45278F397EFF9B4FB9930000",'hex'), 14, Buffer.from("044917DC76B49640D6F83939960FAED4EF392FAAB21428AA21FB54E545054766",'hex'), Buffer.from("1D164B375B72A55728B91D64B6A3C205",'hex'), seed);
     const tagKeys = deriveKeys(Buffer.from("6C6F636B65642073656372657400",'hex'), Buffer.from("FDC8A07694B89E4C47D37DE8CE5C74C1",'hex'), 16, Buffer.from("044917DC76B49640D6F83939960FAED4EF392FAAB21428AA21FB54E545054766",'hex'), Buffer.from("7F752D2873A20017FEF85C0575904B6D",'hex'), seed);
     const cipher_internal = Buffer.alloc(NFC3D_AMIIBO_SIZE);
-    const tagHmac = nodeCrypto.createHmac('sha256', tagKeys.hmacKey);
+    const tagHmac = createHmac('sha256', tagKeys.hmacKey);
     tagHmac.update(plain.slice(0x1D4, 0x208));
     tagHmac.digest().copy(cipher_internal, 0x1B4);
-    const dataHmac = nodeCrypto.createHmac('sha256', dataKeys.hmacKey);
+    const dataHmac = createHmac('sha256', dataKeys.hmacKey);
     dataHmac.update(plain.slice(0x029, 0x1B4));
     dataHmac.update(cipher_internal.slice(0x1B4, 0x1D4));
     dataHmac.update(plain.slice(0x1D4, 0x208));
     dataHmac.digest().copy(cipher_internal, 0x008);
-    const aesCipher = nodeCrypto.createCipheriv('aes-128-ctr', dataKeys.aesKey, dataKeys.aesIV);
+    const aesCipher = createCipheriv('aes-128-ctr', dataKeys.aesKey, dataKeys.aesIV);
     aesCipher.setAutoPadding(false);
     const encrypted = aesCipher.update(plain.slice(0x02C, 0x1B4));
     encrypted.copy(cipher_internal, 0x02C);
     plain.slice(0x000, 0x008).copy(cipher_internal, 0x000);
     plain.slice(0x028, 0x02C).copy(cipher_internal, 0x028);
     plain.slice(0x1D4, 0x208).copy(cipher_internal, 0x1D4);
-    return internalToTag(cipher_internal);
+    const tag = Buffer.alloc(NFC3D_AMIIBO_SIZE);
+    cipher_internal.slice(0x000, 0x008).copy(tag, 0x008);
+    cipher_internal.slice(0x008, 0x028).copy(tag, 0x080);
+    cipher_internal.slice(0x028, 0x04C).copy(tag, 0x010);
+    cipher_internal.slice(0x04C, 0x1B4).copy(tag, 0x0A0);
+    cipher_internal.slice(0x1B4, 0x1D4).copy(tag, 0x034);
+    cipher_internal.slice(0x1D4, 0x1DC).copy(tag, 0x000);
+    cipher_internal.slice(0x1DC, 0x208).copy(tag, 0x054);
+    return tag;
 }
 
 //Extract Mii data from an Amiibo dump
 function extractMiiFromAmiibo(dump) {
     const tag = dump.slice(0, NFC3D_AMIIBO_SIZE);
     const decrypted = decryptAmiibo(tag);
-    const miiData = decrypted.slice(76, 172);// Extract the 96 Bytes (C/F)FSD Mii
+    const miiData = decrypted.slice(76, 172);// Extract the 96 Bytes FFSD Mii
     return Buffer.from(miiData);
 }
 
 //Insert Mii data into an Amiibo dump
-function insertMiiIntoAmiibo(dump, miiWithChecksum) {
+function insertMiiIntoAmiibo(dump, mii) {
+    mii=decodeMii(mii);
+    let miiWithChecksum=encodeMii(mii,MiiFormats.FFSD);
     const decrypted = decryptAmiibo(dump.slice(0, NFC3D_AMIIBO_SIZE));//Decrypt the Amiibo
     miiWithChecksum.copy(decrypted, 76);//Insert the Mii into Amiibo
     const encrypted = encryptAmiibo(decrypted);//Reencrypt the Amiibo
@@ -159,7 +167,7 @@ function insertMiiIntoAmiibo(dump, miiWithChecksum) {
     return result;
 }
 
-module.exports = {
+export {
     insertMiiIntoAmiibo,
     extractMiiFromAmiibo
 };

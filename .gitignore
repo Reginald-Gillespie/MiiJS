@@ -1,17 +1,5 @@
-.vscode
-.vsls.json
+node_modules
+*FLResHigh*
 package-lock.json
 node_modules
-FFLResHigh.dat
-TODO.md
-experiments
-FFLResHigh*
-*maddie*
-export*
-
-# Testing related
 test*
-__tests__
-babel.config.json
-jest.config.js
-webpage-example

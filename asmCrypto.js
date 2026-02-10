@@ -1,4 +1,5 @@
 'use strict';
+import {randomBytes} from "./platform.js";
 
 function string_to_bytes(str, utf8) {
     if (utf8 === void 0) { utf8 = false; }
@@ -3600,8 +3601,7 @@ function BigNumber_extGCD(a, b) {
 function getRandomValues(buf) {
     if (typeof process !== 'undefined' && typeof require === 'function') {
         try {
-            var nodeCrypto = eval('require')('crypto');
-            var bytes = nodeCrypto.randomBytes(buf.length);
+            var bytes = randomBytes(buf.length);
             buf.set(bytes);
             return;
         } catch (e) {
@@ -4182,4 +4182,218 @@ var Modulus = /** @class */ (function (_super) {
     return Modulus;
 }(BigNumber));
 
-exports.AES_CCM = AES_CCM;
+// ------------------------------
+// Minimal exports you need
+// ------------------------------
+
+// Node-style AES-128-CTR (counter is 16-byte big-endian block, incremented each block)
+function _incCounterBE16(counter) {
+  // increment full 128-bit big-endian counter in-place
+  for (let i = 15; i >= 0; i--) {
+    counter[i] = (counter[i] + 1) & 0xff;
+    if (counter[i] !== 0) break;
+  }
+}
+
+function _aes128CtrCrypt(data, key, iv) {
+  if (!(data instanceof Uint8Array)) data = new Uint8Array(data);
+  if (!(key instanceof Uint8Array)) key = new Uint8Array(key);
+  if (!(iv instanceof Uint8Array)) iv = new Uint8Array(iv);
+
+  if (key.length !== 16) throw new Error("AES_CTR: expected 16-byte key (aes-128-ctr)");
+  if (iv.length !== 16) throw new Error("AES_CTR: expected 16-byte IV/counter block (16 bytes)");
+
+  // Use AES core in ECB mode to generate keystream blocks
+  // Note: AES() sets up key schedule using AES_asm under the hood.
+  const heap = _heap_init().subarray(AES_asm.HEAP_DATA);
+  const asm = new AES_asm(null, heap.buffer);
+  // Create AES instance just to run set_key once (mode doesn't matter as long as we call ECB cipher)
+  // padding=false so it never tries to PKCS#7 anything (we won't use AES_Encrypt_finish anyway)
+  new AES(key, undefined, false, "ECB", heap, asm);
+
+  const out = new Uint8Array(data.length);
+  const ctr = new Uint8Array(16);
+  ctr.set(iv);
+
+  let off = 0;
+  while (off < data.length) {
+    // Write counter block into DATA[HEAP_DATA..HEAP_DATA+16)
+    heap.set(ctr, 0);
+
+    // Encrypt counter block with ECB to produce keystream
+    asm.cipher(AES_asm.ENC.ECB, AES_asm.HEAP_DATA, 16);
+
+    const blockLen = Math.min(16, data.length - off);
+    for (let i = 0; i < blockLen; i++) {
+      out[off + i] = data[off + i] ^ heap[i];
+    }
+
+    off += blockLen;
+    _incCounterBE16(ctr);
+  }
+
+  return out;
+}
+
+const AES_CTR = {
+  encrypt(data, key, iv) {
+    return _aes128CtrCrypt(data, key, iv);
+  },
+  decrypt(data, key, iv) {
+    // CTR decrypt === encrypt
+    return _aes128CtrCrypt(data, key, iv);
+  }
+};
+
+// ------------------------------
+// SHA-256 (sync) + HMAC-SHA256 (sync)
+// ------------------------------
+function _rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+
+const _K256 = new Uint32Array([
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+]);
+
+function _sha256Bytes(msg) {
+  if (!(msg instanceof Uint8Array)) msg = new Uint8Array(msg);
+
+  const ml = msg.length;
+  const bitLenHi = Math.floor((ml * 8) / 0x100000000);
+  const bitLenLo = (ml * 8) >>> 0;
+
+  // pad: 0x80 then zeros then 64-bit length
+  const padLen = (((ml + 9 + 63) >> 6) << 6) - ml; // bytes to reach next 64-byte block after adding 9 bytes
+  const buf = new Uint8Array(ml + padLen);
+  buf.set(msg, 0);
+  buf[ml] = 0x80;
+
+  const dv = new DataView(buf.buffer);
+  // write length in bits big-endian into last 8 bytes
+  dv.setUint32(buf.length - 8, bitLenHi, false);
+  dv.setUint32(buf.length - 4, bitLenLo, false);
+
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+
+  const W = new Uint32Array(64);
+
+  for (let off = 0; off < buf.length; off += 64) {
+    // message schedule
+    for (let i = 0; i < 16; i++) {
+      W[i] = dv.getUint32(off + (i << 2), false);
+    }
+    for (let i = 16; i < 64; i++) {
+      const s0 = (_rotr(W[i - 15], 7) ^ _rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3)) >>> 0;
+      const s1 = (_rotr(W[i - 2], 17) ^ _rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10)) >>> 0;
+      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
+    }
+
+    // compression
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, hh = h7;
+
+    for (let i = 0; i < 64; i++) {
+      const S1 = (_rotr(e, 6) ^ _rotr(e, 11) ^ _rotr(e, 25)) >>> 0;
+      const ch = ((e & f) ^ (~e & g)) >>> 0;
+      const t1 = (hh + S1 + ch + _K256[i] + W[i]) >>> 0;
+      const S0 = (_rotr(a, 2) ^ _rotr(a, 13) ^ _rotr(a, 22)) >>> 0;
+      const maj = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
+      const t2 = (S0 + maj) >>> 0;
+
+      hh = g;
+      g = f;
+      f = e;
+      e = (d + t1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (t1 + t2) >>> 0;
+    }
+
+    h0 = (h0 + a) >>> 0;
+    h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0;
+    h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0;
+    h5 = (h5 + f) >>> 0;
+    h6 = (h6 + g) >>> 0;
+    h7 = (h7 + hh) >>> 0;
+  }
+
+  const out = new Uint8Array(32);
+  const odv = new DataView(out.buffer);
+  odv.setUint32(0,  h0, false);
+  odv.setUint32(4,  h1, false);
+  odv.setUint32(8,  h2, false);
+  odv.setUint32(12, h3, false);
+  odv.setUint32(16, h4, false);
+  odv.setUint32(20, h5, false);
+  odv.setUint32(24, h6, false);
+  odv.setUint32(28, h7, false);
+  return out;
+}
+
+const SHA256 = {
+  bytes(data) {
+    return _sha256Bytes(data);
+  }
+};
+
+function _hmacSha256Bytes(data, key) {
+  if (!(data instanceof Uint8Array)) data = new Uint8Array(data);
+  if (!(key instanceof Uint8Array)) key = new Uint8Array(key);
+
+  const blockSize = 64;
+
+  // If key > blockSize, key = sha256(key)
+  let k = key;
+  if (k.length > blockSize) k = _sha256Bytes(k);
+
+  // Pad key to blockSize
+  const keyBlock = new Uint8Array(blockSize);
+  keyBlock.set(k);
+
+  const oKeyPad = new Uint8Array(blockSize);
+  const iKeyPad = new Uint8Array(blockSize);
+  for (let i = 0; i < blockSize; i++) {
+    oKeyPad[i] = keyBlock[i] ^ 0x5c;
+    iKeyPad[i] = keyBlock[i] ^ 0x36;
+  }
+
+  const inner = new Uint8Array(iKeyPad.length + data.length);
+  inner.set(iKeyPad, 0);
+  inner.set(data, iKeyPad.length);
+
+  const innerHash = _sha256Bytes(inner);
+
+  const outer = new Uint8Array(oKeyPad.length + innerHash.length);
+  outer.set(oKeyPad, 0);
+  outer.set(innerHash, oKeyPad.length);
+
+  return _sha256Bytes(outer);
+}
+
+const HMAC_SHA256 = {
+  bytes(data, key) {
+    return _hmacSha256Bytes(data, key);
+  }
+};
+
+// keep your existing AES_CCM export name
+const _AES_CCM = AES_CCM;
+
+// Export the pieces your browser shim imports
+export {
+  _AES_CCM as AES_CCM,
+  AES_asm,
+  getRandomValues,
+  AES_CTR,
+  SHA256,
+  HMAC_SHA256
+};

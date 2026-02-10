@@ -1,370 +1,222 @@
 # MiiJS
-MiiJS is a complete and comprehensive Mii library for reading, converting, modifying, writing, and rendering Mii characters from an accessible coding language. Support for all Mii types, including DS, Wii, 3DS, Wii U, Amiibo, Switch 1 & 2, Amiibos, and Mii Studio. Capable of making Special Miis and 3DS QR codes. Able to generate instructions to recreate Miis from scratch.
-<hr>
+MiiJS is a comprehensive JavaScript library for reading, writing, converting, and rendering Nintendo Mii data.
+Supports Wii, DS, 3DS, Wii U, Switch, Switch 2, Amiibo, Tomodachi Life, Miitomo, QR Codes, Studio Codes, Special Miis, and virtually every known Mii format.
+Build once, work with Miis from any console.
 
+*Rendering powered by [FFL.js](https://github.com/ariankordi/FFL.js/)*
 ## Installation
+MiiJS works in both browser and Node.js, and in both ESM and CJS.
+
+### Node
 `npm install miijs` || `npm i miijs`
 
-<hr>
+- `import MiiJS from "miijs";`
+- `import {Mii} from "miijs";`
+- `const MiiJS = require("miijs");`
+- `const {Mii} = require("miijs");`
 
-## Table of Contents
-- [Functions](#functions)
-- [Code Examples](#code-examples)
-- [Special Miis](#special-miis)
-- [Other Console Support](#other-console-support)
-- [`convertMii` Discrepancies](#discrepancies-in-convertmii-function)
-- [Transferring to/from the System](#transferring-miis-to-and-from-the-system)
-- [FFLResHigh.dat](#fflreshighdat)
-- [Credits](#credits)
-
-<hr>
-
-# Functions
-
-### Reading Miis
-- **`async read3DSQR(PathToMiiQR OR BinaryDataFromQR, ReturnDecryptedBin?)`** - Returns JSON by default. By specifying `true` as the secondary parameter you can receive only the decrypted Mii data from the QR.
-- **`readWiiBin(PathToMii OR BinaryMiiData)`** - Returns JSON from a Wii Mii binary file.
-
-### Writing Miis
-- **`async write3DSQR(MiiJSON, PathToWriteTo, fflRes?)`** - Writes a JPG QR of a 3DS scannable Mii to the path specified. If no fflRes is specified, the QR will render using Nintendo Studio's API. If one is provided, it will contain a locally rendered version. fflRes must either be passed as a buffer, or FFLResHigh.dat present in your project's root directory.
-- **`async writeWiiBin(MiiJSON, PathToWriteTo?)`** - Returns Mii binary which can then be written by default. If PathToWriteTo is specified, it will instead be written to a file.
-
-### Converting Miis
-- **`convertMii(miiJson, typeTo?)`** - Converts the Mii JSON format between consoles (3DS ↔ Wii) and returns the JSON. If typeTo is not specified, converts to the opposite type.
-- **`convertMiiToStudio(miiJSON)`** - Returns a Studio compatible Mii in hex format.
-- **`convertStudioToMii(input)`** - Converts Studio format (hex string or Uint8Array) to 3DS Mii JSON.
-
-### Rendering Miis
-- **`async renderMiiWithStudio(miiJSON)`** - Returns a buffer containing a PNG representation of the Mii's face using Nintendo's Studio API.
-- **`async renderMii(miiJSON, fflRes?)`** - Returns a buffer containing a PNG representation of the Mii's face using local rendering. fflRes must either be passed as a buffer, or FFLResHigh.dat present in your project's root directory. Currently bodies render but are unaffected by height and weight changes, though this is planned to be changed in the future.
-
-### Amiibo Functions
-- **`insertMiiIntoAmiibo(amiiboDump, miiData)`** - Inserts Mii data (92 or 96 bytes, decrypted 3DS format) into an Amiibo dump. Returns the modified Amiibo dump.
-- **`extractMiiFromAmiibo(amiiboDump)`** - Extracts the Mii data (92 bytes, decrypted 3DS format) from an Amiibo dump. Returns a Buffer.
-
-### Utility Functions
-- **`generateInstructions(miiJson, fullInstructions?)`** - Returns a JSON object of different instruction fields for manually recreating the Mii. If fullInstructions is not set, only the instructions that differ from a default Mii will be returned.
-- **`miiHeightToMeasurements(miiHeight)`** - Converts Mii height value (0-127) to real-world feet and inches. Returns `{feet, inches, totalInches, centimeters}`.
-- **`inchesToMiiHeight(totalInches)`** - Converts real-world height in inches to Mii height value (0-127).
-- **`centimetersToMiiHeight(totalCentimeters)`** - Converts real-world height in centimeters to Mii height value (0-127).
-- **`miiWeightToRealWeight(miiWeight)`** - Converts Mii weight value (0-127) to real-world weight values. Returns `{pounds, kilograms}`.
-- **`imperialHeightWeightToMiiWeight(heightInches, weightLbs)`** - Converts real-world imperial measurements to Mii weight values.
-- **`metricHeightWeightToMiiWeight(heightCentimeters, weightKilograms)`** - Converts real-world metric measurements to Mii weight values.
-- **`miiIdToTimestamp(miiId, consoleMiiIdIsFrom)`** - Converts the Mii ID into a JS Date/Timestamp.
-
-### Other Functions
-- **`makeChild(miiJson1, miiJson2, options?)`** - Returns an array of 6 different Mii JSONs, which represent a child generated from the two parent Miis passed to the function at different stages of life. This is somewhat experimental, but should be accurate to my current knowledge. You can pass any or none of { name: "The Name", creatorName: "The Name", favoriteColor: 0-11, gender: 0-1/\*0:Male, 1:Female\*/ }
-
-<hr>
-
-# Code Examples
-
-## Reading a 3DS Mii from QR Code
-```javascript
-const miijs = require('miijs');
-
-// Read from file path for image, or buffer of the data - encrypted or decrypted
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-console.log('Mii Name:', miiJson.meta.name);
-
-// Get the decrypted binary data
-const decryptedBin = await miijs.read3DSQR('./example3DSQR.jpg', true);
-console.log('Decrypted binary length:', decryptedBin.length);
+### Browser
+Download the latest release zip and serve it unzipped however you like, replace the paths with your relevant path.
+```html
+<script src="./fflModule.cjs"></script><!--You only need this import if you're rendering, see the section on FFLResHigh.dat-->
+<script type="module">
+    import MiiJS from "./miijs.browser.js"; //miijs.browser.esm.js available as well
+    //Code to interact with MiiJS
+</script>
 ```
 
-## Reading a Wii Mii from Binary File
-```javascript
-const miijs = require('miijs');
+### Building
+You only need to build if developing local changes for CJS and/or the Browser, in which case just run `npm run build`.
 
-// Read from file path
-const miiJson = await miijs.readWiiBin('./exampleWii.bin');
-console.log('Mii Name:', miiJson.meta.name);
+## Example Usage
+```js
+import fs from "fs";
+import {Mii, ConsoleFormats, MiiFormats, makeMiiChild, miiHeightToMeasurements, miiWeightToMeasurements, imperialHeightWeightToMiiWeight, centimetersToMiiHeight} from "miijs";
 
-// Or pass binary data directly
-const fs = require('fs');
-const binaryData = fs.readFileSync('./exampleWii.bin');
-const miiJson2 = await miijs.readWiiBin(binaryData);
+//Manipulation
+let JohnDoe = await Mii.create("./JohnDoe.charinfo");//Initialize JohnDoe.charinfo from the FS into the Mii class
+JohnDoe.fields.meta.type="Special";//Modify fields as necessary
+JohnDoe.set("name","Johnny");//Modify fields by friendly human name
+JohnDoe.set({meta:{creatorName:"John Sr."}});//Modify fields by an object
+JohnDoe.setAs(ConsoleFormats["3DS"],"hair.type",[9,1,2]);//Set the hairstyle to the one that is, if you were on 3DS (or Wii U), on the 9th page, 1 from the left, 2 from the top. For non paginated values, only two values are necessary. Friendly human names also available.
+JohnDoe.getAs(ConsoleFormats.WII,"hair.type");//Return the friendly name as if viewing from a Wii, same as setAs. Friendly human names also available.
+
+//Writing
+fs.writeFileSync("./JohnDoe.rsd", JohnDoe.encode(MiiFormats.RSD));//Backport and write a Wii file for use on Wiimotes (.mii is the widely known name, but not advised for use)
+fs.writeFileSync("./John.json",JSON.stringify(JohnDoe.toJSON(),null,4));//Write the representation of fields MiiJS is using for JohnDoe to a JSON file
+console.log(JohnDoe);//Mii.toString() will automatically encode as an MNMS/Studio Code string, you can call JohnDoe.toString(MiiFormats.FORMAT) to get a hex string for a different format
+const JohnImg = JohnDoe.render();//Return a buffer containing an image of the Mii
+fs.writeFileSync(`./JohnnysFace.png`,JohnImg);
+const JohnQR = johnDoe.toQR();//Return a buffer containing an image of the Mii QR.
+fs.writeFileSync(`./JohhnysQR.png`,JohnQR);
+
+//Instruction Generation
+const instrs=JohnDoe.toInstructions(ConsoleFormats.DS);//Make a JSON object of the Mii, with human friendly instructions to recreate on that console, backporting if necessary (DS editor in this case is treated as Tomodachi Collection)
+console.log(instrs.hair.type);//Human friendly text for how to find the hair type, in this case, on the DS editor
+fs.writeFileSync("./JohnInstrs.txt",JSON.stringify(instrs,null,4));//Write a file with the JSON instructions
+fs.writeFileSync("./JohnInstrs.json",JSON.stringify(instrs,null,4));
+
+//Amiibo Manipulation
+let exampleAmiibo = fs.readFileSync("./Amiibo.ntag");
+let miiOnAmiibo = await Mii.create(exampleAmiibo);//Automatically detect as Amiibo and extract Mii from it
+exampleAmiibo = JohnDoe.insertIntoAmiibo(exampleAmiibo);//Insert into the Amiibo, return the buffer
+fs.writeFileSync(`./JohnOnAmiibo.ntag`,exampleAmiibo);//Write a new Amiibo file back
+
+//Other Functions
+//Baby
+const child = makeMiiChild(miiOnAmiibo, JohnDoe);//Returns an array with six stages of life represented as raw JSON for the generated baby.
+let newborn = Mii.create(child[0]);
+let fullGrown = Mii.create(child[5]);
+console.log(fullGrown.fields.meta.name);
+
+// Height/Weight Conversion
+console.log(miiHeightToMeasurements(JohnDoe.fields.general.height).totalInches);//Returns a JSON object with various human measurements (imperial, metric) converted from Mii measurements
+console.log(miiWeightToMeasurements(JohnDoe.fields.general.height).pounds);
+JohnDoe.set("weight", imperialHeightWeightToMiiWeight(70, 150));//Set JohnDoe's Weight to a good Mii weight for a person who's 5'10" (70 inches), and 150lbs (metric version also available).
+JohnDoe.set("height", centimetersToMiiHeight(175));//Set JohnDoe's Height to a good Mii height for a person who's 175cm (imperial version also available).
 ```
 
-## Writing a 3DS Mii QR Code
-```javascript
-const miijs = require('miijs');
+### Enums
+- MiiFormats | An enum of all available Mii Formats to decode and encode to
+- ConsoleFormats | An enum of all available console types for functions that need a specific console (getAs/setAs, instructions)
+- FFLExpression | An enum of the different expression types the Mii face can render. Passed through from FFL.js (see Credits), which MiiJS uses as a dependency for rendering.
+- FavoriteColors | An array of favorite color human names to Mii favoriteColor ID
 
-// First, read or create a Mii JSON
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Write QR code. If FFLResHigh.dat is in the same directory, will be used automatically. You can pass a buffer containing FFLResHigh.dat as a fourth parameter. Will use Studio rendering instead of local without FFLResHigh.dat.
-await miijs.write3DSQR(miiJson, './output_qr.jpg');
-//The third parameter asks MiiJS to return an encrypted 3DS data instead
-const encryptedData=await miijs.write3DSQR(miiJson,'',true);
-```
-
-## Writing a Wii Mii Binary
-```javascript
-const miijs = require('miijs');
-const fs = require('fs');
-
-// Read a Mii
-const miiJson = await miijs.readWiiBin('./exampleWii.bin');
-
-// Write to file
-await miijs.writeWiiBin(wiiMii, './output_wii.bin');
-
-// Or get buffer without writing
-const buffer = await miijs.writeWiiBin(wiiMii);
-fs.writeFileSync('./manual_write.bin', buffer);
-```
-
-## Converting Between Formats
-```javascript
-const miijs = require('miijs');
-
-// Read a 3DS Mii
-const mii3DS = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Convert to Wii format
-const miiWii = miijs.convertMii(mii3DS, 'wii');
-
-// Convert back to 3DS
-const backTo3DS = miijs.convertMii(miiWii, '3ds');
-
-// Auto-detect and convert to opposite
-const autoConverted = miijs.convertMii(mii3DS);
-```
-
-## Converting to/from Studio Format
-```javascript
-const miijs = require('miijs');
-
-// Read a Mii and convert to Studio format
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-const studioHex = miijs.convertMiiToStudio(miiJson);
-console.log('Studio URL:', `https://studio.mii.nintendo.com/miis/image.png?data=${studioHex}`);
-
-// Convert Studio format back to JSON
-const studioData = '000d142a303f434b717a7b84939ba6b2bbbec5cbc9d0e2ea...';
-const miiFromStudio = miijs.convertStudioToMii(studioData);
-```
-
-## Rendering Miis
-```javascript
-const miijs = require('miijs');
-const fs = require('fs');
-
-// Read a Mii
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Render using Studio API (simple, no setup needed, requires internet access)
-const studioPng = await miijs.renderMiiWithStudio(miiJson);
-fs.writeFileSync('./mii_studio_render.png', studioPng);
-
-// Render locally with full body (requires FFLResHigh.dat)
-// FFLResHigh.dat can be placed in the project directory to automatically use
-const fflRes = fs.readFileSync('./FFLResHigh.dat');
-const localPng = await miijs.renderMii(miiJson, fflRes);
-fs.writeFileSync('./mii_local_render.png', localPng);
-```
-
-## Working with Amiibos
-```javascript
-const miijs = require('miijs');
-const fs = require('fs');
-
-// Read an Amiibo dump
-const amiiboDump = fs.readFileSync('./exampleAmiiboDump.bin');
-
-// Extract the Mii from the Amiibo (returns 92 bytes decrypted)
-let miiData = miijs.extractMiiFromAmiibo(amiiboDump);
-// Convert the raw Mii data to readable JSON
-const miiJson = miijs.read3DSQR(miiData);
-
-// Read from QR, get decrypted data, insert into Amiibo
-const qrMiiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-const decryptedMiiData = await miijs.read3DSQR('./example3DSQR.jpg', true);
-
-// Insert new Mii into Amiibo
-const modifiedAmiibo = miijs.insertMiiIntoAmiibo(amiiboDump, decryptedMiiData);
-fs.writeFileSync('./modified_amiibo.bin', modifiedAmiibo);
-```
-
-## Generating Recreation Instructions
-```javascript
-const miijs = require('miijs');
-
-// Read a Mii
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Generate only non-default instructions (minimal)
-const minimalInstructions = miijs.generateInstructions(miiJson);
-console.log('Steps to recreate:');
-Object.values(minimalInstructions).forEach(step => {
-    if (step) console.log('- ' + step);
-});
-
-// Generate complete instructions (every step)
-const fullInstructions = miijs.generateInstructions(miiJson, true);
-console.log('\nComplete recreation guide:');
-Object.entries(fullInstructions).forEach(([field, instruction]) => {
-    console.log(`${field}: ${instruction}`);
-});
-```
-
-## Height and Weight Conversions
-```javascript
-const miijs = require('miijs');
-
-// Convert Mii height (0-127) to feet/inches and centimeters
-const heightInfo = miijs.miiHeightToMeasurements(64); // midpoint value
-console.log(`Height: ${heightInfo.feet}'${heightInfo.inches}" (${heightInfo.centimeters} cm)`);
-
-// Convert real height to Mii value
-const miiHeightValue = miijs.inchesToMiiHeight(72);
-console.log('Mii height value for 6\'0":', miiHeightValue);
-
-// Convert Mii weight to real weight (requires height)
-const miiHeight = 64;
-const miiWeight = 64;
-const weightInfo = miijs.miiWeightToRealWeight(miiHeight, miiWeight);
-console.log(`Weight: ${weightInfo.pounds.toFixed(1)} lbs (${weightInfo.kilograms} kg)`);
-
-// Convert real weight to Mii weight value
-const heightInches=70;
-const weightLbs = 150;
-const miiWeightValue = miijs.imperialHeightWeightToMiiWeight(heightInches, weightLbs);
-console.log('Mii weight value:', miiWeightValue);
-
-// Or use metric
-const miiWeightMetric = miijs.metricHeightWeightToMiiWeight(175, 72.5);
-```
-
-## Creating and Modifying a Mii
-```javascript
-const miijs = require('miijs');
-
-// Read an existing Mii
-const miiJson = await miijs.read3DSQR('./example3DSQR.jpg');
-
-// Modify properties
-miiJson.meta.name = 'CustomName';
-miiJson.general.favoriteColor = 5;
-miiJson.hair.color = 0;
-miiJson.eyes.color = 2;
-
-// Make it a Special Mii (3DS only)
-miiJson.meta.type = 'Special';
-
-// Convert to Wii format
-const wiiVersion = miijs.convertMii(miiJson, 'wii');
-
-// Save as both formats
-await miijs.write3DSQR(miiJson, './modified_3ds.jpg');
-await miijs.writeWiiBin(wiiVersion, './modified_wii.bin');
-```
-
-## Making a Child from Two Miis
-```javascript
-const fs = require('fs');
-const miijs = require('miijs');
-
-//Read the parents
-const dad = await miijs.read3DSQR('./dad.jpg');
-const mom = await miijs.read3DSQR('./mom.jpg');
-
-//Make the child
-const child = miijs.makeChild(dad,mom);
-
-//Write the child to a file, and then render all of the stages
-fs.writeFileSync(`./${child[0].meta.name}.json`,JSON.stringify(child,null,4));
-for(var i=0;i<child.length;i++){
-    let img=await miijs.renderMii(child[i]);
-    fs.writeFileSync(`./${child[i].meta.name}`,img);
-}
-```
-
-## Getting the Time the Mii Was Created From the Mii ID
-```javascript
-const miijs=require('miijs');
-
-//Read miis into JSON 
-const mii3DS=await miijs.read3DSQR('./example_mii.jpg');
-const miiWii=await miijs.readWiiBin('./example_mii.bin');
-
-//Same process for both, returns a JS Date/Timestamp
-console.log(miijs.miiIdToTimestamp(mii3DS.meta.miiId,mii3DS.console));
-console.log(miijs.miiIdToTimestamp(miiWii.meta.miiId,miiWii.console));
-```
-
-<hr>
-
-## Special Miis
-Special Miis were on the Wii and 3DS, identifiable via their golden pants. They were created by Nintendo employees, and not consumers. They could not be edited, or copied. In every other instance transferring a Mii to another system would leave a copy on both systems. For Special Miis, they would delete themselves from the console sending them, and only ever be present in one place at a time per copy Nintendo sent out. When receiving them via QR code on the 3DS, it would only allow you to scan that QR once, and never again. On the Wii, these were distributed via the WiiConnect24 service, and would arrive via the Message Board. On the 3DS, these were distributed occasionally via Spotpass, Streetpass, and QR codes.
-### Making a Special Mii
-To make a special Mii, read in the file using the appropriate function, set `mii.info.type="Special";`, and then write a new file with the appropriate function.
--# Special Miis only work on the Wii and 3DS, and no other console.
-
-<hr>
-
-## Other Console Support
-- DS
-   - DS and Wii Miis are interchangeable. The DS only contains Miis in a handful of games, and is not baked into the system, however every instance where it does it is based off the Wii version of Miis, and to my current knowledge always provides a way to transfer from the Wii, being the only way short of recreation to transfer onto the DS. There is, to my knowledge, no way to transfer Miis off of the DS short of recreation.
-   - Use Wii functions for DS Miis
-- Wii U
-   - The Wii U and 3DS Miis are interchangeable, with one major exception. The 3DS has Special Miis, while the Wii U will not render any Mii set as a Special Mii. So since the 3DS has this one added feature, 3DS is what takes priority in the naming schemes across this project, however it is for all intents and purposes interchangeable with a Wii U Mii.
-   - Use 3DS functions for Wii U Miis
-- Switch/2
-   - Miis are more isolated than they've ever been on the Switch/2. To take them on and off of the Switch/2 via direct transfer, an Amiibo _and_ one of, a 3DS with NFC Reader accessory, New 3DS, or Wii U, is **required**. The only other method is to recreate manually from scratch. When the Switch writes to an Amiibo, it converts it to a 3DS/Wii U format. Due to this limitation of direct transfer, all Miis that this library can affect will be going through the 3DS/Wii U anyway, and direct Switch/2 support is thus irrelevant. The only differences between Switch Miis and Wii U Miis (no Special Mii support on the Switch either) is a ton more hair colors anyway.
-   - Use 3DS, Studio, and Amiibo functions for Switch/2 Miis
-- Studio
-   - Studio Miis are in essence Switch/2 Miis. Transferring directly on/off of Studio (a browser Mii Maker used purely for profile pictures across Nintendo's online logins) requires a developer console and code paste, or browser extension. I may undertake making my own version of this in the future, but for the time being [this tool](https://mii.tools/studioloader/) by HEYimHeroic serves this purpose (from what I can tell, I have not used it myself).
-   - Use Studio Functions for Studio Miis
-- Miitomo/Kaerutomo and Tomodachi Life
-   - Both Mii formats are the same as 3DS formats, with extra info added to the end. The way the library is set up, it can already read these. My devices are too new for Kaerutomo support, but I believe it should be able to scan the 3DS format Miis. Writing specific to Tomodachi Life Miis with game data already present in the QR is more within the realm of a Tomodachi Life save editor. I may undertake this for the Miis in the future, but it would be a separate project.
-   - Use 3DS functions for these Miis
-
-<hr>
-
-## Discrepancies in `convertMii` function
-All of these discrepancies __only__ apply when converting from the **3DS to the Wii**, converting from the Wii to the 3DS should be a perfect conversion.
-There is a reason that the Wii supports sending Miis to the 3DS, but not vice versa. Many of the fields on the 3DS are new, and not present on the Wii. This function does its absolute best to backport 3DS Miis, but it *is not perfect and never will be*. If you rely heavily on 3DS exclusive options in your Mii, the outputted Mii will likely not be satisfactory.
- - The 3DS has four more face shapes, thus some are converted to the closest possible for the Wii.
- - The 3DS allows you to set Makeup and Wrinkles seperately, as well as having 7 more "makeup" (including beard shadow and freckles) types and 5 more wrinkle types. This is probably one of the messiest conversions since one field has to be ignored entirely if both are set. Since the 3DS has some that are not even close to anything the Wii has, it will ignore these if the other field is set, allowing for the other field to be added in its place, prioritizing wrinkles over makeup. The outputted Mii will almost certainly require further editing to be satisfactory if these fields are used.
- - The 3DS has 6 extra nose types, all on the second page - these are mapped to similar noses on the first page that the Wii has.
- - The 3DS has an extra page of mouth types containing 12 extra mouth types. These are mapped to similar mouths on the other two pages that the Wii supports.
- - The 3DS has two extra lip colors. These are changed into the default Orangey lip color if used since both of the extra colors are closest to this.
- - The Wii does not have the option to "squish" parts to be thinner. This function ignores this field as a result.
- - The 3DS has 60 extra hairstyles. These are mapped to hairstyles the Wii does have. This will not be a perfect conversion and has a decent chance of needing a manual change.
- - The 3DS has an extra page of eye types that the Wii does not, which the function maps to a similar eye type that the Wii does support if used. Will likely require a manual edit.
- - The 3DS has two extra mustaches and two extra beards. These are mapped to a similar beard or mustache if used - the two extra beards will likely need a manual change if used.
- 
- <hr>
-
-# Transferring Miis to and from the System
- - DS
-    - If the game you would like to transfer Miis to supports it, the option to "Connect to Wii" will be found in various places and worded different ways. The main game you might want to do this for is Tomodachi Collection, which will be in Town Hall after three Mii residents are on the island. On the Wii, you then want to press the DS icon in the top right and follow the prompts from there. If the option is not present, press and _release_ **A**, press and release **B**, press and release **1**, and then press and _hold_ **2**. The option should then be visible. This option is not available on Wii U or the Wii mode of the Wii U, and can only be used to send Miis to DS and 3DS, not from. No option to retrieve Miis from the DS is available besides recreating the Mii.
- - Wii
-    - Method 1 (Recommended, doesn't require homebrew): Connect the Wiimote to your PC, Dolphin seems to be the easiest way to do so though there are some more difficult ways to do so, and use [WDMLMiiTransfer](https://sourceforge.net/projects/wdml/files/WDML%20-%20MiiTransfer/). Open the `readSlotX.bat` file for the slot you're trying to read from (Array notation, 0=1, 1=2, 2=3, and so on). The Mii will be in the same directory under the name `miiX.mii`, where X is the same number as the readSlot you opened. If you used `readSlotAll.bat`, then there will be 10 Miis (0-9) in the directory. Note that if no Mii was ever present in that slot ever on the Wiimote, it will still output a `miiX.mii` file, though it will not contain the Mii data correctly. To write to the Wiimote, make sure the Mii you're writing is in the same directory and named `miiX.mii`, where X is the slot you're writing to, and open `writeSlotX.bat`, where X is the slot you're writing to (in array notation). You can transfer Miis on and off the Wiimote from the Wii by using the Wiimote icon in the top right of Mii Maker.
-    - Method 2 (Requires Homebrew, is untested by me): [Mii Installer](https://wiibrew.org/wiki/Mii_Installer) for writing from the SD card to the Wii, and [Mii Extractor](https://wiibrew.org/wiki/Mii_Extractor) for reading from the Wii.
- - 3DS and Wii U
-    - Open Mii Maker, select "QR Code/Image Options", and then select the respective QR Code option, be it scanning a QR code or saving a Mii as a QR code.
- - Amiibo
-    - You can use [Tagmo](https://play.google.com/store/apps/details?id=com.hiddenramblings.tagmo.eightbit&hl=en_US&pli=1) on Android, bottom right NFC button -> Backup to retrieve an Amiibo file, or Amiibo bin in explorer -> Write: first write to blank NTAG215 tag OR Update: subsequent writes to already-an-Amiibo tags. _Reportedly_ [one of these apps](https://www.reddit.com/r/tagmo/comments/ynxonu/list_of_ios_iphone_amiibo_apps/) can be used for an equivalent on iPhone. I have not tested and cannot verify any of the iPhone apps at this time.
- - Switch/2
-    - You have to use Amiibos as a conduit to interact with Miis on the Switch/2. To take these Miis on and off of the Switch, in System Settings under the Amiibo menu you can register or change the Owner Mii to set the Mii stored on the Amiibo, and under Miis you can select Create a Mii and then Copy from Amiibo to take a Mii from the Amiibo onto the Switch.
-
-<sub>If you are unable to transfer to the console you wish to, you can use the `generateInstructions` function provided here and manually recreate the Mii on the console using the provided instructions.</sub>
-
-<hr>
+## Full Function/Variable List
+Path can be either "meta.name", or just "name" in all cases. "hairType", or "hair.type". For a full list of possible friendly names, run `Object.keys(mappings).filter(a=>mappings[a]!=="SKIP").join(", ")` (I'd put the output here but it's massive and this README is already massive)
+Console will be one of ConsoleFormats in all cases.
+Format will be one of MiiFormats in all cases.
+Debug values enable extra logging to help figure out why something is breaking and where
+- Mii
+    - new Mii(anyKnownWayToRepresentAMii) | No URL or file paths can be searched with this method, otherwise parallel to Mii.create
+    - async Mii.create(anyKnownWayToRepresentAMii) | Automatically detect Mii format from basically any valid Mii, and read it into a Mii object
+    - Mii.toString(format) | Same as Mii.encode, but returns a hex string
+    - Mii.toBuffer(format) | Same as Mii.encode, for automatic encoding with some functions, Mii.encode encouraged
+    - Mii.toJSON() | Returns Mii.fields
+    - Mii.set(objOrPath, value) | Mii.set({meta:{name:"RickAstley"}}), and Mii.set("name", "RickAstley"), and Mii.set("meta.name", "RickAstley") will all do the same thing
+    - Mii.get(path) | Returns the value
+    - Mii.setAs(console, path, value) | Set as if selecting an item on that console's Mii Maker, value is [page, countFromTheLeft, countFromTheTop], or [countFromTheLeft, countFromTheTop]
+    - Mii.getAs(console, path) | Get the value as if seeing the item on that console's Mii Maker, see setAs for what value returns
+    - Mii.encode(format) | Encodes the Mii to that binary format
+    - async Mii.toQR(options) | Returns a buffer containing a QR code for that Mii, scannable by the 3DS or Wii U. Renders the Mii as an icon for the QR if FFLResHigh.dat is present.
+        - Options values include, size: resolution, image: icon to use, noRenderMii: set to true to not render the Mii icon, label: label text to use instead of the Mii name. Additional passthrough options from [qr-code-styling](https://github.com/kozakdenys/qr-code-styling): qrOptions, dotsOptions, cornersSquareOptions, cornersDotsOptions, backgroundOptions. See Mii.render for more available options.
+    - async Mii.render(fullBodyRender, options) | Returns a buffer containing a render of that Mii, IF FFLResHigh.dat is in the project directory
+        - Options values include, fullBody: Render the full body of the Mii instead of just the head, expression: FFLExpression, size: size of the image. bodyPath: Path to use for the body models instead of the default. fflResBuffer: A buffer containing the FFL Resource. fflResPath: A path to the location of the FFL Resource.
+    - Mii.insertIntoAmiibo(amiiboDump) | Provide a buffer containing the Amiibo exactly as it is on the tag, this function returns the same Amiibo with your Mii inserted
+    - Mii.toInstructions(console) | Provides a JSON object containing human readable sentences and directions to recreate the Mii on that console
+- insertMiiIntoAmiibo(amiiboDump, mii) | See Mii.insertIntoAmiibo
+- extractMiiFromAmiibo(amiiboDump) | Returns the Mii binary from inside the Amiibo, can then be decoded using any of the provided decode functions
+- MiiFormats | See enums
+- ConsoleFormats | See enums
+- mappings | The mappings for friendly name to JSON path
+- defaultMappings | The default values we use if you encode a Mii to a format that needs a field the format it's coming from didn't have
+- makeMiiChild(mii1, mii2, options) | Provide two Miis to this function, this function presents an array of six JSON objects representing a potential child at all stages of life in the style of Tomodachi Life
+    - Options values include, name: Mii name to result in, creatorName: Output creatorName result, gender: Gender of the child (0 Male, 1 Female, same as in the Mii code that all Miis output), favoriteColor: The output child's favorite color
+- decryptMii(miiBuffer) | Decrypts the Mii from the QR code format
+- encryptMii(miiBuffer) | Encrypts the Mii to the QR code format
+- makeInstructions(mii, console) | See Mii.toInstructions
+- getAs(mii, console, path) | See Mii.getAs
+- setAs(mii, console, path, value) | See Mii.setAs
+- miiHeightToMeasurements(miiHeight) | Input a Mii's height (from 0-127), outputs { totalInches, inches, feet, centimeters }
+- miiHeightWeightToMeasurements(miiHeight, miiWeight) | Input a Mii's height, and a Mii's weight (values from 0-127), outputs {pounds,kilograms}
+- inchesToMiiHeight(totalInches) | Provide the total inches, outputs the Mii height
+- centimetersToMiiHeight(totalCentimeters) | Provide the total centimeters, outputs the Mii height
+- imperialHeightWeightToMiiWeight(totalInches, totalPounds) | Provide the total inches, and the total pounds, outputs the Mii Weight
+- metricHeightWeightToMiiWeight(totalCentimeters, totalKilograms) | Provide the total centimeters, and the total kilograms, outputs the Mii Weight
+- isMiiInFormat(miiBuffer, format) | Checks if the buffer is in the specified format, returns true or false
+- detectMiiFormat(miiBuffer, debug) | Returns an array of MiiFormats this Mii could be in. If we have a structure defined for it, it will validate if each individual value is within the boundaries for that value for that format.
+- decodeMii(miiOfAnyKnownWayOfRepresentingIt, debug) | See Mii.create
+- encodeMii(MiiClassOrJSON, format) | See Mii.encode
+- renderMii(mii, options) | See Mii.render
+- FFLExpression | See enums
+- scanQR(buffer) | Provide a buffer containing a QR code, returns the buffer the QR code represents.
+- async makeQR(buffer, options) | Provide a buffer, this outputs a QR code with that buffer. If the buffer is a recognized Mii, and FFLResHigh.dat is present, this will be rendered as an icon for the QR. See Mii.toQR for options.
+- getNestedValue(object, path) | Get the value of an object down a path, returns null if any step of the path is undefined.
+- setNestedValue(object, path, value) | Set the value of an object down a path, creating any steps necessary if undefined.
+- deleteNestedValue(object, path) | Deletes the key of an object down a path.
+- getKeyByValue(object, value) | Returns the key associated with that value, useful for backtracing enums.
+- FavoriteColors | See enums
 
 ## FFLResHigh.dat
-FFLResHigh.dat provides the necessary models and textures to build a 3D model of the Mii. This will not be provided by the library but can be provided by placing it in the directory of the project calling MiiJS. By providing FFLResHigh.dat, you can then render Miis locally without using Studio. If you do not have or do not provide FFLResHigh.dat, rendering is still available via Studio.
+FFLResHigh.dat provides the necessary models and textures to build a 3D model of the Mii. This will not be provided by the library but can be provided by placing it in the directory of the project calling MiiJS. By providing FFLResHigh.dat, you can then render Miis locally without using Studio. If you do not have or do not provide FFLResHigh.dat to your local project, rendering is not possible via MiiJS at this time.
 ### Finding FFLResHigh.dat
 Any version of AFLResHigh.dat will work as well, renamed to FFLResHigh.dat.
 You can find FFLResHigh using a Wii U with an FTP program installed at `sys/title/0005001b/10056000/content/FFLResHigh.dat`. From a Miitomo install, it can be found in the cache at `res/asset/model/character/mii/AFLResHigh_2_3.dat`.
+### Body Rendering
+There is active research into dynamically extracting bodies. For a temporary time being, these are provided here, as the best source to find them at is ultimately [Arian Kordi's repository here](https://github.com/ariankordi/ffl-raylib-samples/tree/master/models) anyway. For now, they just work, but please keep in mind that in as near a future as I can manage, these files will be removed from the repo and you will need to extract these similar to FFLResHigh as well.
 
-<hr>
+## Troubleshooting
+- Special Miis **__must__** have the `meta.originalDevice` field set to the __matching__ device. In all other cases, a 3DS can scan a QR who's originalDevice is 4, and a Wii can scan a QR who's originalDevice is 3. However, in the case of Special Miis, to scan on 3DS you __must__ set `originalDevice` to **3**, and to scan on Wii U you __must__ set `originalDevice` to **4**. MiiJS will handle this automatically if you use the Mii class, just make sure to tell the Mii.toQR function you intend to scan on 3DS or Wii U (see ConsoleFormats enum).
+- ~~Special Miis require Sharing to be off on 3DS and Wii U~~ MiiJS should handle automatically
+- ~~Special Miis require Mingle to be off on Wii~~ MiiJS should handle automatically
+- QRs can sometimes not scan if encoded for the other console even when not Special. I'm not sure what the correlation is, but making sure to tell the Mii.toQR function which console you're scanning it on should be bulletproof. If you're using makeQR, encode to `MiiFormats.CFED` for 3DS, and `MiiFormats.FFED` for Wii U. These enforce making sure meta.originalDevice is 3 and 4 respectively, which should prevent all scan issues. Additionally, having Tomodachi Life fields present will encode to the Tomodachi Life QR code automatically if you use Mii.toQR and specify a 3DS QR. If using makeQR, encode to `MiiFormats.TLE`.
 
-# Credits
- - **[kazuki-4ys' MiiInfoEditorCTR](https://github.com/kazuki-4ys/kazuki-4ys.github.io/tree/master/web_apps/MiiInfoEditorCTR)** - I repurposed how to decrypt and reencrypt the QR codes from here, including repurposing the asmCrypto.js file in its entirety with very small modifications (it has since been stripped down to only include the functions this library uses). I believe I also modified the code for rendering the Mii using Nintendo's Mii Studio from here as well, though I do not remember for certain.
- - **[ariankordi's FFL.js](https://github.com/ariankordi/FFL.js/)** - Rendering Miis locally would not be possible without this library. Instructions for finding FFLResHigh are also learned from [ariankordi's FFL-Testing repository](https://github.com/ariankordi/FFL-Testing).
- - **[Models Resource](https://models.spriters-resource.com/3ds/systembios/asset/306260/)** - For the bodies used in Mii rendering
- - **[socram8888's Amiitools](https://github.com/socram8888/amiitool)** - I _think_, for the code reverse engineered to help with aspects of Amiibo dump processing. I went through so many iterations in research and coding, there may be other credits due as well but I _think_ this was the only repo actually used for the reverse engineering in the final working code.
+## Supported types
+By order of console release. A difference of C vs S dictates not having vs having checksums respectively.
+### Nintendo DS
+- .ncd, .nsd
+    - DS Miis, same as Wii equivalents with some Endian swaps
+### Wii
+- .rcd, .rsd
+    - Wii Miis
+### 3DS
+- .cfcd, .cfsd
+    - Decrypted/Internal 3DS Miis, same as their FFCD/FFSD counterparts past one number (Only matters for special Miis)
+- .cfed
+    - Encrypted CFSD for QR code purposes. No different than FFED.
+- .png, .jpg
+    - QR Codes can be scanned and recreated
+- .tl, .tl_alt, .tomodachilife
+    - Tomodachi Life QR Code Mii data after being decrypted in various sizes/aliases
+- .tle
+    - Tomodachi Life QR Code Encrypted data.
+### Wii U
+- .ffcd, .ffsd
+    - Decrypted/Internal Wii U Miis, same as their CFCD/CFSD counterparts past one number (Only matters for special Miis)
+- .ffed
+    - Encrypted FFSD for QR code purposes. No different than CFED.
+- .png, .jpg
+    - QR Codes can be scanned and recreated
+### Amiibo
+- .ntag, .ntag_alt
+    - Amiibo files in various sizes
+- .ntag_internal
+    - Decrypted Amiibo files
+### Miitomo (Untested)
+- .mt, .miitomo
+    - Miitomo QR Code Mii data after being decrypted
+- .mte
+    - Miitomo QR Code Encrypted data.
+### Switch/2
+- .nfcd, .nfsd .switchdb
+    - Switch NAND format for the Mii Maker applet
+- .charinfo
+    - Switch format as used by games
+### My Nintendo Mii Studio/Browser
+- .mnms, .studio, .localstorage
+    - The format stored in localstorage in the Mii Studio website
+### Other
+These formats are decodable and encodeable but not recommended as a file extension for use, as other formats are precisely equivalent and these specific names are either non specific, rarely used, or outdated.
+- .ver3
+- .mii, .mae, .miigx
+- .ufsd, .sampledb
+---
+- UFSD, MII, MIIGX, MAE, are unofficial names from the community.
+- MNMS and NCD/NSD are unofficial names sourced from [HEYimHeroic](https://github.com/HEYimHeroic)'s [Mii Data Files Repository](https://github.com/HEYimHeroic/MiiDataFiles), as well as documenting CFCD/FFCD, NFSD/NFCD, being highly likely official names but not used in any official capacity at this time.
+- CFED/FFED, TL/TL_ALT/TLE/TOMODACHILIFE, MT/MTE/MIITOMO, STUDIO/LOCALSTORAGE, are unofficial names presented by library authors due to no other official name being recognized but distinction being necessary.
+
+## Other Useful Tools to Use with MiiJS
+Each of these is personally used and vetted by at least one of the library authors.
+- Our own [WiimoteBridge](https://github.com/Stewared/WiimoteBridge) is a tool we've been developing designed to make connecting a Wiimote to your device for purposes such as transferring Miis on and off of your Wii much easier.
+- [WDML Mii Transfer](https://sourceforge.net/projects/wdml/) is a tool for Windows devices to transfer Miis on and off the Wiimote
+- [Tagmo](https://play.google.com/store/apps/details?id=com.hiddenramblings.tagmo.eightbit) for Android is good for transferring the file on and off of your Amiibo. There are iPhone equivalents, but none we feel comfortable recommending at this time due to predatory subscription or microtransaction models.
+- [Nintendo's Mii Studio](https://accounts.nintendo.com/mii_studio) is the only official online Mii Maker and is accessible to anyone with a Nintendo Account. (Must already be logged into [Nintendo's online portal](https://accounts.nintendo.com/) to access the Mii Studio link)
+- [HEYimHeroic](https://github.com/HEYimHeroic)'s [Mii Studio Mii Loader](https://github.com/HEYimHeroic/MiiStudioMiiLoader) browser extension lets you import and export Miis from Mii Studio easily.
+
+## Credits
+- [HEYimHeroic](https://github.com/HEYimHeroic)'s various work and documentation across many years and articles were and continue to be an invaluable resource to MiiJS' development.
+- [Arian K.](https://github.com/ariankordi)'s [JS Fiddle](https://jsfiddle.net/u/arian_/fiddles/)s was an immense help for finding obscure processes and his [FFL.js](https://github.com/ariankordi/FFL.js/) is what makes rendering possible
+
+## Disclaimer
+Miis, DS, Wii, 3DS, Wii U, Amiibo, Tomodachi Life, Miitomo, Switch, Switch 2, My Nintendo, Mii Studio, and anything else similar is owned fully by Nintendo of which this library and its authors do not represent.
+MiiJS is not designed in any way to replace or make Miis on their original hardware obsolete. MiiJS is designed exclusively to enhance Miis and the enjoyment and usability of Miis. No copyrighted material is made available through MiiJS, and if at any point copyrighted material is unintentionally made available, please be sure to contact the authors to have it removed immediately.

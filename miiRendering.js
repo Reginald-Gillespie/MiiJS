@@ -8,6 +8,31 @@ import { MiiFormats } from './formats.js';
 
 import { isNode } from './platform.js';
 
+let pngWriterPromise;
+async function encodePngImage(width, height, bgraPixels) {
+    if (!pngWriterPromise) {
+        pngWriterPromise = import('pngjs');
+    }
+    const pngjs = await pngWriterPromise;
+    const PNG = pngjs?.PNG ?? pngjs?.default?.PNG ?? pngjs?.default;
+    if (!PNG) {
+        throw new Error("pngjs PNG encoder unavailable");
+    }
+
+    const rgba = Buffer.alloc(bgraPixels.length);
+    for (let i = 0; i < bgraPixels.length; i += 4) {
+        // WebGPU readback is BGRA; PNG writer expects RGBA.
+        rgba[i] = bgraPixels[i + 2];
+        rgba[i + 1] = bgraPixels[i + 1];
+        rgba[i + 2] = bgraPixels[i];
+        rgba[i + 3] = bgraPixels[i + 3];
+    }
+
+    const png = new PNG({ width, height });
+    png.data = rgba;
+    return PNG.sync.write(png);
+}
+
 //All of this is for FFL
 import { addSkeletonScalingExtensions } from 'ffl.js/helpers/SkeletonScalingExtensions.js';
 import { detectModelDesc } from 'ffl.js/helpers/ModelScaleDesc.js';
@@ -432,8 +457,13 @@ async function renderRequestToImage(renderer, ffl, request, opts = {}) {
         renderer.render(scene, camera);
 
         const pixels = await renderer.readRenderTargetPixelsAsync(rt, 0, 0, SIZE, SIZE);
-
-        return encodeBmpImage(SIZE, SIZE, pixels);
+        try {
+            return await encodePngImage(SIZE, SIZE, pixels);
+        }
+        catch {
+            // Fallback keeps rendering functional if PNG encoder fails unexpectedly.
+            return encodeBmpImage(SIZE, SIZE, pixels);
+        }
     }
     finally {
         charModel && charModel.dispose();

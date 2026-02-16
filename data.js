@@ -366,7 +366,12 @@ export const lookupTables={
             [0,1,2,3],
             [4,5,6,7]
         ]
-    }
+    },
+    "glassesTypes":[
+        0,8,3,
+        4,1,7,
+        14,13,11
+    ]
 };
 export const childGenTables={
     "hairStyleGroupMappings": [

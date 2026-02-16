@@ -1,6 +1,7 @@
-import { backTables } from "./data.js";
+import { backTables, lookupTables } from "./data.js";
 import { decryptMii, encryptMii, miiCrcCalc } from "./miiCrypto.js";
 import { extractMiiFromAmiibo } from "./amiiboHandler.js";
+import lodash from "lodash";
 
 function binaryToHex(binaryString) {
     const decimal = BigInt('0b' + binaryString);
@@ -147,6 +148,7 @@ function forwardPort(data, from, to = "SWITCH") {
     }
 
     if (to === "SWITCH" || from === "3DS") {
+        data.glasses.type=lookupTables.glassesTypes[data.glasses.type];
         if (!data.beard.color) data.beard.color = 8;
         if (!data.eyebrows.color) data.eyebrows.color = 8;
         if (!data.hair.color) data.hair.color = 8;
@@ -1281,7 +1283,7 @@ let commonStructs = {
             {
                 name: "originalDevice",
                 len: 3,
-                min: 4,
+                min: 1,
                 max: 4//1 = Wii. 2 = DS. 3 = 3DS. 4 = Wii U/Switch( 2)
             },
             {
@@ -2218,9 +2220,9 @@ const formats = {
     [MiiFormats.FFCD]: commonStructs[MiiFormats.FFCD],
     [MiiFormats.FFSD]: commonStructs[MiiFormats.FFSD],
     [MiiFormats.FFED]: commonStructs[MiiFormats.FFED],
-    [MiiFormats.CFCD]: commonStructs[MiiFormats.FFCD],
-    [MiiFormats.CFSD]: commonStructs[MiiFormats.FFSD],
-    [MiiFormats.CFED]: commonStructs[MiiFormats.FFED],
+    [MiiFormats.CFCD]: lodash.cloneDeep(commonStructs[MiiFormats.FFCD]),
+    [MiiFormats.CFSD]: lodash.cloneDeep(commonStructs[MiiFormats.FFSD]),
+    [MiiFormats.CFED]: lodash.cloneDeep(commonStructs[MiiFormats.FFED]),
 
     //Miitomo
     [MiiFormats.MT]: {

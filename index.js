@@ -16,9 +16,9 @@ import isValidPath from "is-valid-path";
 import {fs} from "./platform.js";
 
 const { renderMii } = miiRendering;
-const { encodeMii, decodeMii } = miiProcess;
+const { encodeMii, decodeMii, detectMiiFormat } = miiProcess;
 const { mappings, MiiFormats, ConsoleFormats } = miiFormats;
-const { makeQR } = qrTools;
+const { makeQR, scanQR } = qrTools;
 const { insertMiiIntoAmiibo } = amiiboHandler;
 const { makeInstructions, getAs, setAs } = miiInstructions;//getAs comes from here because miiInstructions needs to use it so much, and setAs is there to be near its brother in arms
 
@@ -134,6 +134,23 @@ class Mii {
                 input=await input.buffer();
             }
         }
+
+        // Accept QR images even when uploaded files have no extension (e.g. multer temp files).
+        // We detect by magic bytes/content and scan the QR before decodeMii().
+        try{
+            const formats = detectMiiFormat(input);
+            if (formats.includes("png") || formats.includes("jpg")) {
+                const scanned = await scanQR(input);
+                if (!scanned) {
+                    throw new Error("Detected a PNG/JPG, but couldn't decode the QR code!");
+                }
+                input = scanned;
+            }
+        }
+        catch(e){
+            // If format probing fails, let decodeMii handle and produce the canonical error.
+        }
+
         const mii = await decodeMii(input,debug);
         return new Mii(mii);
     }

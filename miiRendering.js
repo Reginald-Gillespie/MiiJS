@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 let THREE;
 import { GLTFLoader, SkeletonUtils } from 'three/examples/jsm/Addons.js';
+import {backTables} from './data.js';
 const BGRA8Unorm = 'bgra8unorm';
 
 import * as processMii from './miiProcess.js';
@@ -488,6 +489,10 @@ async function renderForNode(data, opts = {}) {
     }
     else if (data?.meta?.type?.toLowerCase() === "foreign") {
         pantsColor = 1;
+    }
+
+    if (data?.glasses) {
+        data.glasses.type = backTables.switch.glassesTypes[data.glasses?.type];
     }
 
     // Add size default here so it’s available to renderRequestToImage

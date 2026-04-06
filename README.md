@@ -3,6 +3,8 @@ MiiJS is a comprehensive JavaScript library for reading, writing, converting, an
 Supports Wii, DS, 3DS, Wii U, Switch, Switch 2, Amiibo, Tomodachi Life, Miitomo, QR Codes, Studio Codes, Special Miis, and virtually every known Mii format.
 Build once, work with Miis from any console.
 
+Powers [https://infinimii.com/](InfiniMii), a website that lets you do everything MiiJS does from a GUI.
+
 *Rendering powered by [FFL.js](https://github.com/ariankordi/FFL.js/)*
 ## Installation
 MiiJS works in both browser and Node.js, and in both ESM and CJS.

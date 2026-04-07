@@ -46,6 +46,8 @@ async function getWebGPU() {
     return webgpuPromise;
 }
 
+// Imported from: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/helpers/HeadlessWebGPU.js
+
 /**
  * Adds WebGPU related extensions to the global scope
  * if using Node.js. It defines navigator, as well as
@@ -173,6 +175,7 @@ function encodeBmpImage(width, height, bgraPixels) {
     bytes.set(bgraPixels, pixelOffset);
     return bytes;
 }
+
 import { prepareBodyForCharModel, attachHeadToBody, disposeModel, adjustCameraForBodyHead, getFaceCamera, getWholeBodyCamera } from 'ffl.js/helpers/BodyUtilities.js';
 import { FFL, CharModel, pantsColors, FFLExpression } from 'ffl.js';
 import FFLShaderNodeMaterial from 'ffl.js/materials/FFLShaderNodeMaterial.js';
@@ -181,6 +184,8 @@ import imported from 'ffl.js/examples/ffl-emscripten-single-file.cjs';
 let ModuleFFL;
 if (isNode) ModuleFFL = imported?.ModuleFFL ?? imported?.default ?? imported;
 else ModuleFFL = globalThis.ModuleFFL;
+
+// Some body model functions are from: https://github.com/ariankordi/my-jsfiddles/blob/main/threejs-mii-accurate-body-scaling/script.js
 
 async function loadGLTFFromFS(path) {
     if (!fs.existsSync(path)) return null;
@@ -375,6 +380,7 @@ function levelFaceCameraToObject(camera, object3D, distMultiplier = 1.15) {
 }
 
 async function renderRequestToImage(renderer, ffl, request, opts = {}) {
+    // Based on: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/examples/nodejs-icon-body-webgpu.js#L168
     const scene = new THREE.Scene();
     let charModel = null;
     let body = null;

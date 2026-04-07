@@ -226,8 +226,8 @@ function backPort(data, to, from = "SWITCH") {
 
 /**
 * SwitchSDK -> NSDB?
-* AMii -> Rumored pre existing translation/canonical layer between all formats?
-* MiiNG -> Rumored PNG with Mii data embedded, should look into.
+* AMii -> Translation/canonical layer between all formats by HEYimHeroic?
+* MiiNG -> PNG with Mii data embedded by HEYimHeroic, should look into.
 */
 
 /** Enum of Mii Formats - see comments on individual items for a description of the format. */
@@ -1993,6 +1993,7 @@ commonStructs[MiiFormats.FFSD] = {
     postProcess: processors.cffcdPostProcess
 };
 commonStructs[MiiFormats.TLC] = [
+    // Adapted from the Kaitai Struct by Arian Kordi: https://github.com/ariankordi/nwf-mii-cemu-toy/blob/ffl-renderer-proto-integrate/assets/kaitai-structs/tomodachi_life_qr_code.ksy
     {
         name: "firstName",
         len: 256,
@@ -2230,7 +2231,8 @@ const formats = {
         translation: '3ds',
         struct: [//Highly experimental, I do not have access to Miitomo so this is exclusively derived from an online resource and is entirely untested.
             ...commonStructs[MiiFormats.FFCD].struct,
-            //Adapted from Arian Kordi's https://jsfiddle.net/arian_/jwfac390/2/
+
+            // Adapted from the struct by Arian Kordi: https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/miitomo-mii-data-decoder/script.js#L3-L39
             {
                 name: "mtSig",
                 len: 32,

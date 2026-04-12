@@ -137,7 +137,7 @@ function forwardPort(data, from, to = "SWITCH") {
         throw new Error(`${to} is not a valid type, expected one of ${Object.keys(ConsoleFormats).join(", ")}.`);
     }
 
-    if (from === "WII" || to === "3DS") {
+    if (from === "WII" || from === "DS" || to === "3DS") {
         const feature = backTables["3ds"].features[data.face.feature];
         if (typeof feature === 'string') {
             data.face.makeup = feature;
@@ -176,7 +176,7 @@ function forwardPort(data, from, to = "SWITCH") {
 function backPort(data, to, from = "SWITCH") {
     from = from.toUpperCase().replaceAll(" ","");
     to = to.toUpperCase().replaceAll(" ", "");
-    if(from==="WII") return data;
+    if(from==="WII" || from === "DS") return data;
     if (!getKeyByValue(ConsoleFormats,from)) {
         throw new Error(`${from} is not a valid type, expected one of ${Object.keys(ConsoleFormats).join(", ")}.`);
     }
@@ -195,7 +195,7 @@ function backPort(data, to, from = "SWITCH") {
         data.beard.color = backTables.switch.hairsColors[data.beard.color];
     }
 
-    if (from === "3DS" || to === "WII") {
+    if (from === "3DS" || to === "WII" || to === "DS") {
         if (data.mouth.color > 2) data.mouth.color = 0;
         if (data.beard.type > 3) data.beard.type = 3;
         if (data.beard.mustache.type === 4) {
@@ -226,8 +226,8 @@ function backPort(data, to, from = "SWITCH") {
 
 /**
 * SwitchSDK -> NSDB?
-* AMii -> Translation/canonical layer between all formats by HEYimHeroic?
-* MiiNG -> PNG with Mii data embedded by HEYimHeroic, should look into.
+* AMii -> Rumored pre existing translation/canonical layer between all formats?
+* MiiNG -> Rumored PNG with Mii data embedded, should look into.
 */
 
 /** Enum of Mii Formats - see comments on individual items for a description of the format. */
@@ -1993,7 +1993,6 @@ commonStructs[MiiFormats.FFSD] = {
     postProcess: processors.cffcdPostProcess
 };
 commonStructs[MiiFormats.TLC] = [
-    // Adapted from the Kaitai Struct by Arian Kordi: https://github.com/ariankordi/nwf-mii-cemu-toy/blob/ffl-renderer-proto-integrate/assets/kaitai-structs/tomodachi_life_qr_code.ksy
     {
         name: "firstName",
         len: 256,
@@ -2231,8 +2230,7 @@ const formats = {
         translation: '3ds',
         struct: [//Highly experimental, I do not have access to Miitomo so this is exclusively derived from an online resource and is entirely untested.
             ...commonStructs[MiiFormats.FFCD].struct,
-
-            // Adapted from the struct by Arian Kordi: https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/miitomo-mii-data-decoder/script.js#L3-L39
+            //Adapted from Arian Kordi's https://jsfiddle.net/arian_/jwfac390/2/
             {
                 name: "mtSig",
                 len: 32,

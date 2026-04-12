@@ -1,13 +1,23 @@
 import {childGenTables,backTables} from "./data.js";
 import {decodeMii} from "./miiProcess.js";
 
+function getParentPermission(parent, permission) {
+    return parent?.perms?.[permission] ?? true;
+}
+
 async function makeMiiChild(parentA, parentB, options) {
     let parent0,parent1;
     if(parentA.fields){
         parent0=await parentA.toJSON();
     }
+    else{
+        parent0=parentA;
+    }
     if(parentB.fields){
         parent1=await parentB.toJSON();
+    }
+    else{
+        parent1=parentB;
     }
     parent0=await decodeMii(parent0);
     parent1=await decodeMii(parent1);
@@ -34,8 +44,9 @@ async function makeMiiChild(parentA, parentB, options) {
 
     //These aren't technically TL sourced but I think this is more fun/functional and doesn't change output really
     child.meta.type=(parent0.meta?.type==="Special"||parent1.meta?.type==="Special")?"Special":"Default";
-    child.perms.sharing=parent0.perms?.sharing&&parent1.perms?.sharing;
-    child.perms.copying=parent0.perms?.copying&&parent1.perms?.copying;
+    if(!child.perms) child.perms={};
+    child.perms.sharing=getParentPermission(parent0,"sharing")&&getParentPermission(parent1,"sharing");
+    child.perms.copying=getParentPermission(parent0,"copying")&&getParentPermission(parent1,"copying");
 
     //For parity with the original, though I wouldn't be averse to making an options toggle to let these generate anyway.
     child.face.makeup=0;

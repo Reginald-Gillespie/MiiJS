@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 let THREE;
 import { GLTFLoader, SkeletonUtils } from 'three/examples/jsm/Addons.js';
-import {backTables} from './data.js';
 const BGRA8Unorm = 'bgra8unorm';
 
 import * as processMii from './miiProcess.js';
 import { MiiFormats } from './formats.js';
+import {backTables} from "./data.js";
 
 import { isNode } from './platform.js';
 
@@ -34,6 +34,24 @@ async function encodePngImage(width, height, bgraPixels) {
     return PNG.sync.write(png);
 }
 
+function normalizeDecodedMiiForRender(data) {
+    const normalized = structuredClone(processMii.decodeMii(data));
+
+    // FFL's local render path expects legacy 3DS glasses indices for 3DS-origin
+    // Miis, even though the app stores them forward-ported in canonical form.
+    if (
+        normalized?.meta?.originalDevice === 3 &&
+        Number.isInteger(normalized?.glasses?.type)
+    ) {
+        const renderType = backTables.switch.glassesTypes[normalized.glasses.type];
+        if (Number.isInteger(renderType)) {
+            normalized.glasses.type = renderType;
+        }
+    }
+
+    return normalized;
+}
+
 //All of this is for FFL
 import { addSkeletonScalingExtensions } from 'ffl.js/helpers/SkeletonScalingExtensions.js';
 import { detectModelDesc } from 'ffl.js/helpers/ModelScaleDesc.js';
@@ -45,8 +63,6 @@ async function getWebGPU() {
     }
     return webgpuPromise;
 }
-
-// Imported from: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/helpers/HeadlessWebGPU.js
 
 /**
  * Adds WebGPU related extensions to the global scope
@@ -175,7 +191,6 @@ function encodeBmpImage(width, height, bgraPixels) {
     bytes.set(bgraPixels, pixelOffset);
     return bytes;
 }
-
 import { prepareBodyForCharModel, attachHeadToBody, disposeModel, adjustCameraForBodyHead, getFaceCamera, getWholeBodyCamera } from 'ffl.js/helpers/BodyUtilities.js';
 import { FFL, CharModel, pantsColors, FFLExpression } from 'ffl.js';
 import FFLShaderNodeMaterial from 'ffl.js/materials/FFLShaderNodeMaterial.js';
@@ -184,8 +199,6 @@ import imported from 'ffl.js/examples/ffl-emscripten-single-file.cjs';
 let ModuleFFL;
 if (isNode) ModuleFFL = imported?.ModuleFFL ?? imported?.default ?? imported;
 else ModuleFFL = globalThis.ModuleFFL;
-
-// Some body model functions are from: https://github.com/ariankordi/my-jsfiddles/blob/main/threejs-mii-accurate-body-scaling/script.js
 
 async function loadGLTFFromFS(path) {
     if (!fs.existsSync(path)) return null;
@@ -380,7 +393,6 @@ function levelFaceCameraToObject(camera, object3D, distMultiplier = 1.15) {
 }
 
 async function renderRequestToImage(renderer, ffl, request, opts = {}) {
-    // Based on: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/examples/nodejs-icon-body-webgpu.js#L168
     const scene = new THREE.Scene();
     let charModel = null;
     let body = null;
@@ -484,7 +496,7 @@ async function renderRequestToImage(renderer, ffl, request, opts = {}) {
 async function renderForNode(data, opts = {}) {
     await isInitialised;
     //We need some info from the buffer, and we also need to make sure it's in MNMS
-    data = processMii.decodeMii(data);
+    data = normalizeDecodedMiiForRender(data);
 
     var pantsColor = 0;
     if (data?.meta?.type?.toLowerCase() === "special") {
@@ -495,10 +507,6 @@ async function renderForNode(data, opts = {}) {
     }
     else if (data?.meta?.type?.toLowerCase() === "foreign") {
         pantsColor = 1;
-    }
-
-    if (data?.glasses) {
-        data.glasses.type = backTables.switch.glassesTypes[data.glasses?.type];
     }
 
     // Add size default here so it’s available to renderRequestToImage
@@ -575,9 +583,9 @@ async function renderForNode(data, opts = {}) {
 }
 
 async function renderForBrowser(data, opts = {}) {
-    await isInitialised; // you currently don't await this in browser
+    await isInitialised;
 
-    data = processMii.decodeMii(data);
+    data = normalizeDecodedMiiForRender(data);
 
     var pantsColor = 0;
     if (data?.meta?.type?.toLowerCase() === "special") {

@@ -219,7 +219,6 @@ const buildOptions = {
     minify: !isServe,
     define: {
         'process.versions': 'undefined',
-        '__MIIJS_BUNDLE_URL__': 'import.meta.url',
     },
     plugins: [nodeShimPlugin],
     loader: {
@@ -246,9 +245,6 @@ const nodeCjsBuildOptions = {
   target: ["node20"],
   sourcemap: true,
   minify: !isServe,
-  define: {
-    '__MIIJS_BUNDLE_URL__': '""'
-  },
   external:["canvas","jsdom","webgpu"],
   footer: {
     js: "if (module.exports && module.exports.default) { module.exports = module.exports.default; module.exports.default = module.exports; }"

@@ -4,8 +4,9 @@ import { lookupTables } from "./data.js";
 
 const ignoredInstructionDefaults = ["gender"];//Always return these in the instructions even when they're default
 
-const gridColumn = type => (type === "SWITCH" ? [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4] : [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]);
-const gridRow = type => type === "SWITCH" ? ['first', 'first', 'first', 'first', 'second', 'second', 'second', 'second', 'third', 'third', 'third', 'third'] : ['first', 'first', 'first', 'second', 'second', 'second', 'third', 'third', 'third', 'fourth', 'fourth', 'fourth'];
+const gridColumn = type => (type.startsWith("SWITCH") ? [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3] : [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]);
+const gridRow = type => type.startsWith("SWITCH") ? [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2] : [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3];
+const defaultRowNames = ["first", "second", "third", "fourth"];
 
 function getLoc(table, val) {
     for (let y = 0; y < table.length; y++) {
@@ -16,6 +17,10 @@ function getLoc(table, val) {
         }
     }
     return [-1, -1];
+}
+function getFlatGridLoc(table, val, grid = lookupTables.instrGrids.threeBy) {
+    const index = table.indexOf(val);
+    return index === -1 ? [-1, -1] : getLoc(grid, index);
 }
 function getNestedValue(obj, path) {
     try {
@@ -83,25 +88,14 @@ function getDefaultFor(key, currentVal) {
 
 // Helper function to format grid position strings from array
 const formatGridPos = (arr) => {
+    if (!Array.isArray(arr) || arr.some(value => !Number.isFinite(Number(value)) || Number(value) < 0)) {
+        return "closest available option";
+    }
+
     if (arr.length === 3 && arr[0] !== undefined) {
         // [page, x, y]
         return `on page ${arr[0] + 1}, ${arr[1] + 1} from the left, ${arr[2] + 1} from the top`;
     } else if (arr.length === 2) {
-        // Could be [x, row] or [x, y]
-        // For face colors with row encoding: 0=first, 1=second, 2=bottom etc
-        // For WIIU: 0=top, 1=middle, 2=bottom
-        if (arr[1] === 0 || arr[1] === 1 || arr[1] === 2) {
-            // Check if this is a row-based layout (face.color, face.type, etc)
-            // If second value is 0 or 1, could be row indicator
-            // We need context, but for now assume [x, y] unless value suggests row
-            const rowNames = ["first", "second", "top", "middle", "bottom"];
-            if (arr[1] < rowNames.length && (arr[0] < 10)) { // heuristic: if x is small, might be row
-                return arr[1] === 0
-                    ? `${arr[0] + 1} from the left`
-                    : `${arr[0] + 1} from the left, on the ${rowNames[arr[1]]} row`;
-            }
-        }
-        // Default [x, y] interpretation
         return `${arr[0] + 1} from the left, ${arr[1] + 1} from the top`;
     } else if (arr.length === 1) {
         // [y] or [x]
@@ -118,17 +112,23 @@ const formatColorPos = (arr) => {
 };
 
 // Special formatter for face.color and similar that use row encoding
-const formatRowPos = (arr) => {
+const formatRowPos = (arr, rowNames = defaultRowNames) => {
+    if (!Array.isArray(arr) || arr.some(value => typeof value !== "string" && (!Number.isFinite(Number(value)) || Number(value) < 0))) {
+        return "closest available option";
+    }
+
     if (arr.length === 2) {
-        const rowNames = ["first", "second", "top", "middle", "bottom"];
-        if (arr[1] === 0) {
-            return `${arr[0] + 1} from the left`;
-        } else {
-            return `${arr[0] + 1} from the left, on the ${rowNames[arr[1]]} row`;
-        }
+        const rowName = typeof arr[1] === "string" ? arr[1] : rowNames[arr[1]];
+        if (!rowName) return formatGridPos(arr);
+
+        return rowName === "first" || rowName === "top"
+            ? `${arr[0] + 1} from the left`
+            : `${arr[0] + 1} from the left, on the ${rowName} row`;
     }
     return formatGridPos(arr);
 };
+
+const faceColorRowNames = type => type === ConsoleFormats.WIIU ? ["top", "middle", "bottom"] : ["first", "second"];
 
 // Helper function to reverse getLoc - finds the index that produces the given [x, y] coordinates
 function reverseGetLoc(grid, x, y) {
@@ -161,7 +161,7 @@ function getAs(mii, type, field) {
             switch (type) {
                 case ConsoleFormats.WII:
                     return mii.face.color > 2
-                        ? [mii.face.color - 2, 1] // [x, row] where row: 0=first, 1=second
+                        ? [mii.face.color - 3, 1] // [x, row] where row: 0=first, 1=second
                         : [mii.face.color, 0];
                 case ConsoleFormats.DS:
                 case ConsoleFormats["3DS"]:
@@ -175,7 +175,7 @@ function getAs(mii, type, field) {
                 case ConsoleFormats.SWITCH2:
                     var fc = lookupTables.switch.faceColors[mii.face.color];
                     return fc > 4
-                        ? [fc - 4, 1] // [x, row]
+                        ? [fc - 5, 1] // [x, row]
                         : [fc, 0];
             }
         case "face.type":
@@ -268,10 +268,7 @@ function getAs(mii, type, field) {
             switch (type) {
                 case ConsoleFormats.DS:
                 case ConsoleFormats.WII:
-                    return [
-                        getLoc(lookupTables.pages.noses[0], mii.nose.type)[0],
-                        getLoc(lookupTables.pages.noses[0], mii.nose.type)[1]
-                    ]; // [x, y]
+                    return getFlatGridLoc(lookupTables.pages.noses[0], mii.nose.type); // [x, y]
                 case ConsoleFormats["3DS"]:
                 case ConsoleFormats.WIIU:
                     var page = getLoc(lookupTables.pages.noses, mii.nose.type);
@@ -354,7 +351,7 @@ function setAs(mii, type, field, value) {
             switch (type) {
                 case ConsoleFormats.WII:
                     // value = [x, row] where row: 0=first, 1=second
-                    mii.face.color = value[1] === 1 ? value[0] + 2 : value[0];
+                    mii.face.color = value[1] === 1 ? value[0] + 3 : value[0];
                     break;
                 case ConsoleFormats.DS:
                 case ConsoleFormats["3DS"]:
@@ -369,7 +366,7 @@ function setAs(mii, type, field, value) {
                 case ConsoleFormats.SWITCH:
                 case ConsoleFormats.SWITCH2:
                     // value = [x, row]
-                    var fc = value[1] === 1 ? value[0] + 4 : value[0];
+                    var fc = value[1] === 1 ? value[0] + 5 : value[0];
                     // Reverse lookup in switch.faceColors
                     mii.face.color = lookupTables.switch.faceColors.indexOf(fc);
                     break;
@@ -486,7 +483,8 @@ function setAs(mii, type, field, value) {
                 case ConsoleFormats.DS:
                 case ConsoleFormats.WII:
                     // value = [x, y]
-                    mii.nose.type = reverseGetLoc(lookupTables.pages.noses[0], value[0], value[1]);
+                    var gridIndex = reverseGetLoc(lookupTables.instrGrids.threeBy, value[0], value[1]);
+                    mii.nose.type = gridIndex === null ? null : lookupTables.pages.noses[0][gridIndex];
                     break;
                 case ConsoleFormats["3DS"]:
                 case ConsoleFormats.WIIU:
@@ -595,7 +593,7 @@ function buildInstructions(mii, type) {
             "weight": `Set the weight to ${Math.round((mii.general.weight / 127) * 100)}%.`
         },
         "face": {
-            "color": `Set the face/skin color to the one ${formatRowPos(getAs(mii, type, "face.color"))}.`,
+            "color": `Set the face/skin color to the one ${formatRowPos(getAs(mii, type, "face.color"), faceColorRowNames(type))}.`,
             "type": `Set the face type to the one ${formatRowPos(getAs(mii, type, "face.type"))}.`,
             "makeup": `Set the makeup to the one ${formatRowPos(getAs(mii, type, "face.makeup"))}.`,
             "feature": `Set the facial features/wrinkles to the one ${formatRowPos(getAs(mii, type, "face.feature"))}.`

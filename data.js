@@ -28,14 +28,14 @@ export const backTables={
     },
     "switch":{
         "glassesTypes":[
-            0,4,4,2,2,
-            3,3,5,1,2,
+            0,4,4,2,3,
+            5,3,5,1,2,
             6,8,6,7,6,
             6,8,6,7,6
         ],
         "faceColors":[0,1,2,3,4,5,3,2,4,5],
-
-        // Tables originally from MiiPort: https://github.com/Genwald/MiiPort/blob/4ee38bbb8aa68a2365e9c48d59d7709f760f9b5d/include/convert_mii.h#L18-L28
+    
+        //Credit for these color tables goes to Arian Kordi https://jsfiddle.net/arian_/n8fesLdj/3/
         "glassesColors":[
             0, 1, 1, 1, 5, 1, 1, 4, 0, 5, 
             1, 1, 3, 5, 1, 2, 3, 4, 5, 4, 
@@ -252,8 +252,8 @@ export const lookupTables={
             [
                 7,9,2,
                 11,3,4,
-                15,11,20,
-                18,14,12
+                15,17,20,
+                19,14,12
             ],
             [
                 27,30,24,
@@ -326,7 +326,7 @@ export const lookupTables={
             [23,1,18,21,22,5],
             [0,8,10,16,6,13],
             [7,9,2,11,3,4],
-            [15,11,20,18,14,12],
+            [15,17,20,19,14,12],
             [27,30,24,25,29,28],
             [26,35,31,34,33,32]
         ],
@@ -369,7 +369,7 @@ export const lookupTables={
     },
     "glassesTypes":[
         0,8,3,
-        4,1,7,
+        4,1,5,
         14,13,11
     ]
 };

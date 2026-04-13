@@ -1,8 +1,16 @@
 import { AES_CCM } from "./asmCrypto.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "./platform.js";
 
-const aes_key = new Uint8Array([0x59, 0xFC, 0x81, 0x7E, 0x64, 0x46, 0xEA, 0x61, 0x90, 0x34, 0x7B, 0x20, 0xE9, 0xBD, 0xCE, 0x52]);
+/** AES-128-CCM key used for encrypting/decrypting Mii QR code data. */
+const AES_CCM_KEY = new Uint8Array([0x59, 0xFC, 0x81, 0x7E, 0x64, 0x46, 0xEA, 0x61, 0x90, 0x34, 0x7B, 0x20, 0xE9, 0xBD, 0xCE, 0x52]);
+
+/**
+ * Key used for Miitomo/Tomodachi Life QR code encryption.
+ * From Arian Kordi: https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L30
+ */
 const AES_CTR_KEY = new Uint8Array([0x30, 0x81, 0x9F, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01]);
+
+// Below two functions are from: https://github.com/kazuki-4ys/kazuki-4ys.github.io/blob/148dc339974f8b7515bfdc1395ec1fc9becb68ab/web_apps/MiiInfoEditorCTR/encode.js#L20-L44
 
 const WRAPPED_MII_DATA_LENGTH = 112;
 const VER3_STORE_DATA_LENGTH = 96;
@@ -43,6 +51,7 @@ function crc16(data, current = 0x0000) {
     return crc & 0xFFFF;
 }
 
+// https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L169-L207
 const crc32CksumTable = new Uint32Array(256);
 function generateCrc32Table(table, poly = 0x04C11DB7) {
     for (let i = 0; i < 256; i++) {
@@ -64,6 +73,7 @@ function crc32(input, table = crc32CksumTable) {
     return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
+// https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L530-L559
 function encryptAesCtr(dataU8) {
   const iv = randomBytes(AES_IV_LENGTH); // Buffer
   const cipher = createCipheriv("aes-128-ctr", Buffer.from(AES_CTR_KEY), iv);
@@ -77,10 +87,12 @@ function decryptAesCtr(encryptedU8, ivU8) {
   return new Uint8Array(decrypted);
 }
 
+// https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L51-L75
 function decryptAesCcm(encryptedData) {
+  // Source: https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L321
   const nonce = Uint8Cat(encryptedData.subarray(0, WRAPPED_ID_LENGTH), new Uint8Array(4));
   const ciphertext = encryptedData.subarray(WRAPPED_ID_LENGTH, encryptedData.length);
-  const plaintext = AES_CCM.decrypt(ciphertext, aes_key, nonce, undefined, 16);
+  const plaintext = AES_CCM.decrypt(ciphertext, AES_CCM_KEY, nonce, undefined, 16);
   const result = Uint8Cat(
     plaintext.subarray(0, WRAPPED_NONCE_LENGTH),
     encryptedData.subarray(0, WRAPPED_ID_LENGTH),
@@ -90,13 +102,14 @@ function decryptAesCcm(encryptedData) {
 }
 
 function encryptAesCcm(storeData) {
+  // Source: https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L396
   const idEndOffset = WRAPPED_ID_OFFSET + WRAPPED_ID_LENGTH;
   const wrappedID = storeData.subarray(WRAPPED_ID_OFFSET, idEndOffset);
   const content = new Uint8Array(VER3_STORE_DATA_LENGTH);
   content.set(storeData.subarray(0, WRAPPED_ID_OFFSET));
   content.set(storeData.subarray(idEndOffset), WRAPPED_ID_OFFSET);
   const nonce = Uint8Cat(wrappedID, new Uint8Array(4));
-  const ciphertext = AES_CCM.encrypt(content, aes_key, nonce, undefined, 16);
+  const ciphertext = AES_CCM.encrypt(content, AES_CCM_KEY, nonce, undefined, 16);
   const correctEncryptedContentLength = ciphertext.length - WRAPPED_ID_LENGTH - WRAPPED_TAG_LENGTH;
   const encryptedContentCorrected = ciphertext.subarray(0, correctEncryptedContentLength);
   const tag = ciphertext.subarray(ciphertext.length - WRAPPED_TAG_LENGTH);
@@ -108,6 +121,7 @@ function decryptMii(data) {
 
   // Extra data present (Tomodachi Life etc.)
   if (uint8Data.length > WRAPPED_MII_DATA_LENGTH) {
+    // https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L694
     const storeData = decryptAesCcm(uint8Data.subarray(0, WRAPPED_MII_DATA_LENGTH));
     const ivOffset = WRAPPED_MII_DATA_LENGTH + AES_IV_LENGTH;
     const iv = uint8Data.subarray(WRAPPED_MII_DATA_LENGTH, ivOffset);
@@ -144,6 +158,7 @@ function encryptMii(data) {
   const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data);
 
   if (uint8Data.length > VER3_STORE_DATA_LENGTH) {
+    // https://github.com/ariankordi/my-jsfiddles/blob/c833be14f1674240e310453cdfa3db5ede53e059/mii-tomo-dachi-topia-qr-tool/script.js#L628
     const storeData = uint8Data.subarray(0, VER3_STORE_DATA_LENGTH);
     const extraData = uint8Data.subarray(VER3_STORE_DATA_LENGTH);
 

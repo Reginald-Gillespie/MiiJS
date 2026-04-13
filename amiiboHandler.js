@@ -1,4 +1,5 @@
 // Takes Amiibo dumps that are either 532 bytes or 540 bytes, and manipulates a 96 byte FFSD Mii in/out of the dump from offset 0x4C.
+// Ported from https://github.com/socram8888/amiitool
 import { Buffer, createCipheriv, createDecipheriv, createHmac } from "./platform.js";
 import {decodeMii,encodeMii} from "./miiProcess.js";
 import {MiiFormats} from "./formats.js";

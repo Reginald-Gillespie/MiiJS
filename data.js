@@ -34,8 +34,11 @@ export const backTables={
             6,8,6,7,6
         ],
         "faceColors":[0,1,2,3,4,5,3,2,4,5],
-    
-        //Credit for these color tables goes to Arian Kordi https://jsfiddle.net/arian_/n8fesLdj/3/
+
+        // Tables originally from MiiPort:
+        // https://github.com/Genwald/MiiPort/blob/4ee38bbb8aa68a2365e9c48d59d7709f760f9b5d/include/convert_mii.h#L18-L28
+        // Cross-referenced against Arian Kordi's notes:
+        // https://jsfiddle.net/arian_/n8fesLdj/3/
         "glassesColors":[
             0, 1, 1, 1, 5, 1, 1, 4, 0, 5, 
             1, 1, 3, 5, 1, 2, 3, 4, 5, 4, 

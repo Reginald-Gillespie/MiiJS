@@ -3,6 +3,8 @@ MiiJS is a comprehensive JavaScript library for reading, writing, converting, an
 Supports Wii, DS, 3DS, Wii U, Switch, Switch 2, Amiibo, Tomodachi Life, Miitomo, QR Codes, Studio Codes, Special Miis, and virtually every known Mii format.
 Build once, work with Miis from any console.
 
+Powers [https://infinimii.com/](InfiniMii), a website that lets you do everything MiiJS does from a GUI.
+
 *Rendering powered by [FFL.js](https://github.com/ariankordi/FFL.js/)*
 ## Installation
 MiiJS works in both browser and Node.js, and in both ESM and CJS.
@@ -215,7 +217,7 @@ Each of these is personally used and vetted by at least one of the library autho
 
 ## Credits
 - [HEYimHeroic](https://github.com/HEYimHeroic)'s various work and documentation across many years and articles were and continue to be an invaluable resource to MiiJS' development.
-- [Arian K.](https://github.com/ariankordi)'s [JS Fiddle](https://jsfiddle.net/u/arian_/fiddles/)s was an immense help for finding obscure processes and his [FFL.js](https://github.com/ariankordi/FFL.js/) is what makes rendering possible
+- [Arian K.](https://github.com/ariankordi)'s [JSFiddles](https://jsfiddle.net/u/arian_/fiddles/) (+ [repo](https://github.com/ariankordi/my-jsfiddles)) were an immense help for finding obscure processes and his [FFL.js](https://github.com/ariankordi/FFL.js/) is what makes rendering possible
 
 ## Disclaimer
 Miis, DS, Wii, 3DS, Wii U, Amiibo, Tomodachi Life, Miitomo, Switch, Switch 2, My Nintendo, Mii Studio, and anything else similar is owned fully by Nintendo of which this library and its authors do not represent.

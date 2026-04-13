@@ -37,12 +37,9 @@ async function encodePngImage(width, height, bgraPixels) {
 function normalizeDecodedMiiForRender(data) {
     const normalized = structuredClone(processMii.decodeMii(data));
 
-    // FFL's local render path expects legacy 3DS glasses indices for 3DS-origin
-    // Miis, even though the app stores them forward-ported in canonical form.
-    if (
-        normalized?.meta?.originalDevice === 3 &&
-        Number.isInteger(normalized?.glasses?.type)
-    ) {
+    // FFL's current local render path still expects legacy Wii U-era glasses
+    // indices, so backport canonical values before rendering.
+    if (Number.isInteger(normalized?.glasses?.type)) {
         const renderType = backTables.switch.glassesTypes[normalized.glasses.type];
         if (Number.isInteger(renderType)) {
             normalized.glasses.type = renderType;
@@ -63,6 +60,8 @@ async function getWebGPU() {
     }
     return webgpuPromise;
 }
+
+// Imported from: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/helpers/HeadlessWebGPU.js
 
 /**
  * Adds WebGPU related extensions to the global scope
@@ -200,6 +199,7 @@ let ModuleFFL;
 if (isNode) ModuleFFL = imported?.ModuleFFL ?? imported?.default ?? imported;
 else ModuleFFL = globalThis.ModuleFFL;
 
+// Some body model functions are from: https://github.com/ariankordi/my-jsfiddles/blob/main/threejs-mii-accurate-body-scaling/script.js
 async function loadGLTFFromFS(path) {
     if (!fs.existsSync(path)) return null;
     const content = await fs.promises.readFile(path);
@@ -393,6 +393,7 @@ function levelFaceCameraToObject(camera, object3D, distMultiplier = 1.15) {
 }
 
 async function renderRequestToImage(renderer, ffl, request, opts = {}) {
+    // Based on: https://github.com/ariankordi/FFL.js/blob/ae0a482abdbd9f81d4e12b055317c12a8a1783a4/examples/nodejs-icon-body-webgpu.js#L168
     const scene = new THREE.Scene();
     let charModel = null;
     let body = null;

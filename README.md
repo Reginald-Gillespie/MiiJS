@@ -187,8 +187,6 @@ By order of console release. A difference of C vs S dictates not having vs havin
 ### Miitomo (Untested)
 - .mt, .miitomo
     - Miitomo QR Code Mii data after being decrypted
-- .mte
-    - Miitomo QR Code Encrypted data.
 ### Switch/2
 - .nfcd, .nfsd .switchdb
     - Switch NAND format for the Mii Maker applet
@@ -205,7 +203,7 @@ These formats are decodable and encodeable but not recommended as a file extensi
 ---
 - UFSD, MII, MIIGX, MAE, are unofficial names from the community.
 - MNMS and NCD/NSD are unofficial names sourced from [HEYimHeroic](https://github.com/HEYimHeroic)'s [Mii Data Files Repository](https://github.com/HEYimHeroic/MiiDataFiles), as well as documenting CFCD/FFCD, NFSD/NFCD, being highly likely official names but not used in any official capacity at this time.
-- CFED/FFED, TL/TL_ALT/TLE/TOMODACHILIFE, MT/MTE/MIITOMO, STUDIO/LOCALSTORAGE, are unofficial names presented by library authors due to no other official name being recognized but distinction being necessary.
+- CFED/FFED, TL/TL_ALT/TLE/TOMODACHILIFE, MT/MIITOMO, STUDIO/LOCALSTORAGE, are unofficial names presented by library authors due to no other official name being recognized but distinction being necessary.
 
 ## Other Useful Tools to Use with MiiJS
 Each of these is personally used and vetted by at least one of the library authors.

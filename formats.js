@@ -331,10 +331,6 @@ const MiiFormats = /** @type {const} */ ({
     */
     MT: 'mt',
     /**
-    * Miitomo Encrypted
-    */
-    MTE: 'mte',
-    /**
     * Tomodachi Life
     * The first 0x5C Bytes are FFCD, then extra data follows.
     */
@@ -489,6 +485,12 @@ const MiiFormats = /** @type {const} */ ({
         //console.warn('Switch Miis come in multiple formats, please be more specific about which one you need.');
         return 'charinfo';
     },
+
+    /**
+     * Mii Creator Miis
+     * @deprecated This is not an official file type, we are supporting it due to its widespread usage. Please use .CHARINFO instead.
+     */
+    MIIC:'miic'
 });
 
 /** Enum of consoles */
@@ -2225,6 +2227,403 @@ const formats = {
     [MiiFormats.CFSD]: lodash.cloneDeep(commonStructs[MiiFormats.FFSD]),
     [MiiFormats.CFED]: lodash.cloneDeep(commonStructs[MiiFormats.FFED]),
 
+    //Mii Creator
+    [MiiFormats.MIIC]: {
+        len: 0x80,
+        struct: [
+            {
+                name: "miicVersion",
+                len: 8,
+                min: 4,
+                max: 4
+            },
+            {
+                name: "miicOriginPlatform",
+                len: 8,
+                min: 0,
+                max: 6
+            },
+            {
+                name: "miicAuthorId",
+                len: 64,
+                hex: true
+            },
+            {
+                name: "miicCreateId",
+                len: 80,
+                hex: true
+            },
+            {
+                name: "creatorName",
+                text: "le",
+                len: 160
+            },
+            {
+                name: "name",
+                text: "le",
+                len: 160
+            },
+            {
+                name: "beardColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "beardType",
+                len: 8,
+                max: 5
+            },
+            {
+                name: "birthday",
+                len: 8,
+                max: 31
+            },
+            {
+                name: "birthMonth",
+                len: 8,
+                max: 12
+            },
+            {
+                name: "miicBirthYear",
+                len: 16,
+                max: 9999
+            },
+            {
+                name: "weight",
+                len: 8,
+                max: 127
+            },
+            {
+                name: "eyeSquash",
+                len: 8,
+                max: 6
+            },
+            {
+                name: "eyebrowSquash",
+                len: 8,
+                max: 6
+            },
+            {
+                name: "eyebrowColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "eyebrowRotation",
+                len: 8,
+                max: 11
+            },
+            {
+                name: "eyebrowSize",
+                len: 8,
+                max: 8
+            },
+            {
+                name: "eyebrowType",
+                len: 8,
+                max: 23
+            },
+            {
+                name: "eyebrowDistanceApart",
+                len: 8,
+                max: 12
+            },
+            {
+                name: "eyebrowYPosition",
+                len: 8,
+                min: 3,
+                max: 18,
+                decoder: decoders.eyebrowYPositions,
+                encoder: encoders.eyebrowYPositions
+            },
+            {
+                name: "eyeColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "eyeRotation",
+                len: 8,
+                max: 7
+            },
+            {
+                name: "eyeSize",
+                len: 8,
+                max: 7
+            },
+            {
+                name: "eyeType",
+                len: 8,
+                max: 59
+            },
+            {
+                name: "eyeDistanceApart",
+                len: 8,
+                max: 12
+            },
+            {
+                name: "eyeYPosition",
+                len: 8,
+                max: 18
+            },
+            {
+                name: "faceColor",
+                len: 8,
+                max: 9
+            },
+            {
+                name: "makeup",
+                len: 8,
+                max: 11
+            },
+            {
+                name: "faceType",
+                len: 8,
+                max: 11
+            },
+            {
+                name: "faceFeature",
+                len: 8,
+                max: 11
+            },
+            {
+                name: "miicFacePaintColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "favorited",
+                bool: true,
+                len: 8,
+                max: 1
+            },
+            {
+                name: "favoriteColor",
+                len: 8,
+                max: 11
+            },
+            {
+                name: "charset",
+                len: 8,
+                max: 3
+            },
+            {
+                name: "gender",
+                len: 8,
+                max: 1
+            },
+            {
+                name: "glassesColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "glassesSize",
+                len: 8,
+                max: 7
+            },
+            {
+                name: "glassesType",
+                len: 8,
+                max: 19
+            },
+            {
+                name: "glassesYPosition",
+                len: 8,
+                max: 20
+            },
+            {
+                name: "hairColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "hairFlipped",
+                bool: true,
+                len: 8,
+                max: 1
+            },
+            {
+                name: "hairType",
+                len: 8,
+                max: 131
+            },
+            {
+                name: "miicHatFavoriteColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicHatCommonColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicHatType",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "height",
+                len: 8,
+                max: 127
+            },
+            {
+                name: "miicBodyType",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "moleSize",
+                len: 8,
+                max: 8
+            },
+            {
+                name: "moleActive",
+                bool: true,
+                len: 8,
+                max: 1
+            },
+            {
+                name: "moleXPosition",
+                len: 8,
+                max: 16
+            },
+            {
+                name: "moleYPosition",
+                len: 8,
+                max: 30
+            },
+            {
+                name: "mouthSquash",
+                len: 8,
+                max: 6
+            },
+            {
+                name: "mouthColor",
+                len: 8,
+                max: 99
+            },
+            {
+                name: "mouthSize",
+                len: 8,
+                max: 8
+            },
+            {
+                name: "mouthType",
+                len: 8,
+                max: 35
+            },
+            {
+                name: "mouthYPosition",
+                len: 8,
+                max: 18
+            },
+            {
+                name: "mustacheSize",
+                len: 8,
+                max: 8
+            },
+            {
+                name: "mustacheType",
+                len: 8,
+                max: 5
+            },
+            {
+                name: "mustacheYPosition",
+                len: 8,
+                max: 16
+            },
+            {
+                name: "noseSize",
+                len: 8,
+                max: 8
+            },
+            {
+                name: "noseType",
+                len: 8,
+                max: 17
+            },
+            {
+                name: "noseYPosition",
+                len: 8,
+                max: 18
+            },
+            {
+                name: "miicPantsColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicPersonality",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicRegionMove",
+                len: 8,
+                max: 3
+            },
+            {
+                name: "miicShirtColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "isSpecial",
+                bool: true,
+                len: 8,
+                max: 1,
+                decoder: (bool) => bool ? "Special" : "Default",
+                encoder: (text) => text === "Special" ? true : false
+            },
+            {
+                name: "miicTransferred",
+                bool: true,
+                len: 8,
+                max: 1
+            },
+            {
+                name: "miicEyeSclera",
+                bool: true,
+                len: 8,
+                max: 1
+            },
+            {
+                name: "miicClothesType",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicShoesColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicHatSecondaryColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            },
+            {
+                name: "miicHatTertiaryColor",
+                len: 8,
+                decoder: (val) => val === 255 ? -1 : val,
+                encoder: (val) => val === -1 ? 255 : val
+            }
+        ]
+    },
+
     //Miitomo
     [MiiFormats.MT]: {
         len: 0x84,
@@ -2338,12 +2737,6 @@ const formats = {
                 len: 16
             }
         ]
-    },
-    [MiiFormats.MTE]: {
-        len: 0xAC,
-        decoder: decryptMii,
-        encoder: encryptMii,
-        preEncode: MiiFormats.MT
     },
     //Tomodachi Life Store Data
     [MiiFormats.TLS]: {
@@ -2970,6 +3363,28 @@ const mappings = {
     'charset': 'meta.charset',
     'region': 'meta.region',
     'originalDevice': 'meta.originalDevice',
+
+    'miicVersion': 'miic.version',
+    'miicOriginPlatform': 'miic.originPlatform',
+    'miicAuthorId': 'miic.authorId',
+    'miicCreateId': 'miic.createId',
+    'miicBirthYear': 'miic.birthYear',
+    'miicFacePaintColor': 'miic.facePaintColor',
+    'miicHatFavoriteColor': 'miic.hat.favoriteColor',
+    'miicHatCommonColor': 'miic.hat.commonColor',
+    'miicHatType': 'miic.hat.type',
+    'miicBodyType': 'miic.bodyType',
+    'miicPantsColor': 'miic.pantsColor',
+    'miicPersonality': 'miic.personality',
+    'miicRegionMove': 'miic.regionMove',
+    'miicShirtColor': 'miic.shirtColor',
+    'miicTransferred': 'miic.transferred',
+    'miicEyeSclera': 'miic.eyeSclera',
+    'miicClothesType': 'miic.clothesType',
+    'miicShoesColor': 'miic.shoesColor',
+    'miicHatSecondaryColor': 'miic.hat.secondaryColor',
+    'miicHatTertiaryColor': 'miic.hat.tertiaryColor',
+
     'selectionSlotIndex': 'meta.slotIndex',//I genuinely don't know why these are relevant to the QR code data, but they're present.
     'selectionPageIndex': 'meta.pageIndex',
     'creatorMac': 'meta.creatorMac',
@@ -3110,6 +3525,24 @@ const defaultMappings = {
     'type': "Default",
     'name': "no name",
     'originalDevice': 4,//3DS/Wii U set this, Wii/NDS have code written to set this to 1/2 in their post process, so having the Switch (technically and Wii U) as a default is fine and should be what's desired in almost all cases from a default.
+    'miicVersion': 4,
+    'miicOriginPlatform': 5,
+    'miicBirthYear': 0,
+    'miicFacePaintColor': -1,
+    'miicHatFavoriteColor': -1,
+    'miicHatCommonColor': -1,
+    'miicHatType': -1,
+    'miicBodyType': -1,
+    'miicPantsColor': -1,
+    'miicPersonality': -1,
+    'miicRegionMove': 0,
+    'miicShirtColor': -1,
+    'miicTransferred': false,
+    'miicEyeSclera': false,
+    'miicClothesType': -1,
+    'miicShoesColor': -1,
+    'miicHatSecondaryColor': -1,
+    'miicHatTertiaryColor': -1,
 
     'hairType': [0x21, 0x0C],
     'hairColor': 1,

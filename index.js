@@ -15,6 +15,16 @@ import util from "util";
 import isValidPath from "is-valid-path";
 import {fs} from "./platform.js";
 
+export * from "./formats.js";
+export * from "./amiiboHandler.js";
+export * from "./miiMeasureConversion.js";
+export * from "./miiRendering.js";
+export * from "./miiCrypto.js";
+export * from "./miiProcess.js";
+export * from "./miiInstructions.js";
+export * from "./miiBabies.js";
+export * from "./qrTools.js";
+
 const { renderMii } = miiRendering;
 const { encodeMii, decodeMii, detectMiiFormat } = miiProcess;
 const { mappings, MiiFormats, ConsoleFormats } = miiFormats;
@@ -306,6 +316,9 @@ class Mii {
     }
 }
 
+const FavoriteColors = lookupTables.favoriteColors;
+
+export { Mii, FavoriteColors, getNestedValue, setNestedValue, deleteNestedValue, getKeyByValue };
 
 export default{
     Mii,
@@ -322,7 +335,7 @@ export default{
 
     ...qrTools,
 
-    FavoriteColors:lookupTables.favoriteColors,
+    FavoriteColors,
 
     //These are outside MiiJS' scope but we define them here and they're nice functions to have so might as well make them available for convenience
     getNestedValue,

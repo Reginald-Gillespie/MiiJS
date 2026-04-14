@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "test": "jest",
+    "test": "set NODE_OPTIONS=--experimental-vm-modules&& jest --runInBand __tests__",
     "build": "node build.cjs",
     "serve": "node build.cjs --serve",
     "prepublishOnly": "npm run build"

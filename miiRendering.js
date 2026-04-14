@@ -542,7 +542,14 @@ async function renderForNode(data, opts = {}) {
     }
     else {//No FFL Resource, no textures or models to render with.
         console.warn(`FFL Resource is unavailable. See README.md for more information.`);
-        return await fs.promises.readFile(`./node_modules/miijs/silhouette${data?.general?.hasOwnProperty("gender") ? data.general.gender : 0}.png`);
+        const gender = data?.general?.hasOwnProperty("gender") ? data.general.gender : 0;
+        const localSilhouette = `./silhouette${gender}.png`;
+        const packageSilhouette = `./node_modules/miijs/silhouette${gender}.png`;
+
+        if (fs.existsSync(localSilhouette)) {
+            return await fs.promises.readFile(localSilhouette);
+        }
+        return await fs.promises.readFile(packageSilhouette);
     }
 
     addSkeletonScalingExtensions(THREE.Skeleton);

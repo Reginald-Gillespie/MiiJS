@@ -187,7 +187,7 @@ const nodeShimPlugin = {
     build.onResolve({ filter: /^assert$/ }, () => ({ path: require.resolve("assert/") }));
     build.onResolve({ filter: /^util$/ }, () => ({ path: require.resolve("util/") }));
     build.onResolve({ filter: /^buffer$/ }, () => ({ path: require.resolve("buffer/") }));
-    build.onResolve({ filter: /^crypto$/ }, () => ({ path: require.resolve("crypto-browserify") }));
+    build.onResolve({ filter: /^(node:)?crypto$/ }, () => shim("shims/crypto.browser.js"));
     build.onResolve({ filter: /^zlib$/ }, () => ({ path: require.resolve("browserify-zlib") }));
 
 

@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "test": "jest",
+    "test": "set NODE_OPTIONS=--experimental-vm-modules&& jest --runInBand __tests__",
     "build": "node build.cjs",
     "serve": "node build.cjs --serve",
     "prepublishOnly": "npm run build"
@@ -63,12 +63,10 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "canvas": "^3.2.1",
-    "crypto-browserify": "^3.12.1",
     "esbuild": "^0.27.3",
     "events": "^3.3.0",
     "fetch": "^1.1.0",
     "ffl.js": "github:ariankordi/FFL.js#f63076162584808715008a39f9cd7b606442cee3",
-    "gl": "^8.1.6",
     "is-jpg": "^3.0.0",
     "is-png": "^3.0.1",
     "is-valid-path": "^0.1.1",

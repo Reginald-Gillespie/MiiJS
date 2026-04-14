@@ -3,3 +3,10 @@ node_modules
 package-lock.json
 node_modules
 test*
+
+# VSCode
+.vsls.json
+.vscode
+
+# Tests stuff
+__tests__

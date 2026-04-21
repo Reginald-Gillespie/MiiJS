@@ -148,7 +148,6 @@ function forwardPort(data, from, to = "SWITCH") {
     }
 
     if (to === "SWITCH" || from === "3DS") {
-        data.glasses.type=lookupTables.glassesTypes[data.glasses.type];
         if (!data.beard.color) data.beard.color = 8;
         if (!data.eyebrows.color) data.eyebrows.color = 8;
         if (!data.hair.color) data.hair.color = 8;
@@ -187,7 +186,7 @@ function backPort(data, to, from = "SWITCH") {
     if (from === "SWITCH" || to === "3DS") {
         data.hair.color = backTables.switch.hairsColors[data.hair.color];
         data.eyes.color = backTables.switch.eyesColors[data.eyes.color];
-        data.glasses.type = backTables.switch.glassesTypes[data.glasses.type];
+        if(data.glasses.type>8) data.glasses.type = backTables.switch.glassesTypes[data.glasses.type-9];
         data.glasses.color = backTables.switch.glassesColors[data.glasses.color];
         data.mouth.color = backTables.switch.mouthsColors[data.mouth.color];
         data.face.color = backTables.switch.faceColors[data.face.color];
@@ -330,6 +329,7 @@ const MiiFormats = /** @type {const} */ ({
     * The first 0x5C Bytes are FFCD, then extra data follows.
     */
     MT: 'mt',
+    MTE: 'mte',
     /**
     * Tomodachi Life
     * The first 0x5C Bytes are FFCD, then extra data follows.
@@ -2737,6 +2737,12 @@ const formats = {
                 len: 16
             }
         ]
+    },
+    [MiiFormats.MTE]: {
+        len: 0xAC,
+        decoder: decryptMii,
+        encoder: encryptMii,
+        preEncode: MiiFormats.MT
     },
     //Tomodachi Life Store Data
     [MiiFormats.TLS]: {

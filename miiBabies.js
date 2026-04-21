@@ -79,6 +79,8 @@ async function makeMiiChild(parentA, parentB, options) {
     child.hair.color = randomBools[2] === 0 ? parent0.hair.color : parent1.hair.color;
     child.eyebrows.color = child.hair.color;
 
+    child.face.type=matchingParent.face.type;
+
     child.eyes.type = randomBools[3] === 0 ? parent0.eyes.type : parent1.eyes.type;
     child.eyes.color = randomBools[4] === 0 ? parent0.eyes.color : parent1.eyes.color;
 

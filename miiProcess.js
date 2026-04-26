@@ -115,29 +115,6 @@ function bytesFromText(str) {
 
 const canonical3DSGlassesTypes = new Set(lookupTables.glassesTypes);
 
-function normalizeLegacyDecodedMii(obj) {
-    if (!obj || typeof obj !== "object") return obj;
-
-    const originalDevice = obj?.meta?.originalDevice;
-    const glassesType = obj?.glasses?.type;
-
-    // Compatibility shim for records saved before encodeMii() stopped mutating
-    // nested fields during 3DS QR generation. Those records can carry raw 3DS
-    // glasses values in the canonical slot. Re-forward-port only impossible
-    // canonical 3DS values so modern/correct records remain unchanged.
-    if (
-        originalDevice === 3 &&
-        Number.isInteger(glassesType) &&
-        glassesType >= 0 &&
-        glassesType < lookupTables.glassesTypes.length &&
-        !canonical3DSGlassesTypes.has(glassesType)
-    ) {
-        obj.glasses.type = lookupTables.glassesTypes[glassesType];
-    }
-
-    return obj;
-}
-
 function formatUses3DSTranslation(formatName, visited = new Set()) {
     if (!formatName || visited.has(formatName)) return false;
     visited.add(formatName);
@@ -519,9 +496,6 @@ function encodeMii(miiObject, targetFormat, debug) {
 
     // Apply pre-processing
     let obj = structuredClone(miiObject);
-    if (formatUses3DSTranslation(targetFormat)) {
-        obj = normalizeLegacyDecodedMii(obj);
-    }
     if (formats[targetFormat].hasOwnProperty("translation")) {
         obj = backPort(obj, formats[targetFormat].translation);
     }

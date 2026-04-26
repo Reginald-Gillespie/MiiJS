@@ -40,7 +40,7 @@ function normalizeDecodedMiiForRender(data) {
     // FFL's current local render path still expects legacy Wii U-era glasses
     // indices, so backport canonical values before rendering.
     if (Number.isInteger(normalized?.glasses?.type)) {
-        const renderType = backTables.switch.glassesTypes[normalized.glasses.type];
+        const renderType = normalized.glasses.type>8?backTables.switch.glassesTypes[normalized.glasses.type-9]:normalized.glasses.type;
         if (Number.isInteger(renderType)) {
             normalized.glasses.type = renderType;
         }

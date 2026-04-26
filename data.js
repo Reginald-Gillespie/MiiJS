@@ -27,12 +27,7 @@ export const backTables={
         ],
     },
     "switch":{
-        "glassesTypes":[
-            0,4,4,2,3,
-            5,3,5,1,2,
-            6,8,6,7,6,
-            6,8,6,7,6
-        ],
+        "glassesTypes":[4,2,2,3,6,8,6,7,8,6,6],
         "faceColors":[0,1,2,3,4,5,3,2,4,5],
 
         // Tables originally from MiiPort:

@@ -79,6 +79,8 @@ async function makeMiiChild(parentA, parentB, options) {
     child.hair.color = randomBools[2] === 0 ? parent0.hair.color : parent1.hair.color;
     child.eyebrows.color = child.hair.color;
 
+    child.face.type=matchingParent.face.type;
+
     child.eyes.type = randomBools[3] === 0 ? parent0.eyes.type : parent1.eyes.type;
     child.eyes.color = randomBools[4] === 0 ? parent0.eyes.color : parent1.eyes.color;
 
@@ -94,11 +96,11 @@ async function makeMiiChild(parentA, parentB, options) {
     //Child Miis generate the last stage, then build offsets backwards through the younger stages of life starting at the older stages
     var eyeBase = Math.min(Math.max(child.eyes.yPosition + 2, 0), 18);
     let browBase = child.eyebrows.yPosition + 2;
-    if (browBase >= 18) {
-        browBase = 18;
+    if (browBase > 15) {
+        browBase = 15;
     }
-    else if (browBase < 4) {
-        browBase = 3;
+    else if (browBase < 0) {
+        browBase = 0;
     }
 
     var mouthBase = Math.min(Math.max(child.mouth.yPosition - 2, 0), 18);
